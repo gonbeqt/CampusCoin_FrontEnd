@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   PackageIcon,
@@ -9,6 +9,7 @@ import {
   PlusCircleIcon,
 } from 'lucide-react'
 import { useUser } from '../../context/UserContext'
+import WalletConnect from '../../components/WalletConnect'
 // Mock data
 const stats = {
   totalProducts: 24,
@@ -42,15 +43,30 @@ const recentSales = [
 ]
 const SellerDashboard = () => {
   const { user } = useUser()
+  const [isWalletConnected, setIsWalletConnected] = useState(false)
+  const [walletBalance, setWalletBalance] = useState(0)
+  const handleWalletConnect = (balance) => {
+    setIsWalletConnected(true)
+    setWalletBalance(balance)
+  }
   return (
     <div className="pt-16 md:ml-64">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Seller Dashboard</h1>
-        <p className="text-gray-600">
-          Welcome, {user?.name}. Here's an overview of your store.
-        </p>
+      <div className="flex flex-wrap items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Seller Dashboard</h1>
+          <p className="text-gray-600">
+            Welcome, {user?.name}. Here's an overview of your store.
+          </p>
+        </div>
+        <div className="mt-4 md:mt-0">
+          <WalletConnect 
+            onConnect={handleWalletConnect}
+            isConnected={isWalletConnected}
+            walletBalance={walletBalance}
+          />
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         <div className="bg-white rounded-lg shadow p-5">
           <div className="flex justify-between items-start">
             <div>
@@ -93,19 +109,7 @@ const SellerDashboard = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-5">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-500">Top Selling</p>
-              <p className="text-xl font-bold mt-1">
-                {stats.topSellingProduct}
-              </p>
-            </div>
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <BarChart2Icon size={24} className="text-purple-600" />
-            </div>
-          </div>
-        </div>
+        
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">

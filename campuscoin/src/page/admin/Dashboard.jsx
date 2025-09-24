@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CalendarIcon,
@@ -9,6 +9,7 @@ import {
   PieChartIcon,
 } from 'lucide-react'
 import { useUser } from '../../context/UserContext'
+import WalletConnect from '../../components/WalletConnect'
 // Mock data
 const stats = {
   totalEvents: 24,
@@ -43,13 +44,28 @@ const recentEvents = [
 ]
 const AdminDashboard = () => {
   const { user } = useUser()
+  const [isWalletConnected, setIsWalletConnected] = useState(false)
+  const [walletBalance, setWalletBalance] = useState(0)
+  const handleWalletConnect = (balance) => {
+    setIsWalletConnected(true)
+    setWalletBalance(balance)
+  }
   return (
     <div className="pt-16 md:ml-64">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
-        <p className="text-gray-600">
-          Welcome, {user?.name}. Here's an overview of the CampusCoin system.
-        </p>
+      <div className="flex flex-wrap items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+          <p className="text-gray-600">
+            Welcome, {user?.name}. Here's an overview of the CampusCoin system.
+          </p>
+        </div>
+        <div className="mt-4 md:mt-0">
+          <WalletConnect 
+            onConnect={handleWalletConnect}
+            isConnected={isWalletConnected}
+            walletBalance={walletBalance}
+          />
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         <div className="bg-white rounded-lg shadow p-5">
@@ -216,7 +232,7 @@ const AdminDashboard = () => {
             </div>
             <div className="space-y-2">
               <Link
-                to="/admin/events/new"
+                to="/admin/events"
                 className="block w-full text-left px-4 py-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
               >
                 Create new event

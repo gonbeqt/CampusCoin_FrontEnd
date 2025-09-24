@@ -21,6 +21,9 @@ import ProductManagement from './page/seller/ProductManagement'
 import AddProduct from './page/seller/AddProduct'
 import Layout from './components/Layout'
 import { UserProvider } from './context/UserContext'
+import Events from './page/student/Events'
+import Sales from './page/seller/Sales'
+import UserManagement from './page/admin/UserManagement'
 export default function App() {
   return (
     <UserProvider>
@@ -34,6 +37,7 @@ export default function App() {
           <Route path="/student" element={<Layout userType="student" />}>
             <Route index element={<StudentDashboard />} />
             <Route path="event/:id" element={<EventDetails />} />
+            <Route path="events" element={< Events/>}/>
             <Route path="rewards" element={<RewardMarketplace />} />
             <Route path="transactions" element={<TransactionHistory />} />
           </Route>
@@ -43,12 +47,14 @@ export default function App() {
             <Route path="events" element={<EventManagement />} />
             <Route path="attendance" element={<AttendanceVerification />} />
             <Route path="rewards" element={<RewardManagement />} />
+            <Route path="users" element={<UserManagement/>}/>
           </Route>
           {/* Seller Routes */}
           <Route path="/seller" element={<Layout userType="seller" />}>
             <Route index element={<SellerDashboard />} />
             <Route path="products" element={<ProductManagement />} />
             <Route path="products/add" element={<AddProduct />} />
+            <Route path="sales" element={<Sales/>} />
           </Route>
         </Routes>
       </Router>
