@@ -5,7 +5,7 @@ import {
   FilterIcon,
   DownloadIcon,
 } from 'lucide-react'
-import { useUser } from '../../context/UserContext'
+import { useUser } from '../../../context/UserContext'
 // Mock transaction data
 const transactionsData = [
   {

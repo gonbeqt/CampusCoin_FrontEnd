@@ -8,8 +8,8 @@ import {
   BarChart2Icon,
   PlusCircleIcon,
 } from 'lucide-react'
-import { useUser } from '../../context/UserContext'
-import WalletConnect from '../../components/WalletConnect'
+import { useUser } from '../../../context/UserContext'
+import WalletConnect from '../../../views/components/WalletConnect'
 // Mock data
 const stats = {
   totalProducts: 24,

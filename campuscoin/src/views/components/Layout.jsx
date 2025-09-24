@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Outlet, Navigate } from 'react-router-dom'
 import Navbar from './Navbar'
 import Sidebar from './Sidebar'
-import { useUser } from '../context/UserContext'
+import { useUser } from '../../context/UserContext'
 const Layout = ({ userType }) => {
   const { user } = useUser()
   const [showMobileMenu, setShowMobileMenu] = useState(false)

@@ -8,7 +8,7 @@ import {
   TrashIcon,
   Edit2Icon,
 } from 'lucide-react'
-import ProductCard from '../../components/ProductCard'
+import ProductCard from '../../../views/components/ProductCard'
 // Mock products data
 const productsData = [
   {

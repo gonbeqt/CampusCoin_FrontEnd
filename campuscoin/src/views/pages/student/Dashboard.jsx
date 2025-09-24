@@ -7,10 +7,10 @@ import {
   ClockIcon,
   MapPinIcon,
 } from 'lucide-react'
-import { useUser } from '../../context/UserContext'
-import EventCard from '../../components/EventCard'
-import WalletCard from '../../components/WalletCard'
-import RecentTransactionsCard from '../../components/RecentTransactionsCard'
+import { useUser } from '../../../context/UserContext'
+import EventCard from '../../../views/components/EventCard'
+import WalletCard from '../../../views/components/WalletCard'
+import RecentTransactionsCard from '../../../views/components/RecentTransactionsCard'
 // Mock data
 const upcomingEvents = [
   {

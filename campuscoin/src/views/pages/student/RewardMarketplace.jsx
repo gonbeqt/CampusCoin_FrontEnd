@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { CoinsIcon, SearchIcon } from 'lucide-react'
-import { useUser } from '../../context/UserContext'
+import { useUser } from '../../../context/UserContext'
 // Mock rewards data
 const rewards = [
   {

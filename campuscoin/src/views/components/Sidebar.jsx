@@ -13,7 +13,7 @@ import {
   PlusCircleIcon,
   BarChart2Icon,
 } from 'lucide-react'
-import { useUser } from '../context/UserContext'
+import { useUser } from '../../context/UserContext'
 const Sidebar = ({ userType, showMobileMenu }) => {
   const location = useLocation()
   const { user } = useUser()

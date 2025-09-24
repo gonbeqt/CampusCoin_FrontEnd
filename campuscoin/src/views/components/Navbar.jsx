@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { BellIcon, MenuIcon, XIcon } from 'lucide-react'
-import { useUser } from '../context/UserContext'
+import { useUser } from '../../context/UserContext'
 const Navbar = ({ showMobileMenu, toggleMobileMenu }) => {
   const { user, logout } = useUser()
   const [notifications] = React.useState(3)

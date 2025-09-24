@@ -26,7 +26,7 @@ import {
   Pie,
   Cell
 } from 'recharts'
-import { useUser } from '../../context/UserContext'
+import { useUser } from '../../../context/UserContext'
 // Mock data for sales overview
 const salesStats = {
   totalSales: 4850,

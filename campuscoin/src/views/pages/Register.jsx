@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { CoinsIcon, UserPlusIcon } from 'lucide-react'
-import { useUser } from '../context/UserContext'
+import { useUser } from '../../context/UserContext'
 const Register = () => {
   const [registerEmail, setRegisterEmail] = useState('')
   const [registerPassword, setRegisterPassword] = useState('')

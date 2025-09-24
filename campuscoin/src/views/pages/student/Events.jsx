@@ -7,7 +7,7 @@ import {
   ClockIcon,
   MapPinIcon,
 } from 'lucide-react'
-import { useUser } from '../../context/UserContext'
+import { useUser } from '../../../context/UserContext'
 // Mock data for events
 const allEvents = [
   {
