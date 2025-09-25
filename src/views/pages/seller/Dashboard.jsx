@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   PackageIcon,
@@ -9,6 +9,8 @@ import {
   PlusCircleIcon,
 } from 'lucide-react'
 import WalletConnect from '../../../views/components/WalletConnect'
+import productController from '../../../controllers/productController'
+import authController from '../../../controllers/authController'
 // Mock data
 const stats = {
   totalProducts: 24,
@@ -43,6 +45,33 @@ const recentSales = [
 const SellerDashboard = ({ user }) => {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [walletBalance, setWalletBalance] = useState(0)
+   const [stats, setStats] = useState({ totalProducts: 0, totalSales: 0, totalRevenue: 0 });
+  const [sellerProfile, setSellerProfile] = useState(user);
+  let fullName = sellerProfile?.name || '';
+  useEffect(() => {
+    const loadStats = async () => {
+      const token = localStorage.getItem('authToken');
+      const res = await productController.getDashboardStats(token);
+
+      if (res.success) {
+        setStats(res.stats);
+      } else {
+        console.error('Failed to fetch stats:', res.error);
+      }
+    };
+
+    const loadProfile = async () => {
+      const result = await authController.fetchUserProfile();
+      if (result.success) {
+        setSellerProfile(result.user);
+      } else {
+        console.error('Failed to fetch seller profile:', result.error);
+      }
+    };
+
+    loadStats();
+    loadProfile();
+  }, []);
 
   const handleWalletConnect = (balance) => {
     setIsWalletConnected(true)
@@ -55,7 +84,7 @@ const SellerDashboard = ({ user }) => {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Seller Dashboard</h1>
           <p className="text-gray-600">
-            Welcome, {user?.name}. Here's an overview of your store.
+            Welcome, {sellerProfile?.name}. Here's an overview of your store.
           </p>
         </div>
         <div className="mt-4 md:mt-0">
@@ -165,11 +194,6 @@ const SellerDashboard = ({ user }) => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
-                          {sale.student}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">
                           {new Date(sale.date).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
@@ -230,12 +254,16 @@ const SellerDashboard = ({ user }) => {
             </div>
             <div className="space-y-3">
               <div>
+                <p className="text-sm text-gray-500">Seller Name</p>
+                <p className="font-medium">{sellerProfile?.first_name} {sellerProfile?.last_name}</p>
+              </div>
+              <div>
                 <p className="text-sm text-gray-500">Store ID</p>
-                <p className="font-medium">{user?.storeId}</p>
+                <p className="font-medium">{sellerProfile?._id}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Email</p>
-                <p className="font-medium">{user?.email}</p>
+                <p className="font-medium">{sellerProfile?.email}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Status</p>
@@ -244,6 +272,12 @@ const SellerDashboard = ({ user }) => {
                   Active
                 </p>
               </div>
+              <Link
+                to="/seller/profile"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+              >
+                View Profile
+              </Link>
             </div>
           </div>
         </div>

@@ -59,7 +59,7 @@ const SellerSidebar = ({ user, showMobileMenu }) => {
         {user?.role === 'seller' && (
           <div className="mb-6 px-4 py-3 bg-blue-700 rounded-lg">
             <p className="text-sm font-medium text-white">Store ID</p>
-            <p className="text-lg font-bold text-white">{user?.storeId}</p>
+            <p className="text-sm font-bold text-white">{user?._id}</p>
           </div>
         )}
         <ul className="space-y-2">
