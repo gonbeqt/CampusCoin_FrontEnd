@@ -7,7 +7,6 @@ import {
   ClockIcon,
   MapPinIcon,
 } from 'lucide-react'
-import { useUser } from '../../../context/UserContext'
 import EventCard from '../../../views/components/EventCard'
 import WalletCard from '../../../views/components/WalletCard'
 import RecentTransactionsCard from '../../../views/components/RecentTransactionsCard'
@@ -61,8 +60,7 @@ const recentTransactions = [
     date: '2023-10-08T15:00:00',
   },
 ]
-const StudentDashboard = () => {
-  const { user } = useUser()
+const StudentDashboard = ({ user }) => {
   return (
     <div className="pt-16 md:ml-64">
       <div className="mb-6">

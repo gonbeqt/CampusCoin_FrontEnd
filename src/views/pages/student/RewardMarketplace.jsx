@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { CoinsIcon, SearchIcon } from 'lucide-react'
-import { useUser } from '../../../context/UserContext'
 // Mock rewards data
 const rewards = [
   {
@@ -65,8 +64,7 @@ const rewards = [
   },
 ]
 const categories = ['All', 'Food', 'Academic', 'Entertainment', 'Fitness']
-const RewardMarketplace = () => {
-  const { user } = useUser()
+const RewardMarketplace = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const filteredRewards = rewards.filter((reward) => {

@@ -8,7 +8,6 @@ import {
   BarChartIcon,
   PieChartIcon,
 } from 'lucide-react'
-import { useUser } from '../../../context/UserContext'
 import WalletConnect from '../../../views/components/WalletConnect'
 // Mock data
 const stats = {
@@ -42,8 +41,7 @@ const recentEvents = [
     status: 'completed',
   },
 ]
-const AdminDashboard = () => {
-  const { user } = useUser()
+const AdminDashboard = ({ user }) => {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [walletBalance, setWalletBalance] = useState(0)
   const handleWalletConnect = (balance) => {

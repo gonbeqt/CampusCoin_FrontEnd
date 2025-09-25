@@ -13,20 +13,19 @@ import {
   DollarSignIcon,
   SearchIcon,
 } from 'lucide-react'
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   Legend,
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell
 } from 'recharts'
-import { useUser } from '../../../context/UserContext'
 // Mock data for sales overview
 const salesStats = {
   totalSales: 4850,
@@ -126,19 +125,18 @@ const salesTransactions = [
 ]
 // Colors for pie chart
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#6366F1']
-const Sales = () => {
-  const { user } = useUser()
+const Sales = ({ user }) => {
   const [dateFilter, setDateFilter] = useState('This Month')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   // Filter transactions based on search term and status
   const filteredTransactions = salesTransactions.filter((transaction) => {
-    const matchesSearch = 
+    const matchesSearch =
       transaction.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
       transaction.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
       transaction.id.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = 
-      statusFilter === 'All' || 
+    const matchesStatus =
+      statusFilter === 'All' ||
       transaction.status === statusFilter.toLowerCase()
     return matchesSearch && matchesStatus
   })
@@ -149,8 +147,7 @@ const Sales = () => {
         <p className="text-gray-600">
           Track your store's performance and sales analytics
         </p>
-      </div>
-      {/* Date range filter */}
+      </div>      {/* Date range filter */}
       <div className="flex flex-wrap items-center justify-between mb-6 gap-4">
         <div className="flex items-center space-x-2">
           <div className="relative">

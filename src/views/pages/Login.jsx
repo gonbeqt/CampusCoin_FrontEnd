@@ -17,38 +17,6 @@ const Login = () => {
 
   const navigate = useNavigate()
 
-  // Subscribe to controller updates
-  useEffect(() => {
-    const handleAuthUpdate = (data) => {
-      switch (data.type) {
-        case 'LOGIN_SUCCESS':
-          setViewState(prev => ({ ...prev, isLoading: false, error: '' }))
-          // Navigate based on user role
-          const role = data.user?.role
-          const route = AuthController.getRouteForRole(role)
-          navigate(route)
-          break
-        
-        case 'LOGIN_FAILURE':
-          setViewState(prev => ({ 
-            ...prev, 
-            isLoading: false, 
-            error: data.error 
-          }))
-          break
-        
-        default:
-          break
-      }
-    }
-
-    AuthController.subscribe(handleAuthUpdate)
-
-    return () => {
-      AuthController.unsubscribe(handleAuthUpdate)
-    }
-  }, [navigate])
-
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -77,18 +45,21 @@ const Login = () => {
     
     setViewState(prev => ({ ...prev, isLoading: true, error: '' }))
 
-    // Call controller
-    const result = await AuthController.login(formData)
-    
-    if (!result.success) {
-      setViewState(prev => ({ 
-        ...prev, 
-        isLoading: false, 
-        error: result.error 
-      }))
-    }
-    // Success case is handled by the observer
-  }
+        // Call controller
+        const result = await AuthController.login(formData)
+        
+        if (result.success) {
+          setViewState(prev => ({ ...prev, isLoading: false, error: '' }))
+          const role = result.user?.role
+          const route = AuthController.getRouteForRole(role)
+          navigate(route)
+        } else {
+          setViewState(prev => ({
+            ...prev,
+            isLoading: false,
+            error: result.error
+          }))
+        }  }
 
   // Check if form is valid
   const isFormValid = formData.email && formData.password

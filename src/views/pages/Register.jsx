@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { CoinsIcon, UserPlusIcon, MailIcon } from 'lucide-react'
-import { useUser } from '../../context/UserContext'
+import { CoinsIcon, MailIcon } from 'lucide-react'
+import AuthController from '../../controllers/authController'
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -14,8 +14,7 @@ const Register = () => {
     role: 'student'
   })
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [registerSuccess, setRegisterSuccess] = useState(false)
+  const [message, setMessage] = useState(null)
   const [showVerification, setShowVerification] = useState(false)
   const [verificationCode, setVerificationCode] = useState('')
   const [verificationError, setVerificationError] = useState('')
@@ -23,7 +22,6 @@ const Register = () => {
   const [isResending, setIsResending] = useState(false)
 
   const navigate = useNavigate()
-  const { register, verifyEmail, resendVerificationCode, login } = useUser()
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -36,19 +34,18 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault()
     setIsLoading(true)
-    setError('')
+    setMessage(null)
 
     try {
-      const result = await register(formData)
-      
+      const result = await AuthController.register(formData)
       if (result.success) {
-        setRegisterSuccess(true)
+        setMessage({ type: 'success', text: result.message || 'Registration successful!' })
         setShowVerification(true)
       } else {
-        setError({ error: result.error });
+        setMessage({ type: 'error', text: result.error || 'Registration failed.' })
       }
     } catch (err) {
-      setError({ error: 'An error occurred during registration' });
+      setMessage({ type: 'error', text: 'An unexpected error occurred during registration.' })
     } finally {
       setIsLoading(false)
     }
@@ -57,53 +54,41 @@ const Register = () => {
   const handleVerification = async (e) => {
     e.preventDefault()
     setIsVerifying(true)
-    setVerificationError('')
+    setMessage(null)
 
     try {
-      const result = await verifyEmail(formData.email, verificationCode)
-      
+      const result = await AuthController.verifyEmail(formData.email, verificationCode)
+
       if (result.success) {
-        // Auto login after successful verification
-        const loginResult = await login(formData.email, formData.password)
-        
-        if (loginResult.success) {
-          // Redirect based on role
-          if (formData.role === 'admin') {
-            navigate('/admin')
-          } else if (formData.role === 'seller') {
-            navigate('/seller')
-          } else {
-            navigate('/student')
-          }
-        } else {
-          // If auto-login fails, redirect to login page
+        setMessage({ type: 'success', text: result.message || 'Email verified successfully!' })
+        setTimeout(() => {
           navigate('/login')
-        }
+        }, 2000);
       } else {
-        setVerificationError(result.message)
+        setMessage({ type: 'error', text: result.error || 'Invalid verification code' })
       }
     } catch (err) {
-      setVerificationError('An error occurred during verification')
+      setMessage({ type: 'error', text: 'An error occurred during verification' })
     } finally {
       setIsVerifying(false)
     }
   }
 
   const handleResendCode = async () => {
+    setMessage(null)
     setIsResending(true)
-    setVerificationError('')
+    setMessage(null)
 
     try {
-      const result = await resendVerificationCode(formData.email)
-      
+      const result = await AuthController.resendVerificationCode(formData.email)
+
       if (result.success) {
-        setVerificationError('') // Clear any previous errors
-        // You might want to show a success message here
+        setMessage({ type: 'success', text: result.message || 'New verification code sent!' })
       } else {
-        setVerificationError(result.message)
+        setMessage({ type: 'error', text: result.error || 'Failed to resend code' })
       }
     } catch (err) {
-      setVerificationError('Failed to resend verification code')
+      setMessage({ type: 'error', text: 'Failed to resend verification code' })
     } finally {
       setIsResending(false)
     }
@@ -120,7 +105,7 @@ const Register = () => {
             {showVerification ? 'Verify Your Email' : 'Create an Account'}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            {showVerification 
+            {showVerification
               ? 'Enter the verification code sent to your email'
               : 'Join CampusCoin - University Attendance & Events Reward System'
             }
@@ -128,6 +113,7 @@ const Register = () => {
         </div>
 
         {showVerification ? (
+          // ================= Verification Form =================
           <div className="mt-8 space-y-6">
             <div className="bg-green-50 border border-green-200 rounded-md p-4">
               <div className="flex">
@@ -190,23 +176,8 @@ const Register = () => {
               </div>
             </form>
           </div>
-        ) : registerSuccess ? (
-          <div className="mt-8 space-y-6">
-            <div className="bg-green-50 border border-green-200 rounded-md p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <UserPlusIcon className="h-5 w-5 text-green-400" />
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-green-800">Registration successful!</h3>
-                  <div className="mt-2 text-sm text-green-700">
-                    <p>Your account has been created successfully. Please verify your email to continue.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         ) : (
+          // ================= Registration Form =================
           <form className="mt-8 space-y-6" onSubmit={handleRegister}>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -307,34 +278,31 @@ const Register = () => {
                 <div className="mt-2 grid grid-cols-3 gap-2">
                   <button
                     type="button"
-                    className={`py-2 px-3 text-sm font-medium rounded-md ${
-                      formData.role === 'student'
+                    className={`py-2 px-3 text-sm font-medium rounded-md ${formData.role === 'student'
                         ? 'bg-blue-600 text-white'
                         : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                    onClick={() => setFormData(prev => ({...prev, role: 'student'}))}
+                      }`}
+                    onClick={() => setFormData(prev => ({ ...prev, role: 'student' }))}
                   >
                     Student
                   </button>
                   <button
                     type="button"
-                    className={`py-2 px-3 text-sm font-medium rounded-md ${
-                      formData.role === 'seller'
+                    className={`py-2 px-3 text-sm font-medium rounded-md ${formData.role === 'seller'
                         ? 'bg-blue-600 text-white'
                         : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                    onClick={() => setFormData(prev => ({...prev, role: 'seller'}))}
+                      }`}
+                    onClick={() => setFormData(prev => ({ ...prev, role: 'seller' }))}
                   >
                     Seller
                   </button>
                   <button
                     type="button"
-                    className={`py-2 px-3 text-sm font-medium rounded-md ${
-                      formData.role === 'admin'
+                    className={`py-2 px-3 text-sm font-medium rounded-md ${formData.role === 'admin'
                         ? 'bg-blue-600 text-white'
                         : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                    onClick={() => setFormData(prev => ({...prev, role: 'admin'}))}
+                      }`}
+                    onClick={() => setFormData(prev => ({ ...prev, role: 'admin' }))}
                   >
                     Admin
                   </button>
@@ -352,8 +320,8 @@ const Register = () => {
               </button>
             </div>
 
-            {error.error && (
-              <div className="text-red-500 text-sm text-center p-2 border border-red-300 bg-red-50 rounded-md">{error.error}</div>
+            {message && message.type === 'error' && (
+              <div className="text-red-500 text-sm text-center p-2 border border-red-300 bg-red-50 rounded-md">{message.text}</div>
             )}
 
             <div className="text-center">

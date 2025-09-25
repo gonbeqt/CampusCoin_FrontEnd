@@ -7,7 +7,6 @@ import {
   ClockIcon,
   MapPinIcon,
 } from 'lucide-react'
-import { useUser } from '../../../context/UserContext'
 // Mock data for events
 const allEvents = [
   {
@@ -83,8 +82,7 @@ const allEvents = [
     description: 'Compete in teams to solve real-world problems using data science.',
   }
 ]
-const Events = () => {
-  const { user } = useUser()
+const Events = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
   const [joinedEvents, setJoinedEvents] = useState([])

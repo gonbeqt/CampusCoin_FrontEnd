@@ -1,17 +1,31 @@
 import React from 'react'
 import {  useNavigate } from 'react-router-dom'
 import { BellIcon, MenuIcon, XIcon } from 'lucide-react'
-import { useUser } from '../../context/UserContext'
-const Navbar = ({ showMobileMenu, toggleMobileMenu }) => {
-  const { user, logout } = useUser()
+import AuthController from '../../controllers/authController'
+const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
   const navigate = useNavigate()
   const [notifications] = React.useState(3)
 
   const handleLogout = async () => {
-    await logout()
+    await AuthController.logout()
     navigate('/login')
   }
+const nameParts = [
+    user.first_name,
+    user.middle_name,
+    user.last_name,
+  ].filter(part => part != null && part !== '').map(part => part.trim());
 
+  // Handle suffix separately
+  const suffix = user.suffix && user.suffix.trim() ? user.suffix.trim() : null;
+
+  // Join name parts with a single space
+  let fullName = nameParts.join(' ').trim();
+
+  // Append suffix without a space if it exists
+  if (suffix) {
+    fullName = fullName ? `${fullName}${suffix}` : suffix;
+  }
   return (
     <nav className="bg-white border-b border-gray-200 px-4 py-2.5 fixed top-0 left-0 right-0 z-50 md:left-64">
       <div className="flex flex-wrap justify-between items-center">
@@ -41,7 +55,7 @@ const Navbar = ({ showMobileMenu, toggleMobileMenu }) => {
           <div className="flex items-center">
             <div className="mr-3 hidden md:block">
               <div className="text-sm font-medium text-gray-900">
-                {user?.name}
+                {fullName}
               </div>
               <div className="text-xs text-gray-500">
                 {user?.role === 'student'

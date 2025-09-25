@@ -8,7 +8,6 @@ import {
   BarChart2Icon,
   PlusCircleIcon,
 } from 'lucide-react'
-import { useUser } from '../../../context/UserContext'
 import WalletConnect from '../../../views/components/WalletConnect'
 // Mock data
 const stats = {
@@ -41,14 +40,15 @@ const recentSales = [
     amount: 15,
   },
 ]
-const SellerDashboard = () => {
-  const { user } = useUser()
+const SellerDashboard = ({ user }) => {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [walletBalance, setWalletBalance] = useState(0)
+
   const handleWalletConnect = (balance) => {
     setIsWalletConnected(true)
     setWalletBalance(balance)
   }
+
   return (
     <div className="pt-16 md:ml-64">
       <div className="flex flex-wrap items-center justify-between mb-6">
