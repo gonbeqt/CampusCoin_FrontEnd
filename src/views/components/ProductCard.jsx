@@ -34,16 +34,15 @@ const ProductCard = ({
           </div>
           {isSellerView ? (
             <div className="flex space-x-2">
-              {onEdit && (
-                <button
-                  onClick={() => onEdit(product)}
-                  className="p-1 bg-blue-100 rounded-full text-blue-600 hover:bg-blue-200"
-                >
-                  <Edit2Icon size={16} />
-                </button>
-              )}
               <button
-                onClick={() => onDelete(product.id)}
+                onClick={() => onEdit(product)}   
+                className="p-1 bg-blue-100 rounded-full text-blue-600 hover:bg-blue-200"
+              >
+                <Edit2Icon size={16} />
+              </button>
+              <button
+                onClick={() => onDelete(product._id)}   
+                
                 className="p-1 bg-red-100 rounded-full text-red-600 hover:bg-red-200"
               >
                 <TrashIcon size={16} />
@@ -55,8 +54,11 @@ const ProductCard = ({
             </div>
           )}
         </div>
+        
       </div>
+      
     </div>
+    
   )
 }
 export default ProductCard
