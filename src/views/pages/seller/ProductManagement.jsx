@@ -211,6 +211,9 @@ const ProductManagement = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Product</h3>
 
             <div className="space-y-3">
+              <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+             Product Name:
+              </span>
               <input
                 type="text"
                 value={productToEdit.name}
@@ -218,12 +221,19 @@ const ProductManagement = () => {
                 placeholder="Product Name"
                 className="w-full px-3 py-2 border rounded-md"
               />
+                <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+             Description:
+           
+          </span>
               <textarea
                 value={productToEdit.description}
                 onChange={(e) => setProductToEdit({ ...productToEdit, description: e.target.value })}
                 placeholder="Description"
                 className="w-full px-3 py-2 border rounded-md"
               />
+               <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+             Price:
+              </span>
               <input
                 type="number"
                 value={productToEdit.price}
@@ -231,6 +241,9 @@ const ProductManagement = () => {
                 placeholder="Price"
                 className="w-full px-3 py-2 border rounded-md"
               />
+               <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+             Category:
+              </span>
               <input
                 type="text"
                 value={productToEdit.category}
@@ -238,6 +251,9 @@ const ProductManagement = () => {
                 placeholder="Category"
                 className="w-full px-3 py-2 border rounded-md"
               />
+               <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+             Quantity:
+              </span>
               <input
                 type="number"
                 value={productToEdit.stockQuantity}

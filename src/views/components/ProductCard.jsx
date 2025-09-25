@@ -10,7 +10,7 @@ const ProductCard = ({
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="h-48 overflow-hidden">
         <img
-          src={product.imageUrl}
+          src={`http://localhost:5000/api/products/image/${product.image}`}
           alt={product.name}
           className="w-full h-full object-cover"
         />

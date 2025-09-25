@@ -67,6 +67,34 @@ class ProductModel {
       return { error: err.message }
     }
   }
+  async getDashboardStats(token) {
+    try {
+      const res = await fetch(`${this.baseURL}/dashboard`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return { success: false, error: data.message || 'Failed to fetch stats' };
+      }
+
+      return {
+        success: true,
+        stats: {
+          totalProducts: data.totalProducts || 0,
+          totalSales: data.totalSales || 0,
+          totalRevenue: data.totalRevenue || 0,
+        },
+      };
+    } catch (err) {
+      console.error('SellerModel.getDashboardStats error:', err);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
 }
 
 export default new ProductModel();

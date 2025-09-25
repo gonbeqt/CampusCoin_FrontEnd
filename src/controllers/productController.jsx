@@ -44,6 +44,27 @@ class ProductController {
     if (res.error) return { success: false, error: res.error }
     return { success: true, message: res.message }
   }
+ 
+
+  async getDashboardStats(token) {
+    if (!token) {
+      return { success: false, error: 'Authentication required. Please log in.' };
+    }
+
+    const result = await ProductModel.getDashboardStats(token);
+
+    if (!result.success) {
+      return { success: false, error: result.error || 'Unable to load dashboard stats' };
+    }
+
+    return {
+      success: true,
+      stats: result.stats,
+    };
+  }
+
+
+
 }
 
 export default new ProductController();
