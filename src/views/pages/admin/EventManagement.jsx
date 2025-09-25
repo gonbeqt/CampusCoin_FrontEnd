@@ -1,4 +1,16 @@
-import React, { useState, useEffect } from 'react'
+// Toast notification component
+function Toast({ message, type, show }) {
+  return (
+    <div
+      className={`fixed top-6 right-6 z-[9999] transition-transform duration-300 ${show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'} ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white px-6 py-3 rounded shadow-lg min-w-[200px] text-center pointer-events-none`}
+      style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.15)' }}
+    >
+      {message}
+    </div>
+  );
+}
+
+import React, { useState, useEffect } from 'react';
 import {
   PlusIcon,
   SearchIcon,
@@ -6,13 +18,13 @@ import {
   CalendarIcon,
   TrashIcon,
   PencilIcon,
-} from 'lucide-react'
+} from 'lucide-react';
 
 const EventManagement = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  // Event creation form state
+  // Event creation/edit form state
   const [form, setForm] = useState({
     title: "",
     date: "",
@@ -21,9 +33,49 @@ const EventManagement = () => {
     category: "",
     reward: "",
     description: "",
+    status: "upcoming",
   });
-  const [createError, setCreateError] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [editId, setEditId] = useState(null); // null = create, id = edit
+  // Delete confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
+
+    // Toast notification state
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const showToast = (message, type = 'success') => {
+      setToast({ show: true, message, type });
+      setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
+    };
+
+  // Show custom delete confirmation modal
+  const handleDeleteEvent = (event) => {
+    setEventToDelete(event);
+    setShowDeleteModal(true);
+  };
+
+  // Confirm delete
+  const confirmDeleteEvent = async () => {
+    if (!eventToDelete) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/events/${eventToDelete._id || eventToDelete.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || errData.error || "Failed to delete event");
+      }
+      setShowDeleteModal(false);
+      setEventToDelete(null);
+      await fetchEvents();
+      showToast('Deleted successfully', 'success');
+    } catch (err) {
+      setShowDeleteModal(false);
+      setEventToDelete(null);
+      showToast('Error deleting event: ' + err.message, 'error');
+    }
+  };
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -60,35 +112,41 @@ const EventManagement = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle event creation
-  const handleCreateEvent = async (e) => {
+  // Handle event create/edit submit
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    setCreateError("");
-    setCreating(true);
-    // Combine date and time into ISO string
-    let eventDate = form.date;
-    if (form.time) {
-      eventDate = form.date + "T" + form.time;
-    }
+    setFormError("");
+    setSubmitting(true);
     try {
-      const res = await fetch("http://localhost:5000/api/events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: form.title,
-          date: form.date,
-          time: form.time,
-          location: form.location,
-          category: form.category,
-          reward: form.reward,
-          description: form.description,
-        }),
-      });
+      let res;
+      if (editId) {
+        // Edit mode
+        res = await fetch(`http://localhost:5000/api/events/${editId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+      } else {
+        // Create mode
+        res = await fetch("http://localhost:5000/api/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: form.title,
+            date: form.date,
+            time: form.time,
+            location: form.location,
+            category: form.category,
+            reward: form.reward,
+            description: form.description,
+            status: form.status,
+          }),
+        });
+      }
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.message || "Failed to create event");
+        throw new Error(errData.message || errData.error || "Failed to submit event");
       }
-      // Success: refresh events, close modal, reset form
       await fetchEvents();
       setShowModal(false);
       setForm({
@@ -99,15 +157,37 @@ const EventManagement = () => {
         category: "",
         reward: "",
         description: "",
+        status: "upcoming",
       });
+      setEditId(null);
+      showToast(editId ? 'Edited successfully' : 'Created successfully', 'success');
     } catch (err) {
-      setCreateError(err.message);
+      setFormError(err.message);
+      showToast('Error: ' + err.message, 'error');
     } finally {
-      setCreating(false);
+      setSubmitting(false);
     }
+  };
+
+  // Open edit modal with event data
+  const handleEditClick = (event) => {
+    setForm({
+      title: event.title || "",
+      date: event.date ? event.date.slice(0, 10) : "",
+      time: event.time || "",
+      location: event.location || "",
+      category: event.category || "",
+      reward: event.reward || "",
+      description: event.description || "",
+      status: event.status || "upcoming",
+    });
+    setEditId(event._id || event.id);
+    setShowModal(true);
   };
   return (
     <div className="pt-16 md:ml-64">
+      {/* Toast notification */}
+      <Toast message={toast.message} type={toast.type} show={toast.show} />
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Event Management</h1>
@@ -214,7 +294,7 @@ const EventManagement = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredEvents.map((event) => (
-                  <tr key={event.id}>
+                  <tr key={event._id || event.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -259,12 +339,53 @@ const EventManagement = () => {
                       {event.registered} students
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-3">
-                        <PencilIcon size={16} />
+                      <button
+                        className="text-blue-600 hover:text-blue-900 mr-3 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300"
+                        style={{ minWidth: 36, minHeight: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                        onClick={() => handleEditClick(event)}
+                        title="Edit Event"
+                      >
+                        <PencilIcon size={18} />
                       </button>
-                      <button className="text-red-600 hover:text-red-900">
-                        <TrashIcon size={16} />
+                      <button
+                        className="text-red-600 hover:text-red-900 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-300"
+                        style={{ minWidth: 36, minHeight: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                        title="Delete Event"
+                        onClick={() => handleDeleteEvent(event)}
+                      >
+                        <TrashIcon size={18} />
                       </button>
+      {/* Delete confirmation modal */}
+      {showDeleteModal && eventToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-[90vw] max-w-md">
+            <div className="p-6 border-b">
+              <h3 className="text-lg font-semibold text-gray-900 text-center">Confirm Delete</h3>
+            </div>
+            <div className="p-6">
+              <p className="mb-4 text-gray-700 break-words text-center" style={{ wordBreak: 'break-word', whiteSpace: 'pre-line' }}>
+                Are you sure you want to delete the event <span className="font-semibold">"{eventToDelete.title}"</span>?
+                <br />
+                <span className="text-red-600 font-medium text-center block">This action cannot be undone.</span>
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <button
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  onClick={() => { setShowDeleteModal(false); setEventToDelete(null); }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
+                  onClick={confirmDeleteEvent}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
                     </td>
                   </tr>
                 ))}
@@ -285,11 +406,11 @@ const EventManagement = () => {
           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
             <div className="p-6 border-b">
               <h3 className="text-lg font-semibold text-gray-900">
-                Create New Event
+                {editId ? "Edit Event" : "Create New Event"}
               </h3>
             </div>
             <div className="p-6">
-              <form className="space-y-4" onSubmit={handleCreateEvent}>
+              <form className="space-y-4" onSubmit={handleFormSubmit}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Event Title
@@ -396,29 +517,58 @@ const EventManagement = () => {
                     required
                   ></textarea>
                 </div>
-                {createError && (
-                  <div className="text-red-600 text-sm">{createError}</div>
+                {/* Status dropdown for edit mode */}
+                {editId && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      name="status"
+                      value={form.status}
+                      onChange={handleFormChange}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    >
+                      <option value="upcoming">Upcoming</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
                 )}
+                {formError && (
+                  <div className="text-red-600 text-sm">{formError}</div>
+                )}
+                <div className="pt-6 border-t bg-gray-50 flex justify-end space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      setEditId(null);
+                      setForm({
+                        title: "",
+                        date: "",
+                        time: "",
+                        location: "",
+                        category: "",
+                        reward: "",
+                        description: "",
+                        status: "upcoming",
+                      });
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    type="button"
+                    disabled={submitting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                    type="submit"
+                    disabled={submitting}
+                  >
+                    {submitting ? (editId ? "Saving..." : "Creating...") : (editId ? "Save Changes" : "Create Event")}
+                  </button>
+                </div>
               </form>
-            </div>
-            <div className="p-6 border-t bg-gray-50 flex justify-end space-x-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                type="button"
-                disabled={creating}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
-                type="submit"
-                formAction="submit"
-                disabled={creating}
-                onClick={handleCreateEvent}
-              >
-                {creating ? "Creating..." : "Create Event"}
-              </button>
             </div>
           </div>
         </div>
