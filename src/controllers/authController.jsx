@@ -214,23 +214,36 @@ class AuthController {
   }
 
   // Logout user
-  logout() {
+  async logout() {
     try {
-      // Clear stored data
-      this.model.removeToken()
-      this.model.removeUserData()
+      const result = await this.model.logout(); // Call the new logout API
 
-      // Notify observers
-      this.notify({
-        type: 'LOGOUT'
-      })
+      if (result.success) {
+        // Clear stored data locally regardless of API success, for immediate UI update
+        this.model.removeToken();
+        this.model.removeUserData();
 
-      return { success: true }
+        // Notify observers
+        this.notify({
+          type: 'LOGOUT'
+        });
+        return { success: true, message: result.message };
+      } else {
+        // If API logout failed, still clear local data for consistency
+        this.model.removeToken();
+        this.model.removeUserData();
+
+        this.notify({
+          type: 'LOGOUT'
+        });
+        return { success: false, error: result.error || 'Logout failed on server' };
+      }
     } catch (error) {
+      console.error('Logout error:', error);
       return {
         success: false,
-        error: 'Logout failed'
-      }
+        error: 'An unexpected error occurred during logout'
+      };
     }
   }
 

@@ -1,10 +1,17 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import {  useNavigate } from 'react-router-dom'
 import { BellIcon, MenuIcon, XIcon } from 'lucide-react'
 import { useUser } from '../../context/UserContext'
 const Navbar = ({ showMobileMenu, toggleMobileMenu }) => {
   const { user, logout } = useUser()
+  const navigate = useNavigate()
   const [notifications] = React.useState(3)
+
+  const handleLogout = async () => {
+    await logout()
+    navigate('/login')
+  }
+
   return (
     <nav className="bg-white border-b border-gray-200 px-4 py-2.5 fixed top-0 left-0 right-0 z-50 md:left-64">
       <div className="flex flex-wrap justify-between items-center">
@@ -43,7 +50,7 @@ const Navbar = ({ showMobileMenu, toggleMobileMenu }) => {
               </div>
             </div>
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className="text-sm text-blue-600 hover:underline"
             >
               Logout

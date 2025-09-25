@@ -5,10 +5,17 @@ class AuthModel {
   }
 
   // Basic headers (no Bearer token)
-  getHeaders() {
-    return {
+  getHeaders(includeAuth = false) {
+    const headers = {
       'Content-Type': 'application/json'
+    };
+    if (includeAuth) {
+      const token = this.getToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
     }
+    return headers;
   }
 
   // Register user
@@ -167,19 +174,62 @@ class AuthModel {
     }
   }
 
+  // Logout user
+  async logout() {
+    try {
+      const response = await fetch(`${this.baseURL}/logout`, {
+        method: 'POST',
+        headers: this.getHeaders(true) 
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return {
+          success: true,
+          message: data.message || 'Logout successful'
+        };
+      } else {
+        console.error('Backend error response for logout:', data);
+        return {
+          success: false,
+          error: data.message || 'Logout failed'
+        };
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      return {
+        success: false,
+        error: 'Network error. Please try again.'
+      };
+    }
+  }
+
   // User data management (optional, still kept)
   saveUserData(userData) {
-    localStorage.setItem('userData', JSON.stringify(userData))
+    localStorage.setItem('userData', JSON.stringify(userData));
   }
 
   getUserData() {
-    const userData = localStorage.getItem('userData')
-    return userData ? JSON.parse(userData) : null
+    const userData = localStorage.getItem('userData');
+    return userData ? JSON.parse(userData) : null;
   }
 
   removeUserData() {
-    localStorage.removeItem('userData')
+    localStorage.removeItem('userData');
+  }
+
+  saveToken(token) {
+    localStorage.setItem('token', token);
+  }
+
+  getToken() {
+    return localStorage.getItem('token');
+  }
+
+  removeToken() {
+    localStorage.removeItem('token');
   }
 }
 
-export default new AuthModel()
+export default new AuthModel();
