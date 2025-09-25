@@ -1,57 +1,114 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { CoinsIcon, UserPlusIcon } from 'lucide-react'
+import { CoinsIcon, UserPlusIcon, MailIcon } from 'lucide-react'
 import { useUser } from '../../context/UserContext'
+
 const Register = () => {
-  const [registerEmail, setRegisterEmail] = useState('')
-  const [registerPassword, setRegisterPassword] = useState('')
-  const [registerName, setRegisterName] = useState('')
-  const [registerRole, setRegisterRole] = useState('student')
+  const [formData, setFormData] = useState({
+    first_name: '',
+    middle_name: '',
+    last_name: '',
+    suffix: '',
+    email: '',
+    password: '',
+    role: 'student'
+  })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [registerSuccess, setRegisterSuccess] = useState(false)
+  const [showVerification, setShowVerification] = useState(false)
+  const [verificationCode, setVerificationCode] = useState('')
+  const [verificationError, setVerificationError] = useState('')
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+
   const navigate = useNavigate()
-  const { login } = useUser()
+  const { register, verifyEmail, resendVerificationCode, login } = useUser()
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
   const handleRegister = async (e) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
+
     try {
-      // Simulate registration process
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      if (registerEmail && registerPassword && registerName) {
+      const result = await register(formData)
+      
+      if (result.success) {
         setRegisterSuccess(true)
-        // In a real app, you would register the user here
-        // For demo purposes, we'll just show success message
+        setShowVerification(true)
       } else {
-        setError('Please fill in all fields')
+        setError({ error: result.error });
       }
     } catch (err) {
-      setError('An error occurred during registration')
+      setError({ error: 'An error occurred during registration' });
     } finally {
       setIsLoading(false)
     }
   }
-  const handleLoginAfterRegister = async () => {
-    setIsLoading(true)
+
+  const handleVerification = async (e) => {
+    e.preventDefault()
+    setIsVerifying(true)
+    setVerificationError('')
+
     try {
-      const success = await login(registerEmail, registerPassword)
-      if (success) {
-        // Redirect based on role
-        if (registerRole === 'admin') {
-          navigate('/admin')
-        } else if (registerRole === 'seller') {
-          navigate('/seller')
+      const result = await verifyEmail(formData.email, verificationCode)
+      
+      if (result.success) {
+        // Auto login after successful verification
+        const loginResult = await login(formData.email, formData.password)
+        
+        if (loginResult.success) {
+          // Redirect based on role
+          if (formData.role === 'admin') {
+            navigate('/admin')
+          } else if (formData.role === 'seller') {
+            navigate('/seller')
+          } else {
+            navigate('/student')
+          }
         } else {
-          navigate('/student')
+          // If auto-login fails, redirect to login page
+          navigate('/login')
         }
+      } else {
+        setVerificationError(result.message)
       }
     } catch (err) {
-      console.error('Login error:', err)
+      setVerificationError('An error occurred during verification')
     } finally {
-      setIsLoading(false)
+      setIsVerifying(false)
     }
   }
+
+  const handleResendCode = async () => {
+    setIsResending(true)
+    setVerificationError('')
+
+    try {
+      const result = await resendVerificationCode(formData.email)
+      
+      if (result.success) {
+        setVerificationError('') // Clear any previous errors
+        // You might want to show a success message here
+      } else {
+        setVerificationError(result.message)
+      }
+    } catch (err) {
+      setVerificationError('Failed to resend verification code')
+    } finally {
+      setIsResending(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -60,13 +117,80 @@ const Register = () => {
             <CoinsIcon className="h-16 w-16 text-blue-600" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create an Account
+            {showVerification ? 'Verify Your Email' : 'Create an Account'}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Join CampusCoin - University Attendance & Events Reward System
+            {showVerification 
+              ? 'Enter the verification code sent to your email'
+              : 'Join CampusCoin - University Attendance & Events Reward System'
+            }
           </p>
         </div>
-        {registerSuccess ? (
+
+        {showVerification ? (
+          <div className="mt-8 space-y-6">
+            <div className="bg-green-50 border border-green-200 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <MailIcon className="h-5 w-5 text-green-400" />
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-green-800">Check your email!</h3>
+                  <div className="mt-2 text-sm text-green-700">
+                    <p>We've sent a 6-digit verification code to <strong>{formData.email}</strong></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleVerification} className="space-y-4">
+              <div>
+                <label htmlFor="verification-code" className="block text-sm font-medium text-gray-700">
+                  Verification Code
+                </label>
+                <input
+                  id="verification-code"
+                  name="verificationCode"
+                  type="text"
+                  maxLength="6"
+                  required
+                  className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-center text-lg tracking-widest"
+                  placeholder="000000"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                />
+              </div>
+
+              {verificationError && (
+                <div className="text-red-500 text-sm text-center">{verificationError}</div>
+              )}
+
+              <div>
+                <button
+                  type="submit"
+                  disabled={isVerifying || verificationCode.length !== 6}
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  {isVerifying ? 'Verifying...' : 'Verify Email'}
+                </button>
+              </div>
+
+              <div className="text-center">
+                <p className="text-sm text-gray-600">
+                  Didn't receive the code?{' '}
+                  <button
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={isResending}
+                    className="font-medium text-blue-600 hover:text-blue-500 disabled:opacity-50"
+                  >
+                    {isResending ? 'Resending...' : 'Resend'}
+                  </button>
+                </p>
+              </div>
+            </form>
+          </div>
+        ) : registerSuccess ? (
           <div className="mt-8 space-y-6">
             <div className="bg-green-50 border border-green-200 rounded-md p-4">
               <div className="flex">
@@ -76,23 +200,7 @@ const Register = () => {
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-green-800">Registration successful!</h3>
                   <div className="mt-2 text-sm text-green-700">
-                    <p>Your account has been created successfully. You can now log in.</p>
-                  </div>
-                  <div className="mt-4 space-x-3">
-                    <button
-                      type="button"
-                      onClick={handleLoginAfterRegister}
-                      disabled={isLoading}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      {isLoading ? 'Logging in...' : 'Continue to Dashboard'}
-                    </button>
-                    <Link
-                      to="/login"
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      Return to Login
-                    </Link>
+                    <p>Your account has been created successfully. Please verify your email to continue.</p>
                   </div>
                 </div>
               </div>
@@ -101,48 +209,97 @@ const Register = () => {
         ) : (
           <form className="mt-8 space-y-6" onSubmit={handleRegister}>
             <div className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Full Name
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
-                  className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  value={registerName}
-                  onChange={(e) => setRegisterName(e.target.value)}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
+                    First Name
+                  </label>
+                  <input
+                    id="first_name"
+                    name="first_name"
+                    type="text"
+                    required
+                    className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={formData.first_name}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
+                    Last Name
+                  </label>
+                  <input
+                    id="last_name"
+                    name="last_name"
+                    type="text"
+                    required
+                    className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={formData.last_name}
+                    onChange={handleInputChange}
+                  />
+                </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="middle_name" className="block text-sm font-medium text-gray-700">
+                    Middle Name (Optional)
+                  </label>
+                  <input
+                    id="middle_name"
+                    name="middle_name"
+                    type="text"
+                    className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={formData.middle_name}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="suffix" className="block text-sm font-medium text-gray-700">
+                    Suffix (Optional)
+                  </label>
+                  <input
+                    id="suffix"
+                    name="suffix"
+                    type="text"
+                    className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Jr., Sr., III"
+                    value={formData.suffix}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+
               <div>
-                <label htmlFor="register-email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email address
                 </label>
                 <input
-                  id="register-email"
+                  id="email"
                   name="email"
                   type="email"
                   required
                   className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  value={registerEmail}
-                  onChange={(e) => setRegisterEmail(e.target.value)}
+                  value={formData.email}
+                  onChange={handleInputChange}
                 />
               </div>
+
               <div>
-                <label htmlFor="register-password" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
                 <input
-                  id="register-password"
+                  id="password"
                   name="password"
                   type="password"
                   required
                   className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  value={registerPassword}
-                  onChange={(e) => setRegisterPassword(e.target.value)}
+                  value={formData.password}
+                  onChange={handleInputChange}
                 />
               </div>
+
               <div>
                 <label htmlFor="role" className="block text-sm font-medium text-gray-700">
                   Account Type
@@ -151,51 +308,54 @@ const Register = () => {
                   <button
                     type="button"
                     className={`py-2 px-3 text-sm font-medium rounded-md ${
-                      registerRole === 'student'
+                      formData.role === 'student'
                         ? 'bg-blue-600 text-white'
                         : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
-                    onClick={() => setRegisterRole('student')}
+                    onClick={() => setFormData(prev => ({...prev, role: 'student'}))}
                   >
                     Student
                   </button>
                   <button
                     type="button"
                     className={`py-2 px-3 text-sm font-medium rounded-md ${
-                      registerRole === 'seller'
+                      formData.role === 'seller'
                         ? 'bg-blue-600 text-white'
                         : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
-                    onClick={() => setRegisterRole('seller')}
+                    onClick={() => setFormData(prev => ({...prev, role: 'seller'}))}
                   >
                     Seller
                   </button>
                   <button
                     type="button"
                     className={`py-2 px-3 text-sm font-medium rounded-md ${
-                      registerRole === 'admin'
+                      formData.role === 'admin'
                         ? 'bg-blue-600 text-white'
                         : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
-                    onClick={() => setRegisterRole('admin')}
+                    onClick={() => setFormData(prev => ({...prev, role: 'admin'}))}
                   >
                     Admin
                   </button>
                 </div>
               </div>
             </div>
-            {error && (
-              <div className="text-red-500 text-sm text-center">{error}</div>
-            )}
+
             <div>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
                 {isLoading ? 'Creating account...' : 'Register'}
               </button>
             </div>
+
+            {error.error && (
+              <div className="text-red-500 text-sm text-center p-2 border border-red-300 bg-red-50 rounded-md">{error.error}</div>
+            )}
+
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
@@ -210,4 +370,5 @@ const Register = () => {
     </div>
   )
 }
+
 export default Register

@@ -1,41 +1,102 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { CoinsIcon } from 'lucide-react'
-import { useUser } from '../../context/UserContext'
+import AuthController from '../../controllers/authController'
+
 const Login = () => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const { login } = useUser()
+  // View state
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  })
+  const [viewState, setViewState] = useState({
+    isLoading: false,
+    error: '',
+    rememberMe: false
+  })
+
   const navigate = useNavigate()
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
-    try {
-      const success = await login(email, password)
-      if (success) {
-        // Redirect based on email (in a real app, this would be based on user role)
-        if (email.includes('admin')) {
-          navigate('/admin')
-        } else if (email.includes('seller')) {
-          navigate('/seller')
-        } else {
-          navigate('/student')
-        }
-      } else {
-        setError('Invalid credentials')
+
+  // Subscribe to controller updates
+  useEffect(() => {
+    const handleAuthUpdate = (data) => {
+      switch (data.type) {
+        case 'LOGIN_SUCCESS':
+          setViewState(prev => ({ ...prev, isLoading: false, error: '' }))
+          // Navigate based on user role
+          const role = data.user?.role
+          const route = AuthController.getRouteForRole(role)
+          navigate(route)
+          break
+        
+        case 'LOGIN_FAILURE':
+          setViewState(prev => ({ 
+            ...prev, 
+            isLoading: false, 
+            error: data.error 
+          }))
+          break
+        
+        default:
+          break
       }
-    } catch (err) {
-      setError('An error occurred during login')
-    } finally {
-      setIsLoading(false)
+    }
+
+    AuthController.subscribe(handleAuthUpdate)
+
+    return () => {
+      AuthController.unsubscribe(handleAuthUpdate)
+    }
+  }, [navigate])
+
+  // Handle input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    
+    // Clear error when user starts typing
+    if (viewState.error) {
+      setViewState(prev => ({ ...prev, error: '' }))
     }
   }
+
+  // Handle checkbox change
+  const handleRememberMeChange = (e) => {
+    setViewState(prev => ({
+      ...prev,
+      rememberMe: e.target.checked
+    }))
+  }
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    setViewState(prev => ({ ...prev, isLoading: true, error: '' }))
+
+    // Call controller
+    const result = await AuthController.login(formData)
+    
+    if (!result.success) {
+      setViewState(prev => ({ 
+        ...prev, 
+        isLoading: false, 
+        error: result.error 
+      }))
+    }
+    // Success case is handled by the observer
+  }
+
+  // Check if form is valid
+  const isFormValid = formData.email && formData.password
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
+        {/* Header */}
         <div>
           <div className="flex justify-center">
             <CoinsIcon className="h-16 w-16 text-blue-600" />
@@ -47,22 +108,25 @@ const Login = () => {
             University Attendance & Events Reward System
           </p>
         </div>
+
+        {/* Login Form */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email-address" className="sr-only">
+              <label htmlFor="email" className="sr-only">
                 Email address
               </label>
               <input
-                id="email-address"
+                id="email"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={handleInputChange}
+                disabled={viewState.isLoading}
               />
             </div>
             <div>
@@ -77,14 +141,21 @@ const Login = () => {
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={handleInputChange}
+                disabled={viewState.isLoading}
               />
             </div>
           </div>
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
+
+          {/* Error Display */}
+          {viewState.error && (
+            <div className="text-red-500 text-sm text-center bg-red-50 border border-red-200 rounded-md p-3">
+              {viewState.error}
+            </div>
           )}
+
+          {/* Remember Me & Forgot Password */}
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <input
@@ -92,6 +163,9 @@ const Login = () => {
                 name="remember-me"
                 type="checkbox"
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                checked={viewState.rememberMe}
+                onChange={handleRememberMeChange}
+                disabled={viewState.isLoading}
               />
               <label
                 htmlFor="remember-me"
@@ -109,15 +183,29 @@ const Login = () => {
               </Link>
             </div>
           </div>
+
+          {/* Submit Button */}
           <div>
             <button
               type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={viewState.isLoading || !isFormValid}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Logging in...' : 'Sign in'}
+              {viewState.isLoading ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Logging in...
+                </span>
+              ) : (
+                'Sign in'
+              )}
             </button>
           </div>
+
+          {/* Register Link */}
           <div className="mt-4">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -136,15 +224,10 @@ const Login = () => {
               </Link>
             </div>
           </div>
-          <div className="text-sm text-center text-gray-500 mt-6">
-            <p>Demo Accounts:</p>
-            <p>Student: student@university.edu (any password)</p>
-            <p>Admin: admin@university.edu (any password)</p>
-            <p>Seller: seller@university.edu (any password)</p>
-          </div>
         </form>
       </div>
     </div>
   )
 }
+
 export default Login
