@@ -12,7 +12,7 @@ class ProductController {
     }
 
     // Delegate to model
-    const result = await ProductModel.addProduct(formData, token);
+    const result = await this.model.addProduct(formData, token);
 
     if (!result.success) {
       return { success: false, error: result.error || 'Unable to add product' };
@@ -27,7 +27,7 @@ class ProductController {
   async getProducts(token) {
     if (!token) return { success: false, error: 'Unauthorized' }
 
-    const res = await ProductModel.getProducts(token)
+    const res = await this.model.getProducts(token)
     if (res.error) return { success: false, error: res.error }
     return { success: true, products: res.products || [], total: res.totalProducts || 0 }
   }
@@ -35,7 +35,7 @@ class ProductController {
   async editProduct(id, data, token) {
     if (!id || !data) return { success: false, error: 'Invalid product data' }
 
-    const res = await ProductModel.editProduct(id, data,token)
+    const res = await this.model.editProduct(id, data,token)
     if (res.error) return { success: false, error: res.error }
     return { success: true, message: res.message, product: res.product }
   }
@@ -43,7 +43,7 @@ class ProductController {
   async deleteProduct(id, token) {
     if (!id) return { success: false, error: 'Product ID required' }
 
-    const res = await ProductModel.deleteProduct(id, token)
+    const res = await this.model.deleteProduct(id, token)
     if (res.error) return { success: false, error: res.error }
     return { success: true, message: res.message }
   }
@@ -54,7 +54,7 @@ class ProductController {
       return { success: false, error: 'Authentication required. Please log in.' };
     }
 
-    const result = await ProductModel.getDashboardStats(token);
+    const result = await this.model.getDashboardStats(token);
 
     if (!result.success) {
       return { success: false, error: result.error || 'Unable to load dashboard stats' };
@@ -69,7 +69,7 @@ class ProductController {
   async getAllOrders(token) {
         if (!token) return { success: false, error: 'Unauthorized' };
 
-        const result = await ProductModel.getAllOrders(token);
+        const result = await this.model.getAllOrders(token);
         if (!result.success) return { success: false, error: result.error };
 
         return { success: true, orders: result.orders, total: result.totalOrders };
@@ -78,7 +78,7 @@ class ProductController {
       if (!orderId) return { success: false, error: 'Order ID required' };
       if (!token) return { success: false, error: 'Authentication required' };
 
-      const result = await ProductModel.cancelOrder(orderId, token);
+      const result = await this.model.cancelOrder(orderId, token);
 
       if (!result.success) return { success: false, error: result.error };
 
@@ -108,7 +108,7 @@ class ProductController {
       if (!orderId) return { success: false, error: 'Order ID required' };
       if (!token) return { success: false, error: 'Authentication required' };
 
-      const result = await ProductModel.cancelOrder(orderId, token);
+      const result = await this.model.cancelOrder(orderId, token);
 
       if (!result.success) return { success: false, error: result.error };
 
