@@ -65,6 +65,8 @@ class ProductController {
       stats: result.stats,
     };
   }
+  async getAllOrders(token) {
+      if (!token) return { success: false, error: 'Unauthorized' };
 
   async getAllProducts() {
     try {
@@ -78,8 +80,21 @@ class ProductController {
       console.error('Error fetching products:', error);
       return { success: false, error: 'An unexpected error occurred' };
     }
-  }
 
+  }
+async cancelOrder(orderId, token) {
+    if (!orderId) return { success: false, error: 'Order ID required' };
+    if (!token) return { success: false, error: 'Authentication required' };
+
+    const result = await ProductModel.cancelOrder(orderId, token);
+
+    if (!result.success) return { success: false, error: result.error };
+
+    return {
+      success: true,
+      message: result.message,
+      order: result.order,
+    };
   async createOrder(productId, quantity) {
     try {
       // Validate input

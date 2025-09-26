@@ -160,6 +160,56 @@ class ProductModel {
       console.error('ProductModel.getUserOrders error:', error);
       return { success: false, error: 'Network error' };
     }
+   }
+  async getAllOrders(token) {
+    try {
+      const res = await fetch(`${this.baseURL}/all_orders`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,  // ✅ add Bearer token
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return { success: false, error: data.message || 'Failed to fetch orders' };
+      }
+
+      return {
+        success: true,
+        orders: data.orders || [],
+        totalOrders: data.totalOrders || 0,
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+  async cancelOrder(orderId, token) {
+    try {
+      const res = await fetch(`${this.baseURL}/cancel_order/${orderId}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return { success: false, error: data.message || 'Failed to cancel order' };
+      }
+
+      return {
+        success: true,
+        message: data.message,
+        order: data.order,
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   }
 }
 

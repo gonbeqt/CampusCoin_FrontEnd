@@ -28,14 +28,27 @@ class AuthModel {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
       });
-      const result = await response.json();
-      return {
+      console.log('[authModel] Raw response:', response);
+      let result = {};
+      try {
+        result = await response.json();
+        console.log('[authModel] Parsed JSON result:', result);
+      } catch (jsonErr) {
+        console.log('[authModel] Failed to parse JSON:', jsonErr);
+        result = {};
+      }
+      const finalResult = {
         success: response.ok,
         message: result.message,
         error: response.ok ? null : result.error || result.message,
         data: result.token ? { token: result.token } : null,
+        requireVerification: !!result.requireVerification,
+        ...result
       };
+      console.log('[authModel] Final login result:', finalResult);
+      return finalResult;
     } catch (error) {
+      console.log('[authModel] Network error:', error);
       return { success: false, error: 'Network error' };
     }
   }

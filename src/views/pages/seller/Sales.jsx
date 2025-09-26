@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BarChart2Icon,
@@ -6,12 +6,14 @@ import {
   ChevronDownIcon,
   CoinsIcon,
   DownloadIcon,
-  FilterIcon,
   PieChartIcon,
   TrendingUpIcon,
   TrendingDownIcon,
   DollarSignIcon,
   SearchIcon,
+  PackageIcon,
+  ShoppingCartIcon,
+  PercentIcon,
 } from 'lucide-react'
 import {
   BarChart,
@@ -26,120 +28,144 @@ import {
   Pie,
   Cell
 } from 'recharts'
-// Mock data for sales overview
-const salesStats = {
-  totalSales: 4850,
-  salesCount: 156,
-  averageOrder: 31,
-  conversionRate: 68,
-  comparedToLastMonth: 12.5,
-}
-// Mock data for sales by month chart
-const monthlySalesData = [
-  { name: 'Jan', sales: 1200 },
-  { name: 'Feb', sales: 1900 },
-  { name: 'Mar', sales: 2100 },
-  { name: 'Apr', sales: 1500 },
-  { name: 'May', sales: 1800 },
-  { name: 'Jun', sales: 2400 },
-  { name: 'Jul', sales: 2200 },
-  { name: 'Aug', sales: 3100 },
-  { name: 'Sep', sales: 2900 },
-  { name: 'Oct', sales: 3300 },
-  { name: 'Nov', sales: 3500 },
-  { name: 'Dec', sales: 4850 },
-]
-// Mock data for sales by category
-const categorySalesData = [
-  { name: 'Clothing', value: 2500 },
-  { name: 'Stationery', value: 1200 },
-  { name: 'Electronics', value: 800 },
-  { name: 'Accessories', value: 350 },
-]
-// Mock data for sales transactions
-const salesTransactions = [
-  {
-    id: 'TX12345',
-    product: 'University Hoodie',
-    student: 'Emma Thompson',
-    date: '2023-12-15T14:05:23',
-    amount: 120,
-    status: 'completed',
-  },
-  {
-    id: 'TX12346',
-    product: 'Campus Notebook',
-    student: 'Michael Johnson',
-    date: '2023-12-14T10:15:45',
-    amount: 25,
-    status: 'completed',
-  },
-  {
-    id: 'TX12347',
-    product: 'Water Bottle',
-    student: 'Sophia Williams',
-    date: '2023-12-13T09:30:12',
-    amount: 15,
-    status: 'completed',
-  },
-  {
-    id: 'TX12348',
-    product: 'Wireless Earbuds',
-    student: 'James Brown',
-    date: '2023-12-12T16:42:18',
-    amount: 80,
-    status: 'completed',
-  },
-  {
-    id: 'TX12349',
-    product: 'University T-Shirt',
-    student: 'Olivia Davis',
-    date: '2023-12-11T11:23:45',
-    amount: 30,
-    status: 'completed',
-  },
-  {
-    id: 'TX12350',
-    product: 'Laptop Sleeve',
-    student: 'Ethan Wilson',
-    date: '2023-12-10T13:55:20',
-    amount: 35,
-    status: 'completed',
-  },
-  {
-    id: 'TX12351',
-    product: 'University Hoodie',
-    student: 'Ava Miller',
-    date: '2023-12-09T15:10:33',
-    amount: 120,
-    status: 'completed',
-  },
-  {
-    id: 'TX12352',
-    product: 'Campus Notebook',
-    student: 'Noah Taylor',
-    date: '2023-12-08T09:05:17',
-    amount: 25,
-    status: 'completed',
-  },
-]
-// Colors for pie chart
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#6366F1']
+
+// Import your controllers
+import WalletController from '../../../controllers/walletController'
+import ProductController from '../../../controllers/productController'
+
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#6366F1', '#EF4444', '#8B5CF6']
+
 const Sales = ({ user }) => {
-  const [dateFilter, setDateFilter] = useState('This Month')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
-  // Filter transactions based on search term and status
-  const filteredTransactions = salesTransactions.filter((transaction) => {
+
+  // Dashboard Stats State
+  const [dashboardStats, setDashboardStats] = useState({
+    totalSales: 0,
+    salesCount: 0,
+    avgOrder: 0,
+    conversion: 0,
+    totalProducts: 0,
+    totalStocks: 0,
+    totalSalesProduct: 0,
+    totalRevenue: 0,
+    monthlySales: [],
+    salesByCategory: {}
+  })
+  const [statsLoading, setStatsLoading] = useState(false)
+  const [statsError, setStatsError] = useState(null)
+
+  // Transaction states
+  const [transactions, setTransactions] = useState([])
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, totalPages: 1 })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  // Get auth token from localStorage or context
+  const getAuthToken = () => {
+    return localStorage.getItem('authToken') || user?.token
+  }
+
+  // Fetch dashboard stats
+  const fetchDashboardStats = async () => {
+    setStatsLoading(true)
+    setStatsError(null)
+    try {
+      const token = getAuthToken()
+      const result = await ProductController.getDashboardStats(token)
+      
+      if (result.success) {
+        // The backend returns the full dashboard data structure
+        setDashboardStats(result.stats || result)
+      } else {
+        setStatsError(result.error)
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err)
+      setStatsError('Failed to load dashboard statistics')
+    } finally {
+      setStatsLoading(false)
+    }
+  }
+
+  // Fetch transactions
+  const fetchTransactions = async (page = 1, limit = 10) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await WalletController.getTransactionHistory(page, limit)
+      if (result.success) {
+        setTransactions(result.transactions)
+        setPagination(result.pagination)
+      } else {
+        setError(result.error)
+      }
+    } catch (err) {
+      setError('Failed to fetch transactions')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchDashboardStats()
+    fetchTransactions(pagination.page, pagination.limit)
+  }, [])
+
+  useEffect(() => {
+    fetchTransactions(pagination.page, pagination.limit)
+  }, [pagination.page])
+
+  // Filtering
+  const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch =
-      transaction.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.id.toLowerCase().includes(searchTerm.toLowerCase())
+      (transaction.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.fromAddress?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.transactionHash?.toLowerCase().includes(searchTerm.toLowerCase()));
+
     const matchesStatus =
       statusFilter === 'All' ||
-      transaction.status === statusFilter.toLowerCase()
-    return matchesSearch && matchesStatus
-  })
+      transaction.type?.toLowerCase() === statusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Handle pagination
+  const handlePrevious = () => {
+    if (pagination.page > 1) {
+      setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
+    }
+  }
+  const handleNext = () => {
+    if (pagination.page < pagination.totalPages) {
+      setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
+    }
+  }
+
+  // Transform category data for pie chart
+  const getCategorySalesData = () => {
+    if (!dashboardStats.salesByCategory) return []
+    
+    return Object.entries(dashboardStats.salesByCategory)
+      .filter(([key, value]) => value > 0)
+      .map(([key, value]) => ({
+        name: key.charAt(0).toUpperCase() + key.slice(1).toLowerCase(),
+        value: parseFloat(value)
+      }))
+  }
+
+  // Custom tooltip for charts to show ETH values
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+          <p className="text-gray-600">{`${label} : ${payload[0].value} ETH`}</p>
+        </div>
+      );
+    }
+    return null;
+  }
+
   return (
     <div className="pt-16 md:ml-64">
       <div className="mb-6">
@@ -147,179 +173,135 @@ const Sales = ({ user }) => {
         <p className="text-gray-600">
           Track your store's performance and sales analytics
         </p>
-      </div>      {/* Date range filter */}
-      <div className="flex flex-wrap items-center justify-between mb-6 gap-4">
-        <div className="flex items-center space-x-2">
-          <div className="relative">
-            <button
-              className="flex items-center space-x-2 bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <CalendarIcon size={16} />
-              <span>{dateFilter}</span>
-              <ChevronDownIcon size={16} />
-            </button>
-          </div>
+      </div>
+
+      {/* Stats Cards */}
+      {statsLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="bg-white p-6 rounded-lg shadow animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          ))}
         </div>
-        <div>
-          <button className="flex items-center space-x-2 bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700">
-            <DownloadIcon size={16} />
-            <span>Export Report</span>
+      ) : statsError ? (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+          <p className="text-red-600">Error loading dashboard stats: {statsError}</p>
+          <button 
+            onClick={fetchDashboardStats}
+            className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          >
+            Retry
           </button>
         </div>
-      </div>
-      {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-5">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-500">Total Revenue</p>
-              <p className="text-2xl font-bold mt-1 flex items-center">
-                <CoinsIcon className="w-5 h-5 mr-1 text-yellow-500" />
-                {salesStats.totalSales}
-              </p>
+      ) : (
+        <>
+          {/* Main KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Total Sales</p>
+                <h3 className="text-xl font-bold flex items-center">
+                  <CoinsIcon size={20} className="mr-2 text-blue-500" />
+                  {dashboardStats.totalSales || 0} ETH
+                </h3>
+              </div>
+              <DollarSignIcon className="text-green-500" size={28} />
             </div>
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <CoinsIcon size={24} className="text-yellow-600" />
+            
+            <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Sales Count</p>
+                <h3 className="text-xl font-bold">{dashboardStats.salesCount || 0}</h3>
+              </div>
+              <BarChart2Icon className="text-blue-500" size={28} />
             </div>
-          </div>
-          <div className="mt-4 flex items-center text-sm">
-            <span className="text-green-600 font-medium flex items-center">
-              <TrendingUpIcon size={16} className="mr-1" />
-              {salesStats.comparedToLastMonth}% vs last month
-            </span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-5">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-500">Total Orders</p>
-              <p className="text-2xl font-bold mt-1">{salesStats.salesCount}</p>
+            
+            <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Avg. Order</p>
+                <h3 className="text-xl font-bold flex items-center">
+                  <CoinsIcon size={16} className="mr-1 text-yellow-500" />
+                  {dashboardStats.avgOrder || 0} ETH
+                </h3>
+              </div>
+              <TrendingUpIcon className="text-yellow-500" size={28} />
             </div>
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <BarChart2Icon size={24} className="text-blue-600" />
+                 <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Products Sold</p>
+                <h3 className="text-xl font-bold">{dashboardStats.totalSalesProduct || 0}</h3>
+              </div>
+              <TrendingUpIcon className="text-green-500" size={28} />
             </div>
+           
           </div>
-          <div className="mt-4 flex items-center text-sm">
-            <span className="text-green-600 font-medium flex items-center">
-              <TrendingUpIcon size={16} className="mr-1" />
-              8.2% vs last month
-            </span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-5">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-500">Average Order</p>
-              <p className="text-2xl font-bold mt-1 flex items-center">
-                <CoinsIcon className="w-5 h-5 mr-1 text-yellow-500" />
-                {salesStats.averageOrder}
-              </p>
-            </div>
-            <div className="p-2 bg-green-100 rounded-lg">
-              <DollarSignIcon size={24} className="text-green-600" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-sm">
-            <span className="text-red-600 font-medium flex items-center">
-              <TrendingDownIcon size={16} className="mr-1" />
-              3.1% vs last month
-            </span>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-5">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-500">Conversion Rate</p>
-              <p className="text-2xl font-bold mt-1">{salesStats.conversionRate}%</p>
-            </div>
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <PieChartIcon size={24} className="text-purple-600" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-sm">
-            <span className="text-green-600 font-medium flex items-center">
-              <TrendingUpIcon size={16} className="mr-1" />
-              5.3% vs last month
-            </span>
-          </div>
-        </div>
-      </div>
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-5 lg:col-span-2">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-700">Monthly Sales Trend</h2>
-            <div className="flex space-x-2">
-              <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md">This Year</button>
-              <button className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md">Last Year</button>
-            </div>
-          </div>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={monthlySalesData}
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value) => [`${value} coins`, 'Sales']}
-                  labelFormatter={(label) => `Month: ${label}`}
-                />
-                <Legend />
-                <Bar dataKey="sales" fill="#3B82F6" name="Sales (CampusCoins)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-5">
-          <h2 className="text-lg font-semibold text-gray-700 mb-6">Sales by Category</h2>
-          <div className="h-80 flex flex-col items-center justify-center">
-            <ResponsiveContainer width="100%" height="80%">
-              <PieChart>
-                <Pie
-                  data={categorySalesData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                >
-                  {categorySalesData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => [`${value} coins`, 'Sales']} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="grid grid-cols-2 gap-2 w-full mt-4">
-              {categorySalesData.map((category, index) => (
-                <div key={category.name} className="flex items-center">
-                  <span 
-                    className="w-3 h-3 rounded-full mr-2" 
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  ></span>
-                  <span className="text-xs text-gray-600">{category.name}</span>
+
+        
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Monthly Sales Bar Chart */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-lg font-semibold mb-4">Monthly Sales (ETH)</h2>
+              {dashboardStats.monthlySales && dashboardStats.monthlySales.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={dashboardStats.monthlySales}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Bar dataKey="sales" fill="#3B82F6" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-gray-500">
+                  No monthly sales data available
                 </div>
-              ))}
+              )}
+            </div>
+
+            {/* Category Pie Chart */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-lg font-semibold mb-4">Sales by Category (ETH)</h2>
+              {getCategorySalesData().length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={getCategorySalesData()}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, value }) => `${name}: ${value} ETH`}
+                    >
+                      {getCategorySalesData().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [`${value} ETH`, 'Sales']} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-gray-500">
+                  No category sales data available
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      </div>
-      {/* Transactions */}
+        </>
+      )}
+
+      {/* Transactions Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
         <div className="p-5 border-b border-gray-200">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <h2 className="text-lg font-semibold text-gray-700">Recent Transactions</h2>
             <div className="flex flex-wrap items-center gap-3">
+              {/* Search */}
               <div className="relative">
                 <SearchIcon 
                   size={18} 
@@ -333,6 +315,7 @@ const Sales = ({ user }) => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
+              {/* Status Filter */}
               <div className="relative">
                 <select
                   className="pl-4 pr-8 py-2 border border-gray-300 rounded-lg appearance-none bg-white focus:ring-blue-500 focus:border-blue-500 text-sm"
@@ -352,89 +335,88 @@ const Sales = ({ user }) => {
             </div>
           </div>
         </div>
+
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Transaction ID
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Student
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredTransactions.length > 0 ? (
-                filteredTransactions.map((transaction) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{transaction.id}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{transaction.product}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{transaction.student}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {new Date(transaction.date).toLocaleDateString('en-US', {
+          {loading ? (
+            <div className="p-6 text-center text-gray-500">Loading...</div>
+          ) : error ? (
+            <div className="p-6 text-center text-red-500">{error}</div>
+          ) : (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Hash</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredTransactions.length > 0 ? (
+                  filteredTransactions.map((transaction) => (
+                    <tr key={transaction._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
+                        {transaction.fromAddress?.substring(0, 10)}...
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{transaction.productName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {new Date(transaction.updatedAt).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-blue-600 flex items-center">
-                        <CoinsIcon size={14} className="mr-1" />
-                        {transaction.amount}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${transaction.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                          transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                          'bg-red-100 text-red-800'}`}>
-                        {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                      </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap flex items-center">
+                        <CoinsIcon size={14} className="mr-1 text-blue-600" />
+                        {transaction.amount} ETH
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                          ${transaction.type === 'receive' ? 'bg-green-100 text-green-800' : 
+                            transaction.type === 'Cancelled' ? 'bg-yellow-100 text-yellow-800' : 
+                            'bg-red-100 text-red-800'}`}>
+                          {transaction.type?.charAt(0).toUpperCase() + transaction.type?.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
+                        {transaction.transactionHash?.substring(0, 10)}...
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                      No transactions found
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                    No transactions found matching your search criteria
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
+
+        {/* Pagination */}
         <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            Showing <span className="font-medium">{filteredTransactions.length}</span> of{" "}
-            <span className="font-medium">{salesTransactions.length}</span> transactions
+            Page <span className="font-medium">{pagination.page}</span> of{" "}
+            <span className="font-medium">{pagination.totalPages}</span>
           </div>
           <div className="flex space-x-2">
-            <button className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50">
+            <button 
+              onClick={handlePrevious}
+              disabled={pagination.page === 1}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
               Previous
             </button>
-            <button className="px-4 py-2 border border-blue-500 bg-blue-500 rounded-md text-sm text-white hover:bg-blue-600">
+            <button 
+              onClick={handleNext}
+              disabled={pagination.page === pagination.totalPages}
+              className="px-4 py-2 border border-blue-500 bg-blue-500 rounded-md text-sm text-white hover:bg-blue-600 disabled:opacity-50"
+            >
               Next
             </button>
           </div>
@@ -443,4 +425,5 @@ const Sales = ({ user }) => {
     </div>
   )
 }
+
 export default Sales
