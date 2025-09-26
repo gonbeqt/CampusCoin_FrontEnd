@@ -1,6 +1,8 @@
 import React from 'react'
 import { CoinsIcon, TrendingUpIcon } from 'lucide-react'
-const WalletCard = ({ balance }) => {
+import { useBalance } from "./BalanceContext";
+const WalletCard = () => {
+  const { balance } = useBalance()
   return (
     <div className="bg-white rounded-lg shadow p-5">
       <div className="flex justify-between items-center mb-4">
@@ -18,11 +20,6 @@ const WalletCard = ({ balance }) => {
           <p className="text-3xl font-bold text-gray-900">{balance}</p>
           <p className="text-sm text-gray-500">CampusCoin</p>
         </div>
-      </div>
-      <div className="mt-4">
-        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium">
-          Redeem Rewards
-        </button>
       </div>
     </div>
   )
