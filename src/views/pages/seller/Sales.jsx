@@ -11,6 +11,9 @@ import {
   TrendingDownIcon,
   DollarSignIcon,
   SearchIcon,
+  PackageIcon,
+  ShoppingCartIcon,
+  PercentIcon,
 } from 'lucide-react'
 import {
   BarChart,
@@ -26,48 +29,64 @@ import {
   Cell
 } from 'recharts'
 
-// import your transaction controller/service
+// Import your controllers
 import WalletController from '../../../controllers/walletController'
+import ProductController from '../../../controllers/productController'
 
-// Mock data (KEEP stats/charts)
-const salesStats = {
-  totalSales: 4850,
-  salesCount: 156,
-  averageOrder: 31,
-  conversionRate: 68,
-  comparedToLastMonth: 12.5,
-}
-const monthlySalesData = [
-  { name: 'Jan', sales: 1200 },
-  { name: 'Feb', sales: 1900 },
-  { name: 'Mar', sales: 2100 },
-  { name: 'Apr', sales: 1500 },
-  { name: 'May', sales: 1800 },
-  { name: 'Jun', sales: 2400 },
-  { name: 'Jul', sales: 2200 },
-  { name: 'Aug', sales: 3100 },
-  { name: 'Sep', sales: 2900 },
-  { name: 'Oct', sales: 3300 },
-  { name: 'Nov', sales: 3500 },
-  { name: 'Dec', sales: 4850 },
-]
-const categorySalesData = [
-  { name: 'Clothing', value: 2500 },
-  { name: 'Stationery', value: 1200 },
-  { name: 'Electronics', value: 800 },
-  { name: 'Accessories', value: 350 },
-]
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#6366F1']
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#6366F1', '#EF4444', '#8B5CF6']
 
 const Sales = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
+
+  // Dashboard Stats State
+  const [dashboardStats, setDashboardStats] = useState({
+    totalSales: 0,
+    salesCount: 0,
+    avgOrder: 0,
+    conversion: 0,
+    totalProducts: 0,
+    totalStocks: 0,
+    totalSalesProduct: 0,
+    totalRevenue: 0,
+    monthlySales: [],
+    salesByCategory: {}
+  })
+  const [statsLoading, setStatsLoading] = useState(false)
+  const [statsError, setStatsError] = useState(null)
 
   // Transaction states
   const [transactions, setTransactions] = useState([])
   const [pagination, setPagination] = useState({ page: 1, limit: 10, totalPages: 1 })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+
+  // Get auth token from localStorage or context
+  const getAuthToken = () => {
+    return localStorage.getItem('authToken') || user?.token
+  }
+
+  // Fetch dashboard stats
+  const fetchDashboardStats = async () => {
+    setStatsLoading(true)
+    setStatsError(null)
+    try {
+      const token = getAuthToken()
+      const result = await ProductController.getDashboardStats(token)
+      
+      if (result.success) {
+        // The backend returns the full dashboard data structure
+        setDashboardStats(result.stats || result)
+      } else {
+        setStatsError(result.error)
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err)
+      setStatsError('Failed to load dashboard statistics')
+    } finally {
+      setStatsLoading(false)
+    }
+  }
 
   // Fetch transactions
   const fetchTransactions = async (page = 1, limit = 10) => {
@@ -87,6 +106,11 @@ const Sales = ({ user }) => {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchDashboardStats()
+    fetchTransactions(pagination.page, pagination.limit)
+  }, [])
 
   useEffect(() => {
     fetchTransactions(pagination.page, pagination.limit)
@@ -118,6 +142,30 @@ const Sales = ({ user }) => {
     }
   }
 
+  // Transform category data for pie chart
+  const getCategorySalesData = () => {
+    if (!dashboardStats.salesByCategory) return []
+    
+    return Object.entries(dashboardStats.salesByCategory)
+      .filter(([key, value]) => value > 0)
+      .map(([key, value]) => ({
+        name: key.charAt(0).toUpperCase() + key.slice(1).toLowerCase(),
+        value: parseFloat(value)
+      }))
+  }
+
+  // Custom tooltip for charts to show ETH values
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+          <p className="text-gray-600">{`${label} : ${payload[0].value} ETH`}</p>
+        </div>
+      );
+    }
+    return null;
+  }
+
   return (
     <div className="pt-16 md:ml-64">
       <div className="mb-6">
@@ -127,81 +175,127 @@ const Sales = ({ user }) => {
         </p>
       </div>
 
-      {/* 🔹 Sales Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-500">Total Sales</p>
-            <h3 className="text-xl font-bold">${salesStats.totalSales}</h3>
-          </div>
-          <DollarSignIcon className="text-green-500" size={28} />
+      {/* Stats Cards */}
+      {statsLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="bg-white p-6 rounded-lg shadow animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          ))}
         </div>
-        <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-500">Sales Count</p>
-            <h3 className="text-xl font-bold">{salesStats.salesCount}</h3>
-          </div>
-          <BarChart2Icon className="text-blue-500" size={28} />
+      ) : statsError ? (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+          <p className="text-red-600">Error loading dashboard stats: {statsError}</p>
+          <button 
+            onClick={fetchDashboardStats}
+            className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          >
+            Retry
+          </button>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-500">Avg. Order</p>
-            <h3 className="text-xl font-bold">${salesStats.averageOrder}</h3>
+      ) : (
+        <>
+          {/* Main KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Total Sales</p>
+                <h3 className="text-xl font-bold flex items-center">
+                  <CoinsIcon size={20} className="mr-2 text-blue-500" />
+                  {dashboardStats.totalSales || 0} ETH
+                </h3>
+              </div>
+              <DollarSignIcon className="text-green-500" size={28} />
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Sales Count</p>
+                <h3 className="text-xl font-bold">{dashboardStats.salesCount || 0}</h3>
+              </div>
+              <BarChart2Icon className="text-blue-500" size={28} />
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Avg. Order</p>
+                <h3 className="text-xl font-bold flex items-center">
+                  <CoinsIcon size={16} className="mr-1 text-yellow-500" />
+                  {dashboardStats.avgOrder || 0} ETH
+                </h3>
+              </div>
+              <TrendingUpIcon className="text-yellow-500" size={28} />
+            </div>
+                 <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Products Sold</p>
+                <h3 className="text-xl font-bold">{dashboardStats.totalSalesProduct || 0}</h3>
+              </div>
+              <TrendingUpIcon className="text-green-500" size={28} />
+            </div>
+           
           </div>
-          <TrendingUpIcon className="text-yellow-500" size={28} />
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-500">Conversion</p>
-            <h3 className="text-xl font-bold">{salesStats.conversionRate}%</h3>
-          </div>
-          <TrendingDownIcon className="text-purple-500" size={28} />
-        </div>
-      </div>
 
-      {/* 🔹 Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Monthly Sales Bar Chart */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Monthly Sales</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlySalesData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="sales" fill="#3B82F6" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Monthly Sales Bar Chart */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-lg font-semibold mb-4">Monthly Sales (ETH)</h2>
+              {dashboardStats.monthlySales && dashboardStats.monthlySales.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={dashboardStats.monthlySales}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Bar dataKey="sales" fill="#3B82F6" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-gray-500">
+                  No monthly sales data available
+                </div>
+              )}
+            </div>
 
-        {/* Category Pie Chart */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Sales by Category</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={categorySalesData}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-                label
-              >
-                {categorySalesData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+            {/* Category Pie Chart */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-lg font-semibold mb-4">Sales by Category (ETH)</h2>
+              {getCategorySalesData().length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={getCategorySalesData()}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, value }) => `${name}: ${value} ETH`}
+                    >
+                      {getCategorySalesData().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [`${value} ETH`, 'Sales']} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-gray-500">
+                  No category sales data available
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
-      {/* 🔹 Transactions */}
+      {/* Transactions Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
         <div className="p-5 border-b border-gray-200">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -263,7 +357,9 @@ const Sales = ({ user }) => {
                 {filteredTransactions.length > 0 ? (
                   filteredTransactions.map((transaction) => (
                     <tr key={transaction._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">{transaction.fromAddress}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
+                        {transaction.fromAddress?.substring(0, 10)}...
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">{transaction.productName}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {new Date(transaction.updatedAt).toLocaleDateString('en-US', {
@@ -275,17 +371,19 @@ const Sales = ({ user }) => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap flex items-center">
                         <CoinsIcon size={14} className="mr-1 text-blue-600" />
-                        {transaction.amount}
+                        {transaction.amount} ETH
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                           ${transaction.type === 'receive' ? 'bg-green-100 text-green-800' : 
                             transaction.type === 'Cancelled' ? 'bg-yellow-100 text-yellow-800' : 
                             'bg-red-100 text-red-800'}`}>
-                          {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
+                          {transaction.type?.charAt(0).toUpperCase() + transaction.type?.slice(1)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{transaction.transactionHash}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
+                        {transaction.transactionHash?.substring(0, 10)}...
+                      </td>
                     </tr>
                   ))
                 ) : (
