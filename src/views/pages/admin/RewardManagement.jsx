@@ -1,125 +1,170 @@
-import React, { useState } from 'react'
-import {
-  PlusIcon,
-  SearchIcon,
-  FilterIcon,
-  ShoppingBagIcon,
-  TrashIcon,
-  PencilIcon,
-} from 'lucide-react'
-// Mock rewards data
-const rewardsData = [
-  {
-    id: '1',
-    title: 'Canteen Meal Voucher',
-    description: 'Get a free meal at the university canteen',
-    cost: 50,
-    category: 'Food',
-    available: true,
-    claimed: 45,
-    image:
-      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80',
-  },
-  {
-    id: '2',
-    title: 'Printing Credits (100 pages)',
-    description: '100 pages of black & white printing at any campus printer',
-    cost: 40,
-    category: 'Academic',
-    available: true,
-    claimed: 32,
-    image:
-      'https://images.unsplash.com/photo-1607703703674-df96af81dffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80',
-  },
-  {
-    id: '3',
-    title: 'Campus Concert Ticket',
-    description: 'One ticket to the upcoming campus concert',
-    cost: 150,
-    category: 'Entertainment',
-    available: true,
-    claimed: 18,
-    image:
-      'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80',
-  },
-  {
-    id: '4',
-    title: 'Coffee Shop Voucher',
-    description: 'Free coffee at the campus coffee shop',
-    cost: 30,
-    category: 'Food',
-    available: false,
-    claimed: 67,
-    image:
-      'https://images.unsplash.com/photo-1509042239860-f550ce710b93?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80',
-  },
-  {
-    id: '5',
-    title: 'University Bookstore Discount',
-    description: '20% off on your next purchase at the university bookstore',
-    cost: 75,
-    category: 'Academic',
-    available: true,
-    claimed: 29,
-    image:
-      'https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80',
-  },
-  {
-    id: '6',
-    title: 'Gym Day Pass',
-    description: 'One day pass for the university gym',
-    cost: 35,
-    category: 'Fitness',
-    available: true,
-    claimed: 41,
-    image:
-      'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80',
-  },
-]
-const RewardManagement = () => {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [availabilityFilter, setAvailabilityFilter] = useState('all') // 'all', 'available', 'unavailable'
-  const [showModal, setShowModal] = useState(false)
-  const filteredRewards = rewardsData.filter((reward) => {
+import React, { useState, useEffect } from 'react';
+import { SearchIcon, FilterIcon, CheckCircleIcon, XCircleIcon } from 'lucide-react';
+import ProductController from '../../../controllers/productController';
+import WalletController from '../../../controllers/walletController';
+
+// ✅ Toast notification component
+function Toast({ message, type, show }) {
+  return (
+    <div
+      className={`fixed top-6 right-6 z-[9999] transition-transform duration-300 ${
+        show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+      } ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white px-6 py-3 rounded shadow-lg min-w-[200px] text-center pointer-events-none`}
+      style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.15)' }}
+    >
+      {message}
+    </div>
+  );
+}
+
+const OrderManagement = () => {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'pending', 'paid', 'cancelled'
+
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [orderToAction, setOrderToAction] = useState(null);
+
+  // ✅ Toast state
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast((t) => ({ ...t, show: false })), 2500);
+  };
+
+  // Fetch all orders
+  const fetchOrders = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const token = localStorage.getItem('authToken');
+      const result = await ProductController.getAllOrders(token);
+      if (result.success) {
+        setOrders(result.orders);
+      } else {
+        setError(result.error);
+        showToast(result.error, 'error');
+      }
+    } catch (err) {
+      setError("Failed to fetch orders");
+      showToast("Failed to fetch orders", 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  // ✅ Handle paying a reward
+  const handlePayClick = (order) => {
+    setOrderToAction(order);
+    setShowPayModal(true);
+  };
+
+  const confirmPayOrder = async () => {
+    if (!orderToAction) return;
+    try {
+      const result = await WalletController.sendEth(
+        orderToAction.walletAddress,
+        orderToAction.price_eth,
+        orderToAction._id || orderToAction.id
+      );
+
+      if (result.success) {
+        showToast(`Payment successful! Tx: ${result.transaction?.hash || 'N/A'}`, 'success');
+        setOrders((prev) =>
+          prev.map((o) =>
+            o._id === (orderToAction._id || orderToAction.id) ? { ...o, status: 'paid' } : o
+          )
+        );
+      } else {
+        showToast(result.error || 'Payment failed', 'error');
+      }
+    } catch (err) {
+      showToast('Error sending payment: ' + err.message, 'error');
+    } finally {
+      setShowPayModal(false);
+      setOrderToAction(null);
+    }
+  };
+
+  // ✅ Handle cancel order modal
+  const handleCancelClick = (order) => {
+    setOrderToAction(order);
+    setShowCancelModal(true);
+  };
+
+  // ✅ Confirm cancel order
+  const confirmCancelOrder = async () => {
+    if (!orderToAction) return;
+    const token = localStorage.getItem('authToken');
+    try {
+      const result = await ProductController.cancelOrder(orderToAction._id || orderToAction.id, token);
+      if (result.success) {
+        showToast(result.message, 'success');
+        setOrders((prev) =>
+          prev.map((o) =>
+            o._id === (orderToAction._id || orderToAction.id) ? { ...o, status: 'cancelled' } : o
+          )
+        );
+      } else {
+        showToast(result.error, 'error');
+      }
+    } catch (err) {
+      showToast('Error cancelling order: ' + err.message, 'error');
+    } finally {
+      setShowCancelModal(false);
+      setOrderToAction(null);
+    }
+  };
+
+  // Filter orders
+  const filteredOrders = orders.filter((order) => {
     const matchesSearch =
-      reward.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reward.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesAvailability =
-      availabilityFilter === 'all' ||
-      (availabilityFilter === 'available' && reward.available) ||
-      (availabilityFilter === 'unavailable' && !reward.available)
-    return matchesSearch && matchesAvailability
-  })
+      order.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.rewardTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order._id?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'paid':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <div className="pt-16 md:ml-64">
+      <Toast message={toast.message} type={toast.type} show={toast.show} />
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Reward Management
-          </h1>
-          <p className="text-gray-600">
-            Create and manage rewards for students to redeem
-          </p>
+          <h1 className="text-2xl font-bold text-gray-800">Order Management</h1>
+          <p className="text-gray-600">Manage student reward redemption orders</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          <PlusIcon size={16} className="mr-2" />
-          Create Reward
-        </button>
       </div>
+
       <div className="bg-white rounded-lg shadow mb-6">
+        {/* Filters */}
         <div className="p-4 border-b">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="relative w-full md:w-64">
-              <SearchIcon
-                size={18}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              />
+              <SearchIcon size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search rewards..."
+                placeholder="Search orders..."
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -127,238 +172,171 @@ const RewardManagement = () => {
             </div>
             <div className="flex items-center">
               <FilterIcon size={16} className="text-gray-500 mr-2" />
-              <span className="text-gray-700 font-medium">Availability:</span>
+              <span className="text-gray-700 font-medium">Status:</span>
               <div className="ml-3 space-x-2">
-                <button
-                  className={`px-3 py-1 rounded-full text-sm ${availabilityFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                  onClick={() => setAvailabilityFilter('all')}
-                >
-                  All
-                </button>
-                <button
-                  className={`px-3 py-1 rounded-full text-sm ${availabilityFilter === 'available' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                  onClick={() => setAvailabilityFilter('available')}
-                >
-                  Available
-                </button>
-                <button
-                  className={`px-3 py-1 rounded-full text-sm ${availabilityFilter === 'unavailable' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                  onClick={() => setAvailabilityFilter('unavailable')}
-                >
-                  Unavailable
-                </button>
+                {['all', 'pending', 'paid', 'cancelled'].map((status) => (
+                  <button
+                    key={status}
+                    className={`px-3 py-1 rounded-full text-sm ${
+                      statusFilter === status
+                        ? status === 'pending'
+                          ? 'bg-yellow-600 text-white'
+                          : status === 'paid'
+                          ? 'bg-green-600 text-white'
+                          : status === 'cancelled'
+                          ? 'bg-red-600 text-white'
+                          : 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                    onClick={() => setStatusFilter(status)}
+                  >
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
         </div>
+
+        {/* Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Reward
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Description
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Cost
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Category
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Status
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Claimed
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Actions
-                </th>
+                {['Order ID', 'Customer', 'Cost', 'Date', 'Status', 'Actions'].map((col) => (
+                  <th
+                    key={col}
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    {col}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredRewards.map((reward) => (
-                <tr key={reward.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 rounded-md overflow-hidden">
-                        <img
-                          src={reward.image}
-                          alt={reward.title}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {reward.title}
-                        </div>
-                      </div>
-                    </div>
+              {filteredOrders.map((order) => (
+                <tr key={order._id || order.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {order._id || order.id}
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-500 max-w-xs truncate">
-                      {reward.description}
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {order.id}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-blue-600 font-medium">
-                      {reward.cost} CampusCoin
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
+                    {order.price_eth} 
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {reward.category}
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {new Date(order.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${reward.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}
                     >
-                      {reward.available ? 'Available' : 'Unavailable'}
+                      {order.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {reward.claimed} times
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">
-                      <PencilIcon size={16} />
-                    </button>
-                    <button className="text-red-600 hover:text-red-900">
-                      <TrashIcon size={16} />
-                    </button>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                    {order.status === 'pending' && (
+                      <>
+                        <button
+                          className="text-green-600 hover:text-green-900 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-300"
+                          onClick={() => handlePayClick(order)}
+                          title="Mark as Paid"
+                        >
+                          <CheckCircleIcon size={18} />
+                        </button>
+                        <button
+                          className="text-red-600 hover:text-red-900 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-300"
+                          onClick={() => handleCancelClick(order)}
+                          title="Cancel Order"
+                        >
+                          <XCircleIcon size={18} />
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        {filteredRewards.length === 0 && (
+
+        {filteredOrders.length === 0 && !loading && (
           <div className="text-center py-10">
-            <p className="text-gray-500">
-              No rewards found matching your criteria.
-            </p>
+            <p className="text-gray-500">No orders found matching your criteria.</p>
           </div>
         )}
       </div>
-      {showModal && (
+
+      {/* ✅ Pay Confirmation Modal */}
+      {showPayModal && orderToAction && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
+          <div className="bg-white rounded-lg shadow-lg w-[90vw] max-w-md">
             <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Create New Reward
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900 text-center">Confirm Payment</h3>
             </div>
             <div className="p-6">
-              <form className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Reward Title
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter reward title"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    rows={3}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter reward description"
-                  ></textarea>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Category
-                    </label>
-                    <select className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                      <option value="">Select category</option>
-                      <option value="Food">Food</option>
-                      <option value="Academic">Academic</option>
-                      <option value="Entertainment">Entertainment</option>
-                      <option value="Fitness">Fitness</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Cost (CampusCoin)
-                    </label>
-                    <input
-                      type="number"
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Enter cost amount"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Image URL
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter image URL"
-                  />
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="available"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    defaultChecked
-                  />
-                  <label
-                    htmlFor="available"
-                    className="ml-2 block text-sm text-gray-900"
-                  >
-                    Available for redemption
-                  </label>
-                </div>
-              </form>
+              <p className="mb-4 text-gray-700 text-center">
+                Mark order <strong>{orderToAction._id || orderToAction.id}</strong> as paid?
+              </p>
+              <div className="flex justify-center gap-2">
+                <button
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  onClick={() => {
+                    setShowPayModal(false);
+                    setOrderToAction(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700"
+                  onClick={confirmPayOrder}
+                >
+                  Confirm Payment
+                </button>
+              </div>
             </div>
-            <div className="p-6 border-t bg-gray-50 flex justify-end space-x-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
-                Create Reward
-              </button>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Cancel Confirmation Modal */}
+      {showCancelModal && orderToAction && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-[90vw] max-w-md">
+            <div className="p-6 border-b">
+              <h3 className="text-lg font-semibold text-gray-900 text-center">Cancel Order</h3>
+            </div>
+            <div className="p-6">
+              <p className="mb-4 text-gray-700 text-center">
+                Are you sure you want to cancel order{' '}
+                <strong>{orderToAction._id || orderToAction.id}</strong>?
+              </p>
+              <div className="flex justify-center gap-2">
+                <button
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  onClick={() => {
+                    setShowCancelModal(false);
+                    setOrderToAction(null);
+                  }}
+                >
+                  Back
+                </button>
+                <button
+                  className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
+                  onClick={confirmCancelOrder}
+                >
+                  Confirm Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
     </div>
-  )
-}
-export default RewardManagement
+  );
+};
+
+export default OrderManagement;
