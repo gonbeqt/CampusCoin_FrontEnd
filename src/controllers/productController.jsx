@@ -48,7 +48,6 @@ class ProductController {
     return { success: true, message: res.message }
   }
  
-
   async getDashboardStats(token) {
     if (!token) {
       return { success: false, error: 'Authentication required. Please log in.' };
@@ -108,6 +107,7 @@ class ProductController {
       if (!orderId) return { success: false, error: 'Order ID required' };
       if (!token) return { success: false, error: 'Authentication required' };
 
+
       const result = await this.model.cancelOrder(orderId, token);
 
       if (!result.success) return { success: false, error: result.error };
@@ -119,6 +119,10 @@ class ProductController {
       };
     }
   
+
+  
+
+
   async createOrder(productId, quantity) {
     try {
       // Validate input
