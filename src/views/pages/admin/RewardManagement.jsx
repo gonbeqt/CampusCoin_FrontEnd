@@ -7,9 +7,8 @@ import WalletController from '../../../controllers/walletController';
 function Toast({ message, type, show }) {
   return (
     <div
-      className={`fixed top-6 right-6 z-[9999] transition-transform duration-300 ${
-        show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
-      } ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white px-6 py-3 rounded shadow-lg min-w-[200px] text-center pointer-events-none`}
+      className={`fixed top-6 right-6 z-[9999] transition-transform duration-300 ${show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+        } ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white px-6 py-3 rounded shadow-lg min-w-[200px] text-center pointer-events-none`}
       style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.15)' }}
     >
       {message}
@@ -23,17 +22,18 @@ const OrderManagement = () => {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'pending', 'paid', 'cancelled'
-
   const [showPayModal, setShowPayModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [orderToAction, setOrderToAction] = useState(null);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
   // ✅ Toast state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast((t) => ({ ...t, show: false })), 2500);
   };
+
 
   // Fetch all orders
   const fetchOrders = async () => {
@@ -124,6 +124,7 @@ const OrderManagement = () => {
   };
 
   // Filter orders
+  // Filter orders
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.buyerFullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -132,6 +133,21 @@ const OrderManagement = () => {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  // ✅ Pagination logic (must be after filteredOrders)
+  const indexOfLastOrder = currentPage * rowsPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - rowsPerPage;
+  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+
+  const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -177,17 +193,16 @@ const OrderManagement = () => {
                 {['all', 'pending', 'paid', 'cancelled'].map((status) => (
                   <button
                     key={status}
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      statusFilter === status
-                        ? status === 'pending'
-                          ? 'bg-yellow-600 text-white'
-                          : status === 'paid'
+                    className={`px-3 py-1 rounded-full text-sm ${statusFilter === status
+                      ? status === 'pending'
+                        ? 'bg-yellow-600 text-white'
+                        : status === 'paid'
                           ? 'bg-green-600 text-white'
                           : status === 'cancelled'
-                          ? 'bg-red-600 text-white'
-                          : 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                            ? 'bg-red-600 text-white'
+                            : 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
                     onClick={() => setStatusFilter(status)}
                   >
                     {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -215,7 +230,7 @@ const OrderManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredOrders.map((order) => (
+              {currentOrders.map((order) => (
                 <tr key={order._id || order.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {order._id || order.id}
@@ -224,7 +239,7 @@ const OrderManagement = () => {
                     {order.buyerFullName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
-                    {order.price_eth} 
+                    {order.price_eth}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {new Date(order.createdAt).toLocaleDateString()}
@@ -259,7 +274,45 @@ const OrderManagement = () => {
                 </tr>
               ))}
             </tbody>
+            
+
           </table>
+          {/* Pagination Controls */}
+            {filteredOrders.length > 0 && (
+              <div className="flex justify-between items-center w-full p-4 border-t bg-gray-50">
+                <div className="flex-1">
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 rounded-md text-sm font-medium ${currentPage === 1
+                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
+                  >
+                    Previous
+                  </button>
+                </div>
+
+                <div className="flex-1 text-center">
+                  <span className="text-gray-700 font-medium">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                </div>
+
+                <div className="flex-1 text-right">
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 rounded-md text-sm font-medium ${currentPage === totalPages
+                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
         </div>
 
         {filteredOrders.length === 0 && !loading && (
