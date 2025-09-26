@@ -202,7 +202,7 @@ const RewardMarketplace = ({ user }) => {
             >
               <div className="h-36 relative overflow-hidden group">
                 <img
-                  src={product.image}
+                  src={`http://localhost:5000/api/products/image/${product.image}`}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
