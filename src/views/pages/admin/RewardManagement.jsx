@@ -126,7 +126,7 @@ const OrderManagement = () => {
   // Filter orders
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
-      order.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.buyerFullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.rewardTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order._id?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
@@ -203,7 +203,7 @@ const OrderManagement = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {['Order ID', 'Customer', 'Cost', 'Date', 'Status', 'Actions'].map((col) => (
+                {['Order ID', 'Student Name', 'Cost', 'Date', 'Status', 'Actions'].map((col) => (
                   <th
                     key={col}
                     scope="col"
@@ -221,7 +221,7 @@ const OrderManagement = () => {
                     {order._id || order.id}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {order.id}
+                    {order.buyerFullName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
                     {order.price_eth} 
