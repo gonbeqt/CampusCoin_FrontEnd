@@ -81,7 +81,7 @@ const EventManagement = () => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:5000/api/events");
+      const res = await fetch("http://localhost:5000/api/events", { method: "GET" });
       const data = await res.json();
       setEvents(data);
     } catch (err) {
