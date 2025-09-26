@@ -48,7 +48,6 @@ class ProductController {
     return { success: true, message: res.message }
   }
  
-
   async getDashboardStats(token) {
     if (!token) {
       return { success: false, error: 'Authentication required. Please log in.' };
@@ -65,8 +64,29 @@ class ProductController {
       stats: result.stats,
     };
   }
+
   async getAllOrders(token) {
-      if (!token) return { success: false, error: 'Unauthorized' };
+        if (!token) return { success: false, error: 'Unauthorized' };
+
+        const result = await ProductModel.getAllOrders(token);
+        if (!result.success) return { success: false, error: result.error };
+
+        return { success: true, orders: result.orders, total: result.totalOrders };
+      }
+      async cancelOrder(orderId, token) {
+      if (!orderId) return { success: false, error: 'Order ID required' };
+      if (!token) return { success: false, error: 'Authentication required' };
+
+      const result = await ProductModel.cancelOrder(orderId, token);
+
+      if (!result.success) return { success: false, error: result.error };
+
+      return {
+        success: true,
+        message: result.message,
+        order: result.order,
+      };
+    }
 
   async getAllProducts() {
     try {
@@ -95,6 +115,8 @@ async cancelOrder(orderId, token) {
       message: result.message,
       order: result.order,
     };
+  }
+
   async createOrder(productId, quantity) {
     try {
       // Validate input
