@@ -32,7 +32,34 @@ const RewardMarketplace = ({ user }) => {
   const [redeemStates, setRedeemStates] = useState({})
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
-  const { balance } = useBalance()
+  const [processingOrders, setProcessingOrders] = useState({})
+  const { balance, refreshBalance } = useBalance()
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const result = await productController.getAllProducts();
+      if (result.success) {
+        setProducts(result.products);
+        // Initialize quantities and redeem states
+        const initialQuantities = {}
+        const initialRedeemStates = {}
+        result.products.forEach(product => {
+          initialQuantities[product._id] = product.stockQuantity > 0 ? 1 : 0
+          initialRedeemStates[product._id] = false
+        })
+        setQuantities(initialQuantities)
+        setRedeemStates(initialRedeemStates)
+        setError(null)
+      } else {
+        setError(result.error)
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -78,36 +105,34 @@ const RewardMarketplace = ({ user }) => {
 
   const handleConfirm = async (productId) => {
     try {
-      // Debug log before creating order
-      console.log('Attempting to create order:', {
-        productId,
-        quantity: quantities[productId],
-        token: localStorage.getItem('authToken')
-      });
+      setProcessingOrders(prev => ({ ...prev, [productId]: true }));
+      setError(null);
 
       const orderResult = await productController.createOrder(productId, quantities[productId]);
-      console.log('Order result:', orderResult); // Debug log order result
 
       if (orderResult.success) {
-        // Refresh products after successful order
-        const result = await productController.getAllProducts();
-        if (result.success) {
-          setProducts(result.products);
-          setRedeemStates(prev => ({
-            ...prev,
-            [productId]: false
-          }));
-          // Show success message
-          setError(null);
-        }
+        // Refresh everything
+        await Promise.all([
+          fetchProducts(),  // Refresh product list
+          refreshBalance()  // Refresh user's balance
+        ]);
+        
+        setRedeemStates(prev => ({
+          ...prev,
+          [productId]: false
+        }));
+        
+        // Show success message
+        setError(null);
       } else {
         console.error('Error creating order:', orderResult.error);
-        // Show error message to user
         setError(orderResult.error || 'Failed to create order');
       }
     } catch (err) {
       console.error('Error creating order:', err);
       setError(err.message || 'An unexpected error occurred');
+    } finally {
+      setProcessingOrders(prev => ({ ...prev, [productId]: false }));
     }
   }
 
@@ -319,8 +344,16 @@ const RewardMarketplace = ({ user }) => {
                           <button
                             className="flex-1 h-full rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transform transition-all duration-200 hover:scale-105 active:scale-95"
                             onClick={() => handleConfirm(product._id)}
+                            disabled={processingOrders[product._id]}
                           >
-                            Confirm
+                            {processingOrders[product._id] ? (
+                              <span className="flex items-center justify-center">
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              </span>
+                            ) : 'Confirm'}
                           </button>
                           <button
                             className="flex-1 h-full rounded-lg text-sm font-medium bg-red-600 hover:bg-red-700 text-white transform transition-all duration-200 hover:scale-105 active:scale-95"
