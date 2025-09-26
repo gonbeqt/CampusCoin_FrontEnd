@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom'
 import {
   CalendarIcon,
@@ -10,6 +10,7 @@ import {
 import EventCard from '../../../views/components/EventCard'
 import WalletCard from '../../../views/components/WalletCard'
 import RecentTransactionsCard from '../../../views/components/RecentTransactionsCard'
+import productController from '../../../controllers/productController';
 // Mock data
 const upcomingEvents = [
   {
@@ -61,6 +62,31 @@ const recentTransactions = [
   },
 ]
 const StudentDashboard = ({ user }) => {
+  const [recentTransactions, setRecentTransactions] = useState([]);
+  useEffect(() => {
+    const fetchRecentTransactions = async () => {
+      const res = await productController.getUserOrders();
+      if (res.success) {
+        // Map orders into the format RecentTransactionsCard expects
+        const transactions = res.orders.map((o) => ({
+          _id: o._id,
+          status: o.status, // "paid" | "pending" | "cancelled"
+          productId: o.productId,
+          totalPrice: o.totalPrice,
+          createdAt: o.createdAt,
+        }));
+
+        // newest first
+        const sorted = transactions.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        setRecentTransactions(sorted.slice(0, 5));
+      }
+    };
+
+    fetchRecentTransactions();
+  }, []);
   return (
     <div className="pt-16 md:ml-64">
       <div className="mb-6">

@@ -95,6 +95,72 @@ class ProductModel {
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
+
+  async getAllProducts() {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${this.baseURL}/all_products`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const result = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? result : null,
+        error: response.ok ? null : result.error || result.message,
+      };
+    } catch (error) {
+      return { success: false, error: 'Network error' };
+    }
+  }
+
+  async createOrder(productId, quantity) {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${this.baseURL}/order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId, quantity }),
+      });
+      const result = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? result : null,
+        error: response.ok ? null : result.error || result.message,
+      };
+    } catch (error) {
+      return { success: false, error: 'Network error' };
+    }
+  }
+
+   async getUserOrders() {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${this.baseURL}/my-orders`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? data : null,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('ProductModel.getUserOrders error:', error);
+      return { success: false, error: 'Network error' };
+    }
+   }
   async getAllOrders(token) {
     try {
       const res = await fetch(`${this.baseURL}/all_orders`, {
@@ -147,4 +213,4 @@ class ProductModel {
   }
 }
 
-export default new ProductModel();
+export default ProductModel;

@@ -1,6 +1,9 @@
 // src/controllers/productController.js
-import ProductModel from '../models/productModel';
+import ProductModel from '../models/productModel.jsx';
 class ProductController {
+  constructor() {
+    this.model = new ProductModel();
+  }
 
   async addProduct(formData, token) {
     
@@ -65,12 +68,21 @@ class ProductController {
   async getAllOrders(token) {
       if (!token) return { success: false, error: 'Unauthorized' };
 
-      const result = await ProductModel.getAllOrders(token);
-      if (!result.success) return { success: false, error: result.error };
-
-      return { success: true, orders: result.orders, total: result.totalOrders };
+  async getAllProducts() {
+    try {
+      const result = await this.model.getAllProducts();
+      if (result.success) {
+        return { success: true, products: result.data.products, totalProducts: result.data.totalProducts };
+      } else {
+        return { success: false, error: result.error || 'Failed to fetch products' };
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      return { success: false, error: 'An unexpected error occurred' };
     }
-    async cancelOrder(orderId, token) {
+
+  }
+async cancelOrder(orderId, token) {
     if (!orderId) return { success: false, error: 'Order ID required' };
     if (!token) return { success: false, error: 'Authentication required' };
 
@@ -83,9 +95,45 @@ class ProductController {
       message: result.message,
       order: result.order,
     };
+  async createOrder(productId, quantity) {
+    try {
+      // Validate input
+      if (!productId || !quantity || quantity < 1) {
+        return { success: false, error: 'Invalid product ID or quantity' };
+      }
+
+      const result = await this.model.createOrder(productId, quantity);
+      if (result.success) {
+        return { 
+          success: true, 
+          message: 'Order created successfully',
+          order: result.data.order 
+        };
+      } else {
+        return { 
+          success: false, 
+          error: result.error || 'Failed to create order' 
+        };
+      }
+    } catch (error) {
+      console.error('Error creating order:', error);
+      return { success: false, error: 'An unexpected error occurred' };
+    }
   }
 
-
+    async getUserOrders() {
+    try {
+      const result = await this.model.getUserOrders();
+      if (!result.success) {
+        return { success: false, error: result.error || 'Failed to fetch user orders' };
+      }
+      return { success: true, orders: result.data.orders || [], totalOrders: result.data.totalOrders || 0 };
+    } catch (error) {
+      console.error('ProductController.getUserOrders error:', error);
+      return { success: false, error: 'Unexpected error occurred' };
+    }
+  }
 }
 
-export default new ProductController();
+const productController = new ProductController();
+export default productController;
