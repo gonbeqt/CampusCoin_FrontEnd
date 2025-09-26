@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useBalance } from "./BalanceContext";
 import {
   HomeIcon,
   CalendarIcon,
@@ -10,7 +11,7 @@ import {
 
 const StudentSidebar = ({ user, showMobileMenu }) => {
   const location = useLocation()
-
+  const { balance } = useBalance()
   const studentNavItems = [
     {
       name: 'Dashboard',
@@ -54,7 +55,7 @@ const StudentSidebar = ({ user, showMobileMenu }) => {
           <div className="mb-6 px-4 py-3 bg-blue-700 rounded-lg">
             <p className="text-sm font-medium text-white">Your Balance</p>
             <p className="text-2xl font-bold text-white flex items-center">
-              <CoinsIcon className="w-5 h-5 mr-1" /> {user?.balance || 0}
+              <CoinsIcon className="w-5 h-5 mr-1" /> {balance}
             </p>
           </div>
         )}
