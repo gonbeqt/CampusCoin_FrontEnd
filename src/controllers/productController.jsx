@@ -102,20 +102,26 @@ class ProductController {
     }
 
   }
-async cancelOrder(orderId, token) {
-    if (!orderId) return { success: false, error: 'Order ID required' };
-    if (!token) return { success: false, error: 'Authentication required' };
 
-    const result = await this.model.cancelOrder(orderId, token);
+  async cancelOrder(orderId, token) {
+      if (!orderId) return { success: false, error: 'Order ID required' };
+      if (!token) return { success: false, error: 'Authentication required' };
 
-    if (!result.success) return { success: false, error: result.error };
 
-    return {
-      success: true,
-      message: result.message,
-      order: result.order,
-    };
-  }
+      const result = await this.model.cancelOrder(orderId, token);
+
+      if (!result.success) return { success: false, error: result.error };
+
+      return {
+        success: true,
+        message: result.message,
+        order: result.order,
+      };
+    }
+  
+
+  
+
 
   async createOrder(productId, quantity) {
     try {
