@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { CoinsIcon } from 'lucide-react'
 import AuthController from '../../controllers/authController'
+import VerificationModal from '../../components/VerificationModal'
 
 const Login = () => {
   // View state
@@ -14,6 +15,8 @@ const Login = () => {
     error: '',
     rememberMe: false
   })
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
+  const [verificationEmail, setVerificationEmail] = useState('')
 
   const navigate = useNavigate()
 
@@ -42,24 +45,29 @@ const Login = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+    // Prevent accidental form reload
+    if (e && e.nativeEvent && typeof e.nativeEvent.stopImmediatePropagation === 'function') {
+      e.nativeEvent.stopImmediatePropagation();
+    }
     setViewState(prev => ({ ...prev, isLoading: true, error: '' }))
 
-        // Call controller
-        const result = await AuthController.login(formData)
-        
-        if (result.success) {
-          setViewState(prev => ({ ...prev, isLoading: false, error: '' }))
-          const role = result.user?.role
-          const route = AuthController.getRouteForRole(role)
-          navigate(route)
-        } else {
-          setViewState(prev => ({
-            ...prev,
-            isLoading: false,
-            error: result.error
-          }))
-        }  }
+    // Call controller
+    const result = await AuthController.login(formData)
+    console.log('[handleSubmit] login result:', result)
+
+    if (result.success) {
+      setViewState(prev => ({ ...prev, isLoading: false, error: '' }))
+      const role = result.user?.role
+      const route = AuthController.getRouteForRole(role)
+      navigate(route)
+    } else {
+      setViewState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: result.error
+      }))
+    }
+  }
 
   // Check if form is valid
   const isFormValid = formData.email && formData.password
@@ -120,7 +128,7 @@ const Login = () => {
           </div>
 
           {/* Error Display */}
-          {viewState.error && (
+          {(viewState.error && (!showVerificationModal || viewState.error !== 'Email not verified')) && (
             <div className="text-red-500 text-sm text-center bg-red-50 border border-red-200 rounded-md p-3">
               {viewState.error}
             </div>
@@ -196,6 +204,8 @@ const Login = () => {
             </div>
           </div>
         </form>
+
+        {/* Verification Modal removed, reverted to original logic */}
       </div>
     </div>
   )
