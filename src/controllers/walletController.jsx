@@ -74,7 +74,7 @@ class WalletController {
     }
   }
 
-  async sendEth(toAddress, amount, description = '') {
+  async sendEth(toAddress, amount,orderId) {
     try {
       const validationError = this.validateSendTransaction(toAddress, amount);
       if (validationError) {
@@ -84,7 +84,7 @@ class WalletController {
       const result = await this.model.sendEth({
         toAddress: toAddress.trim(),
         amount: amount.toString(),
-        description: description.trim()
+        orderId: orderId
       });
 
       if (result.success) {
