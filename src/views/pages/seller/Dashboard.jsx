@@ -81,7 +81,7 @@ const SellerDashboard = ({ user }) => {
       </div>
 
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-white rounded-lg shadow p-5">
           <div className="flex justify-between items-start">
             <div>
@@ -94,20 +94,8 @@ const SellerDashboard = ({ user }) => {
           </div>
           <div className="mt-4 flex items-center text-sm">
             <span className="text-green-600 font-medium flex items-center">
-              <TrendingUpIcon size={16} className="mr-1" /> {stats.totalProducts} active
+              <TrendingUpIcon size={16} className="mr-1" />  active
             </span>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-5">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-500">Total Sales</p>
-              <p className="text-2xl font-bold mt-1">{stats.totalSales}</p>
-            </div>
-            <div className="p-2 bg-green-100 rounded-lg">
-              <UsersIcon size={24} className="text-green-600" />
-            </div>
           </div>
         </div>
 
@@ -116,7 +104,7 @@ const SellerDashboard = ({ user }) => {
             <div>
               <p className="text-gray-500">Total Revenue</p>
               <p className="text-2xl font-bold mt-1 flex items-center">
-                <CoinsIcon className="w-5 h-5 mr-1 text-yellow-500" /> {stats.totalRevenue}
+                <CoinsIcon className="w-5 h-5 mr-1 text-yellow-500" /> {stats.totalRevenue}  ETH
               </p>
             </div>
             <div className="p-2 bg-yellow-100 rounded-lg">
@@ -164,8 +152,8 @@ const SellerDashboard = ({ user }) => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {tx.updatedAt}
                         </td>
-                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 flex items-center">
-                          <CoinsIcon size={14} className="mr-1" /> {tx.amount}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                           {tx.amount}
                         </td>
                        
                       </tr>
