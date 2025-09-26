@@ -106,6 +106,18 @@ class ProductController {
     }
   }
 
+    async getUserOrders() {
+    try {
+      const result = await this.model.getUserOrders();
+      if (!result.success) {
+        return { success: false, error: result.error || 'Failed to fetch user orders' };
+      }
+      return { success: true, orders: result.data.orders || [], totalOrders: result.data.totalOrders || 0 };
+    } catch (error) {
+      console.error('ProductController.getUserOrders error:', error);
+      return { success: false, error: 'Unexpected error occurred' };
+    }
+  }
 }
 
 const productController = new ProductController();

@@ -138,6 +138,29 @@ class ProductModel {
       return { success: false, error: 'Network error' };
     }
   }
+
+   async getUserOrders() {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${this.baseURL}/my-orders`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? data : null,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('ProductModel.getUserOrders error:', error);
+      return { success: false, error: 'Network error' };
+    }
+  }
 }
 
 export default ProductModel;
