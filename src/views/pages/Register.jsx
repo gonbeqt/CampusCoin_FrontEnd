@@ -1,27 +1,40 @@
-import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { CoinsIcon, MailIcon } from 'lucide-react'
 import AuthController from '../../controllers/authController'
 
 const Register = () => {
+
+  const location = useLocation();
   const [formData, setFormData] = useState({
     first_name: '',
     middle_name: '',
     last_name: '',
     suffix: '',
-    email: '',
+    email: location.state?.email || '',
     password: '',
-    role: 'student'
+    role: 'student',
+    course: '',
   })
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState(null)
-  const [showVerification, setShowVerification] = useState(false)
+  const [showVerification, setShowVerification] = useState(location.state?.showVerification || false)
   const [verificationCode, setVerificationCode] = useState('')
   const [verificationError, setVerificationError] = useState('')
   const [isVerifying, setIsVerifying] = useState(false)
   const [isResending, setIsResending] = useState(false)
 
   const navigate = useNavigate()
+
+  // If redirected from login, update email and showVerification on mount
+  useEffect(() => {
+    if (location.state?.email) {
+      setFormData(prev => ({ ...prev, email: location.state.email }))
+    }
+    if (location.state?.showVerification) {
+      setShowVerification(true)
+    }
+  }, [location.state])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -57,6 +70,7 @@ const Register = () => {
     setMessage(null)
 
     try {
+      // Always use the email in formData (which is set from location.state if redirected)
       const result = await AuthController.verifyEmail(formData.email, verificationCode)
 
       if (result.success) {
@@ -310,15 +324,34 @@ const Register = () => {
               </div>
             </div>
 
+            {/* Course Selector */}
             <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              <label htmlFor="course" className="block text-sm font-medium text-gray-700">
+                Course
+              </label>
+              <select
+                id="course"
+                name="course"
+                value={formData.course}
+                onChange={handleInputChange}
+                required
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               >
-                {isLoading ? 'Creating account...' : 'Register'}
-              </button>
+                <option value="">Select a course</option>
+                <option value="BSIT">BSIT</option>
+                <option value="CAHS">CAHS</option>
+                <option value="CMA">CMA</option>
+                <option value="CRIM">CRIM</option>
+                <option value="CEA">CEA</option>
+              </select>
             </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {isLoading ? 'Creating account...' : 'Register'}
+            </button>
 
             {message && message.type === 'error' && (
               <div className="text-red-500 text-sm text-center p-2 border border-red-300 bg-red-50 rounded-md">{message.text}</div>
@@ -336,7 +369,7 @@ const Register = () => {
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default Register
+export default Register;
