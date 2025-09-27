@@ -14,14 +14,13 @@ import validationController from '../../../controllers/validationController'
 const SuperAdminDashboard = ({ user }) => {
   const [isLoading, setIsLoading] = React.useState(false)
   const [dashboardData, setDashboardData] = React.useState({
-    summary: {
-      total: 0,
-      pending: 0,
-      approve: 0,
-      rejected: 0,
-      suspended: 0,
-    },
-    recentValidations: [],
+      totalUsers: 0,
+      totalPending: 0,
+      totalApproved: 0,
+      totalRejected: 0,
+      totalSuspended: 0,
+      recentValidations:[]
+
   })
 
   React.useEffect(() => {
@@ -42,15 +41,13 @@ const SuperAdminDashboard = ({ user }) => {
 
         if (statsRes.success && usersRes.success) {
           setDashboardData({
-            summary: {
-              total: statsRes.total || 0,
-              pending: statsRes.pending || 0,
-              approve: statsRes.approve || 0,
-              rejected: statsRes.rejected || 0,
-              suspended: statsRes.suspended || 0,
-            },
-            recentValidations: usersRes.users || [],
-          })
+              totalUsers: statsRes.totalUsers || 0,
+              totalPending: statsRes.totalPending || 0,
+              totalApproved: statsRes.totalApproved || 0,
+              totalRejected: statsRes.totalRejected || 0,
+              totalSuspended: statsRes.totalSuspended || 0,
+              recentValidations: usersRes.users || [],
+           })
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
@@ -82,9 +79,9 @@ const SuperAdminDashboard = ({ user }) => {
             <div className="bg-white rounded-lg shadow p-5">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-gray-500">Total Validations</p>
+                  <p className="text-gray-500">Total Users</p>
                   <p className="text-2xl font-bold mt-1">
-                    {dashboardData.summary.total}
+                    {dashboardData.totalUsers}
                   </p>
                 </div>
                 <div className="p-2 bg-purple-100 rounded-lg">
@@ -99,7 +96,7 @@ const SuperAdminDashboard = ({ user }) => {
                 <div>
                   <p className="text-gray-500">Pending Validations</p>
                   <p className="text-2xl font-bold mt-1">
-                    {dashboardData.summary.pending}
+                    {dashboardData.totalPending}
                   </p>
                 </div>
                 <div className="p-2 bg-blue-100 rounded-lg">
@@ -115,7 +112,7 @@ const SuperAdminDashboard = ({ user }) => {
                 <div>
                   <p className="text-gray-500">Approve Validations</p>
                   <p className="text-2xl font-bold mt-1">
-                    {dashboardData.summary.approve}
+                    {dashboardData.totalApproved}
                   </p>
                 </div>
                 <div className="p-2 bg-green-100 rounded-lg">
@@ -212,7 +209,7 @@ const SuperAdminDashboard = ({ user }) => {
                       <span className="text-sm text-gray-700">Rejected Users</span>
                     </div>
                     <span className="text-sm font-medium">
-                      {dashboardData.summary.rejected}
+                      {dashboardData.totalRejected}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -221,7 +218,7 @@ const SuperAdminDashboard = ({ user }) => {
                       <span className="text-sm text-gray-700">Suspended Users</span>
                     </div>
                     <span className="text-sm font-medium">
-                      {dashboardData.summary.suspended}
+                      {dashboardData.totalSuspended}
                     </span>
                   </div>
 
