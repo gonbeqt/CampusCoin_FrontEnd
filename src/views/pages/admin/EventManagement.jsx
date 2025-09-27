@@ -28,11 +28,16 @@ const EventManagement = () => {
   const [form, setForm] = useState({
     title: "",
     date: "",
-    time: "",
+    timeStart: "",
+    timeEnd: "",
     location: "",
     category: "",
     reward: "",
     description: "",
+    speakers: [{ name: '', description: '' }],
+    organizedBy: '',
+    maxStudents: '',
+    minStudents: '',
     status: "upcoming",
   });
   const [formError, setFormError] = useState("");
@@ -119,48 +124,68 @@ const EventManagement = () => {
     setSubmitting(true);
     try {
       let res;
+      const payload = {
+        title: form.title,
+        date: form.date,
+        time: { start: form.timeStart, end: form.timeEnd },
+        location: form.location,
+        category: form.category,
+        reward: form.reward,
+        description: form.description,
+        speakers: form.speakers,
+        organizedBy: form.organizedBy,
+        maxStudents: form.maxStudents ? Number(form.maxStudents) : null,
+        minStudents: form.minStudents ? Number(form.minStudents) : 0,
+        status: form.status,
+      };
+  const token = localStorage.getItem('authToken');
+      const authHeaders = {
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      };
       if (editId) {
-        // Edit mode
         res = await fetch(`http://localhost:5000/api/events/${editId}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
+          headers: authHeaders,
+          body: JSON.stringify(payload),
         });
       } else {
-        // Create mode
-        res = await fetch("http://localhost:5000/api/events", {
+        res = await fetch("http://localhost:5000/api/events/create", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: form.title,
-            date: form.date,
-            time: form.time,
-            location: form.location,
-            category: form.category,
-            reward: form.reward,
-            description: form.description,
-            status: form.status,
-          }),
+          headers: authHeaders,
+          body: JSON.stringify(payload),
         });
       }
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        // Not JSON, probably HTML error
+        throw new Error(text.startsWith('<') ? 'Server returned HTML (possible 404/500 or wrong endpoint)' : text);
+      }
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || errData.error || "Failed to submit event");
+        throw new Error(data?.message || data?.error || "Failed to submit event");
       }
       await fetchEvents();
       setShowModal(false);
       setForm({
         title: "",
         date: "",
-        time: "",
+        timeStart: "",
+        timeEnd: "",
         location: "",
         category: "",
         reward: "",
         description: "",
+        speakers: [{ name: '', description: '' }],
+        organizedBy: '',
+        maxStudents: '',
+        minStudents: '',
         status: "upcoming",
       });
       setEditId(null);
-      showToast(editId ? 'Edited successfully' : 'Created successfully', 'success');
+      showToast(editId ? "Event updated successfully!" : "Event created successfully!");
     } catch (err) {
       setFormError(err.message);
       showToast('Error: ' + err.message, 'error');
@@ -174,11 +199,16 @@ const EventManagement = () => {
     setForm({
       title: event.title || "",
       date: event.date ? event.date.slice(0, 10) : "",
-      time: event.time || "",
+      timeStart: event.time?.start || "",
+      timeEnd: event.time?.end || "",
       location: event.location || "",
       category: event.category || "",
       reward: event.reward || "",
       description: event.description || "",
+      speakers: event.speakers && event.speakers.length > 0 ? event.speakers : [{ name: '', description: '' }],
+      organizedBy: event.organizedBy || '',
+      maxStudents: event.maxStudents || '',
+      minStudents: event.minStudents || '',
       status: event.status || "upcoming",
     });
     setEditId(event._id || event.id);
@@ -403,13 +433,13 @@ const EventManagement = () => {
       )}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div className="p-6 border-b">
               <h3 className="text-lg font-semibold text-gray-900">
                 {editId ? "Edit Event" : "Create New Event"}
               </h3>
             </div>
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto flex-1">
               <form className="space-y-4" onSubmit={handleFormSubmit}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -425,7 +455,7 @@ const EventManagement = () => {
                     required
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Date
@@ -441,15 +471,114 @@ const EventManagement = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Time
+                      Start Time
                     </label>
                     <input
                       type="time"
-                      name="time"
-                      value={form.time}
+                      name="timeStart"
+                      value={form.timeStart}
                       onChange={handleFormChange}
                       className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      End Time
+                    </label>
+                    <input
+                      type="time"
+                      name="timeEnd"
+                      value={form.timeEnd}
+                      onChange={handleFormChange}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
+                {/* Speakers */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Speakers</label>
+                  {form.speakers.map((speaker, idx) => (
+                    <div key={idx} className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        placeholder="Name"
+                        value={speaker.name}
+                        onChange={e => {
+                          const speakers = [...form.speakers];
+                          speakers[idx].name = e.target.value;
+                          setForm(f => ({ ...f, speakers }));
+                        }}
+                        className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                      <input
+                        type="text"
+                        placeholder="Description/Title"
+                        value={speaker.description}
+                        onChange={e => {
+                          const speakers = [...form.speakers];
+                          speakers[idx].description = e.target.value;
+                          setForm(f => ({ ...f, speakers }));
+                        }}
+                        className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                        onClick={() => {
+                          setForm(f => ({ ...f, speakers: f.speakers.filter((_, i) => i !== idx) }));
+                        }}
+                        disabled={form.speakers.length === 1}
+                      >Remove</button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    onClick={() => setForm(f => ({ ...f, speakers: [...f.speakers, { name: '', description: '' }] }))}
+                  >Add Speaker</button>
+                </div>
+
+                {/* Organizer */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Organizer</label>
+                  <input
+                    type="text"
+                    name="organizedBy"
+                    value={form.organizedBy}
+                    onChange={handleFormChange}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter organizer name (e.g. Computer Science Department)"
+                  />
+                </div>
+
+                {/* Min/Max Students */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Students</label>
+                    <input
+                      type="number"
+                      name="maxStudents"
+                      value={form.maxStudents}
+                      onChange={handleFormChange}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      min="1"
+                      placeholder="Leave blank for unlimited"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Min Students</label>
+                    <input
+                      type="number"
+                      name="minStudents"
+                      value={form.minStudents}
+                      onChange={handleFormChange}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      min="0"
+                      placeholder="0"
                     />
                   </div>
                 </div>
@@ -546,11 +675,16 @@ const EventManagement = () => {
                       setForm({
                         title: "",
                         date: "",
-                        time: "",
+                        timeStart: "",
+                        timeEnd: "",
                         location: "",
                         category: "",
                         reward: "",
                         description: "",
+                        speakers: [{ name: '', description: '' }],
+                        organizedBy: '',
+                        maxStudents: '',
+                        minStudents: '',
                         status: "upcoming",
                       });
                     }}
