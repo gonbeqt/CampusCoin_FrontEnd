@@ -33,7 +33,7 @@ const RewardMarketplace = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [processingOrders, setProcessingOrders] = useState({})
-  const { balance, refreshBalance } = useBalance()
+  const { balance, setBalance, refreshBalance } = useBalance();
 
   const fetchProducts = async () => {
     try {
@@ -104,37 +104,39 @@ const RewardMarketplace = ({ user }) => {
   }
 
   const handleConfirm = async (productId) => {
-    try {
-      setProcessingOrders(prev => ({ ...prev, [productId]: true }));
-      setError(null);
+  try {
+    setProcessingOrders(prev => ({ ...prev, [productId]: true }));
+    setError(null);
 
-      const orderResult = await productController.createOrder(productId, quantities[productId]);
+    const product = products.find(p => p._id === productId);
+    const totalCost = product.price * quantities[productId];
 
-      if (orderResult.success) {
-        // Refresh everything
-        await Promise.all([
-          fetchProducts(),  // Refresh product list
-          refreshBalance()  // Refresh user's balance
-        ]);
-        
-        setRedeemStates(prev => ({
-          ...prev,
-          [productId]: false
-        }));
-        
-        // Show success message
-        setError(null);
-      } else {
-        console.error('Error creating order:', orderResult.error);
-        setError(orderResult.error || 'Failed to create order');
+    const orderResult = await productController.createOrder(productId, quantities[productId]);
+
+    if (orderResult.success) {
+      // Deduct balance locally
+      refreshBalance?.(); // optional: refresh from backend if needed
+      setRedeemStates(prev => ({ ...prev, [productId]: false }));
+
+      if (balance >= totalCost) {
+        setBalance(prev => prev - totalCost); // immediately adjust balance
+        await refreshBalance(); // optional: sync with backend
       }
-    } catch (err) {
-      console.error('Error creating order:', err);
-      setError(err.message || 'An unexpected error occurred');
-    } finally {
-      setProcessingOrders(prev => ({ ...prev, [productId]: false }));
+
+      // Refresh product list
+      await fetchProducts();
+
+      // Optionally show a success message
+      setError(null);
+    } else {
+      setError(orderResult.error || 'Failed to create order');
     }
+  } catch (err) {
+    setError(err.message || 'An unexpected error occurred');
+  } finally {
+    setProcessingOrders(prev => ({ ...prev, [productId]: false }));
   }
+};
 
   const handleCancel = (productId) => {
     setRedeemStates(prev => ({
@@ -182,34 +184,38 @@ const RewardMarketplace = ({ user }) => {
           </span>
         </div>
       </div>
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="relative w-full md:w-64">
-            <SearchIcon
-              size={18}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              placeholder="Search rewards..."
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {displayCategories.map((category) => (
-              <button
-                key={category}
-                className={`px-3 py-1 rounded-full text-sm ${selectedCategory === category ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
+        {/* category buttons */}
+        <div className="flex gap-2 mb-4 flex-wrap">
+          <button
+            onClick={() => setSelectedCategory('All')}
+            className={`px-3 py-1 rounded-full ${selectedCategory === 'All' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+          >
+            All
+          </button>
+          {displayCategories.filter(c => c !== 'All').map(category => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`px-3 py-1 rounded-full ${selectedCategory === category ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+            >
+              {category}
+            </button>
+          ))}
         </div>
-      </div>
+
+        {/* Search bar */}
+        <div className="relative flex-1 mb-6">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <SearchIcon size={18} className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search rewards..."
+            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
       {loading ? (
         <div className="text-center py-10">
           <p className="text-gray-500">Loading products...</p>
