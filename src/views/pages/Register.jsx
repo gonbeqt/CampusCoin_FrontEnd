@@ -28,6 +28,7 @@ const Register = () => {
     confirmPassword: '',
     role: 'student',
     course: '',
+  student_id: ['', '', '', '', '', '', '', '', '', '', '', ''], // 12 digits for XX-XXXX-XXXXXX
     // Admin fields
     credentialType: '',
     // Seller fields
@@ -135,6 +136,11 @@ const Register = () => {
         setMessage({ type: 'error', text: 'Please select a course' })
         return false
       }
+      const idStr = formData.student_id.join('');
+      if (!idStr || !/^[0-9]{12}$/.test(idStr)) {
+        setMessage({ type: 'error', text: 'Please enter a valid 12-digit Student ID number' })
+        return false;
+      }
       if (!documents.studentId) {
         setMessage({ type: 'error', text: 'Please upload your Student ID image' })
         return false
@@ -185,7 +191,14 @@ const Register = () => {
       // Add form fields
       Object.keys(formData).forEach(key => {
         if (formData[key] && key !== 'confirmPassword') {
-          formDataToSend.append(key, formData[key])
+          // For student_id, send as 'XX-XXXX-XXXXXX' if role is student
+          if (key === 'student_id' && formData.role === 'student') {
+            const arr = formData.student_id;
+            const id = `${arr.slice(0,2).join('')}-${arr.slice(2,6).join('')}-${arr.slice(6,12).join('')}`;
+            formDataToSend.append('student_id', id);
+          } else {
+            formDataToSend.append(key, formData[key])
+          }
         }
       })
 
@@ -589,25 +602,75 @@ const Register = () => {
 
               {formData.role === 'student' && (
                 <div>
-                  <label htmlFor="course" className="block text-sm font-medium text-gray-700">
-                    Course *
-                  </label>
-                  <select
-                    id="course"
-                    name="course"
-                    value={formData.course}
-                    onChange={handleInputChange}
-                    required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    disabled={viewState.isLoading}
-                  >
-                    <option value="">Select a course</option>
-                    <option value="BSIT">BSIT - Bachelor of Science in Information Technology</option>
-                    <option value="CAHS">CAHS - College of Allied Health Sciences</option>
-                    <option value="CMA">CMA - College of Management and Accountancy</option>
-                    <option value="CRIM">CRIM - Criminology</option>
-                    <option value="CEA">CEA - College of Engineering and Architecture</option>
-                  </select>
+                  <div>
+                    <label htmlFor="course" className="block text-sm font-medium text-gray-700">
+                      Course *
+                    </label>
+                    <select
+                      id="course"
+                      name="course"
+                      value={formData.course}
+                      onChange={handleInputChange}
+                      required
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      disabled={viewState.isLoading}
+                    >
+                      <option value="">Select a course</option>
+                      <option value="BSIT">BSIT - Bachelor of Science in Information Technology</option>
+                      <option value="CAHS">CAHS - College of Allied Health Sciences</option>
+                      <option value="CMA">CMA - College of Management and Accountancy</option>
+                      <option value="CRIM">CRIM - Criminology</option>
+                      <option value="CEA">CEA - College of Engineering and Architecture</option>
+                    </select>
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Student ID Number *
+                    </label>
+                    <div className="flex items-center mt-1 gap-2">
+                      <div className="flex gap-1">
+                        {formData.student_id.map((digit, idx) => (
+                          <React.Fragment key={idx}>
+                            <input
+                              autoComplete="off"
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]"
+                              maxLength={1}
+                              required
+                              className="w-10 h-10 text-center border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-mono"
+                              value={digit}
+                              onChange={e => {
+                                const val = e.target.value.replace(/[^0-9]/g, '')
+                                setFormData(prev => {
+                                  const arr = [...prev.student_id]
+                                  arr[idx] = val
+                                  return { ...prev, student_id: arr }
+                                })
+                                // Auto-focus next box if filled
+                                if (val && idx < 11) {
+                                  const next = document.getElementById(`student-id-digit-${idx+1}`)
+                                  if (next) next.focus()
+                                }
+                              }}
+                              onKeyDown={e => {
+                                if (e.key === 'Backspace' && !formData.student_id[idx] && idx > 0) {
+                                  const prev = document.getElementById(`student-id-digit-${idx-1}`)
+                                  if (prev) prev.focus()
+                                }
+                              }}
+                              id={`student-id-digit-${idx}`}
+                              disabled={viewState.isLoading}
+                            />
+                            {(idx === 1 || idx === 5) && (
+                              <span className="mx-1 text-lg font-bold text-gray-400 select-none">-</span>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Enter your student number (format: XX-XXXX-XXXXXX).</p>
+                  </div>
                 </div>
               )}
 
