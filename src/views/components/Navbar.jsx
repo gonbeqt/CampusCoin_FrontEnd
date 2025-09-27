@@ -10,21 +10,18 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
     navigate('/login')
   }
   const nameParts = [
-    user.first_name,
-    user.middle_name,
-    user.last_name,
-  ].filter(part => part != null && part !== '').map(part => part.trim());
+  user?.first_name,
+  user?.middle_name,
+  user?.last_name,
+].filter(part => part != null && part !== '').map(part => part.trim());
 
-  // Handle suffix separately
-  const suffix = user.suffix && user.suffix.trim() ? user.suffix.trim() : null;
+const suffix = user?.suffix && user.suffix.trim() ? user.suffix.trim() : null;
 
-  // Join name parts with a single space
-  let fullName = nameParts.join(' ').trim();
+let fullName = nameParts.join(' ').trim();
+if (suffix) {
+  fullName = fullName ? `${fullName} ${suffix}` : suffix;
+}
 
-  // Append suffix without a space if it exists
-  if (suffix) {
-    fullName = fullName ? `${fullName}${suffix}` : suffix;
-  }
   const [notifications] = useState([
     {
       id: '1',
