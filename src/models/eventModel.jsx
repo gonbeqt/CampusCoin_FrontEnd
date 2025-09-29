@@ -24,6 +24,25 @@ class EventModel {
     }
   }
 
+  async getEventById(eventId) {
+    try {
+      const response = await fetch(`${this.baseURL}/${eventId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('EventModel.getEventById error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+  
   async joinEvent(eventId, token) {
     try {
       const response = await fetch(`${this.baseURL}/${eventId}/join`, {
@@ -47,26 +66,48 @@ class EventModel {
   }
 
   async claimReward(eventId, token) {
-  try {
-    const response = await fetch(`${this.baseURL}/${eventId}/claim`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const response = await fetch(`${this.baseURL}/${eventId}/claim`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    const data = await response.json();
-    return {
-      success: response.ok,
-      data,
-      error: response.ok ? null : data.error || data.message,
-    };
-  } catch (error) {
-    console.error('EventModel.claimReward error:', error);
-    return { success: false, error: 'Network error. Please try again.' };
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('EventModel.claimReward error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
   }
-}
+
+  async getJoinedCompletedEventsCount(token) {
+    try {
+      const response = await fetch(`${this.baseURL}/events/joined/completed/count`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error("EventModel.getJoinedCompletedEventsCount error:", error);
+      return { success: false, error: "Network error. Please try again." };
+    }
+  }
 }
 
 export default EventModel;

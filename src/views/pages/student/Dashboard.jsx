@@ -11,58 +11,13 @@ import EventCard from '../../../views/components/EventCard'
 import WalletCard from '../../../views/components/WalletCard'
 import RecentTransactionsCard from '../../../views/components/RecentTransactionsCard'
 import productController from '../../../controllers/productController';
-// Mock data
-const upcomingEvents = [
-  {
-    id: '1',
-    title: 'Blockchain Technology Workshop',
-    date: '2023-10-15T14:00:00',
-    location: 'Engineering Building, Room 302',
-    reward: 50,
-    category: 'Workshop',
-  },
-  {
-    id: '2',
-    title: 'AI Research Seminar',
-    date: '2023-10-17T10:00:00',
-    location: 'Science Hall, Auditorium',
-    reward: 30,
-    category: 'Seminar',
-  },
-  {
-    id: '3',
-    title: 'Career Fair 2023',
-    date: '2023-10-20T09:00:00',
-    location: 'Student Center, Main Hall',
-    reward: 40,
-    category: 'Career',
-  },
-]
-const recentTransactions = [
-  {
-    id: '1',
-    type: 'earned',
-    amount: 50,
-    event: 'Database Systems Lecture',
-    date: '2023-10-10T09:30:00',
-  },
-  {
-    id: '2',
-    type: 'redeemed',
-    amount: 25,
-    reward: 'Canteen Meal Voucher',
-    date: '2023-10-09T12:45:00',
-  },
-  {
-    id: '3',
-    type: 'earned',
-    amount: 35,
-    event: 'Student Council Meeting',
-    date: '2023-10-08T15:00:00',
-  },
-]
+import eventController from '../../../controllers/eventController';
+
 const StudentDashboard = ({ user }) => {
   const [recentTransactions, setRecentTransactions] = useState([]);
+  const [allEvents, setAllEvents] = useState([]);
+  const [attendanceCount, setAttendanceCount] = useState(0);
+
   useEffect(() => {
     const fetchRecentTransactions = async () => {
       const res = await productController.getUserOrders();
@@ -81,12 +36,96 @@ const StudentDashboard = ({ user }) => {
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
 
-        setRecentTransactions(sorted.slice(0, 5));
+        setRecentTransactions(sorted.slice(0, 3));
       }
     };
 
     fetchRecentTransactions();
   }, []);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const res = await eventController.getAllEvents();
+      if (res.success) {
+        setAllEvents(res.events);
+      } else {
+        console.error("Error fetching events:", res.error);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      const res = await eventController.getJoinedCompletedEventsCount();
+      if (res.success) {
+        setAttendanceCount(res.count);
+      } else {
+        console.error("Error fetching attendance:", res.error);
+      }
+    };
+
+    fetchAttendance();
+  }, []);
+
+  const upcomingEvents = allEvents
+  .filter(event => {
+    if (!event?.date || !event?.time?.start) return false;
+
+    const start = new Date(event.date);
+    const [h, m] = event.time.start.replace(/AM|PM/i, "").split(":");
+    let hour = Number(h);
+    const minute = Number(m || 0);
+    if (/PM/i.test(event.time.start) && hour !== 12) hour += 12;
+    if (/AM/i.test(event.time.start) && hour === 12) hour = 0;
+    start.setHours(hour, minute, 0, 0);
+
+    return start > new Date();
+  })
+  .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  const nextEvent = upcomingEvents[0] || null;
+
+  const claimableEvents = allEvents.filter(ev => {
+    const hasJoined = ev.registeredStudents?.includes(user?._id || user?.id);
+    const rewardClaimed = ev.claimedStudents?.includes(user?._id || user?.id);
+    const now = new Date();
+
+    if (!ev?.time?.end || !ev?.date) return false;
+
+    // build event end time
+    const eventEnd = new Date(ev.date);
+    const [endHourStr, endMinuteStr] = ev.time.end.replace(/AM|PM/i, "").split(":");
+    let endHour = Number(endHourStr);
+    const endMinute = Number(endMinuteStr || 0);
+    if (/PM/i.test(ev.time.end) && endHour !== 12) endHour += 12;
+    if (/AM/i.test(ev.time.end) && endHour === 12) endHour = 0;
+    eventEnd.setHours(endHour, endMinute, 0, 0);
+
+    return hasJoined && !rewardClaimed && now > eventEnd;
+  });
+
+  const handleClaimReward = async (eventId) => {
+    const res = await eventController.claimReward(eventId);
+    if (res.success) {
+      user.balance = res.newBalance;
+
+      setAllEvents(prev =>
+        prev.map(ev =>
+          ev._id === eventId
+            ? { ...ev, claimedStudents: [...(ev.claimedStudents || []), user._id || user.id] }
+            : ev
+        )
+      );
+
+      setAllEvents(prev => prev.filter(ev => ev._id !== eventId));
+
+      alert("Reward claimed successfully!");
+    } else {
+      alert(res.error || "Failed to claim reward");
+    }
+  };
+
   return (
     <div className="pt-16 md:ml-64">
       <div className="mb-6">
@@ -109,7 +148,7 @@ const StudentDashboard = ({ user }) => {
                 <CalendarIcon size={18} className="mr-2" />
                 <span className="font-medium">Events</span>
               </div>
-              <p className="text-2xl font-bold">12</p>
+              <p className="text-2xl font-bold">{attendanceCount}</p>
               <p className="text-sm text-gray-500">Attended</p>
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
@@ -126,32 +165,32 @@ const StudentDashboard = ({ user }) => {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-700">Next Event</h2>
           </div>
-          {upcomingEvents.length > 0 && (
+          {nextEvent ? (
             <div>
-              <h3 className="font-medium text-gray-800">
-                {upcomingEvents[0].title}
-              </h3>
+              <h3 className="font-medium text-gray-800">{nextEvent.title}</h3>
               <div className="flex items-center text-gray-500 mt-2">
                 <ClockIcon size={16} className="mr-1" />
                 <span className="text-sm">
-                  {new Date(upcomingEvents[0].date).toLocaleString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
+                  {new Date(nextEvent.date).toLocaleString("en-US", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
                   })}
                 </span>
               </div>
               <div className="flex items-center text-gray-500 mt-1">
                 <MapPinIcon size={16} className="mr-1" />
-                <span className="text-sm">{upcomingEvents[0].location}</span>
+                <span className="text-sm">{nextEvent.location}</span>
               </div>
               <div className="mt-3 flex items-center text-blue-600">
                 <CoinsIcon size={16} className="mr-1" />
-                <span>{upcomingEvents[0].reward} CampusCoin reward</span>
+                <span>{nextEvent.reward} CampusCoin reward</span>
               </div>
             </div>
+          ) : (
+            <p className="text-gray-500">No upcoming events</p>
           )}
         </div>
       </div>
@@ -170,9 +209,13 @@ const StudentDashboard = ({ user }) => {
               </Link>
             </div>
             <div className="space-y-4">
-              {upcomingEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
+              {upcomingEvents.length > 0 ? (
+                upcomingEvents.slice(0, 3).map(event => (
+                  <EventCard key={event._id} event={event} />
+                ))
+              ) : (
+                <p className="text-gray-500">No upcoming events</p>
+              )}
             </div>
           </div>
         </div>

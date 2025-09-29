@@ -1,9 +1,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { CalendarIcon, MapPinIcon, CoinsIcon, ClockIcon } from 'lucide-react'
+
 const EventCard = ({ event }) => {
   const eventDate = new Date(event.date)
   const isPast = eventDate < new Date()
+
   return (
     <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
       <div className="flex justify-between items-start">
@@ -45,18 +47,14 @@ const EventCard = ({ event }) => {
       </div>
       <div className="mt-4 flex justify-between items-center">
         <Link
-          to={`/student/event/${event.id}`}
+          to={`/student/event/${event._id}`}
           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
         >
           View details
         </Link>
-        {!isPast && (
-          <button className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700">
-            Check in
-          </button>
-        )}
       </div>
     </div>
   )
 }
+
 export default EventCard

@@ -53,8 +53,8 @@ const Events = ({ user }) => {
   // Determine event status dynamically
   const getEventStatus = (event) => {
     const now = new Date();
-    const hasJoined = event.registeredStudents?.includes(userId) || joinedEvents.includes(event._id);
-    const rewardClaimed = event.claimedStudents?.includes(userId) || event.status === 'completed';
+    const hasJoined = event.registeredStudents?.includes(userId);
+    const rewardClaimed = event.claimedStudents?.includes(userId);
 
     if (!event?.time?.start || !event?.time?.end || !event?.date) return 'Upcoming';
 
@@ -145,8 +145,22 @@ const Events = ({ user }) => {
     const res = await eventController.joinEvent(eventId);
     if (res.success) {
       setJoinedEvents([...joinedEvents, eventId]);
+
+      setAllEvents(prev =>
+        prev.map(ev =>
+          ev._id === eventId
+            ? { 
+                ...ev, 
+                registeredStudents: [...(ev.registeredStudents || []), userId] 
+              }
+            : ev
+        )
+      );
+
       const reward = allEvents.find(e => e._id === eventId)?.reward;
-      setShowSuccessMessage(`You've successfully joined "${eventTitle}". You'll earn ${reward} CampusCoins upon attendance.`);
+      setShowSuccessMessage(
+        `You've successfully joined "${eventTitle}". You'll earn ${reward} CampusCoins upon attendance.`
+      );
       setTimeout(() => setShowSuccessMessage(null), 5000);
     } else {
       alert(res.error || "Failed to join event");
@@ -273,7 +287,8 @@ const Events = ({ user }) => {
               <p className="mt-1 text-sm text-gray-500">{event.description?.substring(0, 60)}{event.description?.length > 60 ? '...' : ''}</p>
 
               <div className="mt-4 space-y-2">
-                <div className="flex items-center text-gray-500"><ClockIcon size={16} className="mr-1" />{event.time.start} - {event.time.end}</div>
+                <div className="flex items-center text-gray-500">
+                  <ClockIcon size={16} className="mr-1" />{event.time.start} - {event.time.end}</div>
                 <div className="flex items-center text-gray-500"><MapPinIcon size={16} className="mr-1" />{event.location}</div>
               </div>
               <div className="mt-4 flex items-center text-blue-600"><CoinsIcon size={16} className="mr-1" />{event.reward} CampusCoin reward</div>

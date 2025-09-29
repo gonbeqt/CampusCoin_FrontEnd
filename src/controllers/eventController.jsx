@@ -24,6 +24,20 @@ class EventController {
     }
   }
 
+    async getEventById(eventId) {
+    try {
+      const result = await this.model.getEventById(eventId);
+      if (!result.success) {
+        return { success: false, error: result.error || 'Failed to fetch event details' };
+      }
+
+      return { success: true, event: result.data };
+    } catch (error) {
+      console.error('EventController.getEventById error:', error);
+      return { success: false, error: 'Unexpected error occurred' };
+    }
+  }
+
   async joinEvent(eventId) {
     try {
       const token = this.auth.getToken();
@@ -47,27 +61,47 @@ class EventController {
   }
 
   async claimReward(eventId) {
-  try {
-    const token = this.auth.getToken();
-    if (!token) {
-      return { success: false, error: 'No authentication token found' };
-    }
+    try {
+      const token = this.auth.getToken();
+      if (!token) {
+        return { success: false, error: 'No authentication token found' };
+      }
 
-    const result = await this.model.claimReward(eventId, token);
-    if (!result.success) {
-      return { success: false, error: result.error || 'Failed to claim reward' };
-    }
+      const result = await this.model.claimReward(eventId, token);
+      if (!result.success) {
+        return { success: false, error: result.error || 'Failed to claim reward' };
+      }
 
-    return {
-      success: true,
-      message: result.data.message || 'Reward claimed successfully',
-      newBalance: result.data.newBalance,
-    };
-  } catch (error) {
-    console.error('EventController.claimReward error:', error);
-    return { success: false, error: 'Unexpected error occurred' };
+      return {
+        success: true,
+        message: result.data.message || 'Reward claimed successfully',
+        newBalance: result.data.newBalance,
+        eventStatus: result.data.eventStatus,
+      };
+    } catch (error) {
+      console.error('EventController.claimReward error:', error);
+      return { success: false, error: 'Unexpected error occurred' };
+    }
   }
-}
+
+  async getJoinedCompletedEventsCount() {
+    try {
+      const token = this.auth.getToken();
+      if (!token) {
+        return { success: false, error: "No authentication token found" };
+      }
+
+      const result = await this.model.getJoinedCompletedEventsCount(token);
+      if (!result.success) {
+        return { success: false, error: result.error || "Failed to fetch attendance" };
+      }
+
+      return { success: true, count: result.data.count || 0 };
+    } catch (error) {
+      console.error("EventController.getJoinedCompletedEventsCount error:", error);
+      return { success: false, error: "Unexpected error occurred" };
+    }
+  }
 }
 
 const eventController = new EventController();
