@@ -1,14 +1,46 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { CalendarIcon, MapPinIcon, CoinsIcon, ClockIcon } from 'lucide-react'
-const EventCard = ({ event }) => {
-  const eventDate = new Date(event.date)
-  const isPast = eventDate < new Date()
+const EventCard = ({ event, onClick, admin }) => {
+  const eventDate = new Date(event.date);
+  const navigate = useNavigate();
+  // Use _id if present, else id
+  const eventId = event._id || event.id;
+
+  // If admin prop is true, make card clickable and remove buttons
+  const handleCardClick = () => {
+    if (admin) {
+      navigate(`/admin/attendance/${eventId}`);
+    }
+  };
+
+  // Status color logic
+  let statusColor = 'bg-blue-100 text-blue-800';
+  let statusText = 'Upcoming';
+  if (event.status === 'completed') {
+    statusColor = 'bg-green-100 text-green-800';
+    statusText = 'Completed';
+  } else if (event.status === 'ongoing') {
+    statusColor = 'bg-yellow-100 text-yellow-800';
+    statusText = 'Ongoing';
+  }
+
   return (
-    <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-      <div className="flex justify-between items-start">
+    <div
+      className={`border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-${admin ? 'pointer' : 'default'} relative`}
+      onClick={admin ? handleCardClick : undefined}
+    >
+      {/* Finalized/Not Finalized Banner */}
+      <div className="absolute top-0 left-0 w-full flex justify-center z-10">
+        {event.finalized ? (
+          <div className="bg-green-400 text-green-900 font-bold text-xs px-3 py-1 rounded-b shadow-md">Finalized</div>
+        ) : (
+          <div className="bg-yellow-400 text-yellow-900 font-bold text-xs px-3 py-1 rounded-b shadow-md">Not Finalized</div>
+        )}
+      </div>
+      <div className="flex justify-between items-start mt-4">
         <div>
-          <h3 className="font-medium text-gray-900">{event.title}</h3>
+          <h3 className="font-bold text-lg text-gray-900">{event.title}</h3>
           <div className="flex items-center text-gray-500 mt-2">
             <CalendarIcon size={16} className="mr-1" />
             <span className="text-sm">
@@ -32,8 +64,16 @@ const EventCard = ({ event }) => {
             <MapPinIcon size={16} className="mr-1" />
             <span className="text-sm">{event.location}</span>
           </div>
+          {event.organizedBy && (
+            <div className="flex items-center text-gray-500 mt-1">
+              <span className="text-xs italic">Organized by: {event.organizedBy}</span>
+            </div>
+          )}
         </div>
         <div className="flex flex-col items-end">
+          <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${statusColor} mb-2`}>
+            {statusText}
+          </span>
           <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 mb-2">
             {event.category}
           </span>
@@ -43,20 +83,8 @@ const EventCard = ({ event }) => {
           </div>
         </div>
       </div>
-      <div className="mt-4 flex justify-between items-center">
-        <Link
-          to={`/student/event/${event.id}`}
-          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-        >
-          View details
-        </Link>
-        {!isPast && (
-          <button className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700">
-            Check in
-          </button>
-        )}
-      </div>
+      {/* No buttons for admin */}
     </div>
-  )
-}
-export default EventCard
+  );
+};
+export default EventCard;
