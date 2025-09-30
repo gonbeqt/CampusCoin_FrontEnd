@@ -131,8 +131,15 @@ const Events = ({ user }) => {
   // Filter events based on search and status
   const filteredEvents = allEvents.filter(event => {
     const status = getEventStatus(event);
-    // Filter by status
-    if (statusFilter !== 'All' && status !== statusFilter) return false;
+    // Custom logic for Claim Reward tab
+    if (statusFilter === 'Claim Reward') {
+      // Show if event is finalized and user is registered (claimed or not)
+      const isFinalized = event.finalized === true;
+      const isRegistered = Array.isArray(event.registeredStudents) && event.registeredStudents.includes(userId);
+      if (!(isFinalized && isRegistered)) return false;
+    } else if (statusFilter !== 'All' && status !== statusFilter) {
+      return false;
+    }
     // Filter by category
     if (categoryFilter !== 'All' && event.category !== categoryFilter) return false;
     // Filter by search term
@@ -179,7 +186,8 @@ const Events = ({ user }) => {
             ? { 
                 ...ev, 
                 claimedStudents: [...(ev.claimedStudents || []), userId],
-                status: 'completed' // sync backend status
+                status: 'completed',
+                justClaimed: true // flag for UI
               }
             : ev
         )
@@ -188,7 +196,9 @@ const Events = ({ user }) => {
       setShowSuccessMessage("Reward claimed successfully!");
       setTimeout(() => setShowSuccessMessage(null), 5000);
     } else {
-      alert(res.error || "Failed to claim reward");
+      console.error('Claim Reward Error:', res.error || "Failed to claim reward");
+      setShowSuccessMessage(res.error || "Failed to claim reward");
+      setTimeout(() => setShowSuccessMessage(null), 5000);
     }
   };
 
@@ -258,8 +268,47 @@ const Events = ({ user }) => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {filteredEvents.length > 0 ? (
         filteredEvents.map(event => (
-          <div key={event._id} className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="p-5">
+          <div key={event._id} className={`bg-white rounded-lg shadow overflow-hidden relative`}>
+            {/* Finalized banner: only show for admin/superadmin */}
+            {event.finalized && userData?.role && (userData.role === 'admin' || userData.role === 'superadmin') && (
+              <div className="absolute top-0 left-0 w-full flex justify-center z-20">
+                <div className="bg-green-500 text-white font-bold text-sm px-6 py-2 rounded-b shadow-md mt-0 mb-2">
+                  Finalized
+                </div>
+              </div>
+            )}
+            {/* Attendance status banner and background icon for Claim Reward tab */}
+            {statusFilter === 'Claim Reward' && (
+              <>
+                {/* Background icon: check for present, X for absent */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  {Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) ? (
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" className="opacity-10">
+                      <circle cx="12" cy="12" r="12" fill="#22c55e" />
+                      <path d="M7 13l3 3 7-7" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ) : (
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" className="opacity-10">
+                      <circle cx="12" cy="12" r="12" fill="#ef4444" />
+                      <path d="M8 8l8 8M16 8l-8 8" stroke="#991b1b" strokeWidth="2.5" strokeLinecap="round" />
+                    </svg>
+                  )}
+                </div>
+                {/* Banner */}
+                <div className="absolute top-0 left-0 w-full flex justify-center z-10">
+                  {Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) ? (
+                    <div className="bg-green-500 text-white font-bold text-sm px-6 py-2 rounded-b shadow-md mt-0 mb-2">
+                      Marked Present
+                    </div>
+                  ) : (
+                    <div className="bg-red-500 text-white font-bold text-sm px-6 py-2 rounded-b shadow-md mt-0 mb-2">
+                      Marked Absent
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+            <div className="p-5 pt-10">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -292,29 +341,58 @@ const Events = ({ user }) => {
                 <div className="flex items-center text-gray-500"><MapPinIcon size={16} className="mr-1" />{event.location}</div>
               </div>
               <div className="mt-4 flex items-center text-blue-600"><CoinsIcon size={16} className="mr-1" />{event.reward} CampusCoin reward</div>
-              <div className="mt-5 flex justify-between items-center">
+              <div className="mt-5 flex justify-between items-center relative">
                 <Link to={`/student/event/${event._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">View details</Link>
 
-                {getEventStatus(event) === "Completed" ? (
-                  <span className="px-3 py-1 bg-gray-400 text-white text-sm font-medium rounded">Completed</span>
-                ) : getEventStatus(event) === "Claim Reward" ? (
-                  <button
-                    className="px-3 py-1 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700"
-                    onClick={() => handleClaimReward(event._id)}
-                  >
-                    Claim Reward
-                  </button>
-                ) : getEventStatus(event) === "Ongoing" ? (
-                  <span className="px-3 py-1 bg-yellow-500 text-white text-sm font-medium rounded">Ongoing...</span>
-                ) : getEventStatus(event) === "Registered" ? (
-                  <span className="px-3 py-1 bg-green-600 text-white text-sm font-medium rounded">Registered</span>
-                ) : (
-                  <button
-                    className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
-                    onClick={() => handleJoinEvent(event._id, event.title)}
-                  >
-                    Join Event
-                  </button>
+                {/* Claim Now button for Claim Reward tab (enabled for present, disabled for absent) */}
+                {statusFilter === 'Claim Reward' && (
+                  event.claimedStudents && event.claimedStudents.includes(userId) ? (
+                    <button
+                      className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
+                      disabled
+                    >
+                      Claimed
+                    </button>
+                  ) : Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) ? (
+                    <button
+                      className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded shadow hover:bg-green-700 transition-colors"
+                      onClick={() => handleClaimReward(event._id)}
+                    >
+                      Claim Now
+                    </button>
+                  ) : (
+                    <button
+                      className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-red-400 text-white text-sm font-bold rounded shadow opacity-60 cursor-not-allowed"
+                      disabled
+                    >
+                      Claim Now
+                    </button>
+                  )
+                )}
+
+                {/* Existing status/claim/join buttons for other tabs */}
+                {statusFilter !== 'Claim Reward' && (
+                  getEventStatus(event) === "Completed" ? (
+                    <span className="px-3 py-1 bg-gray-400 text-white text-sm font-medium rounded">Completed</span>
+                  ) : getEventStatus(event) === "Claim Reward" ? (
+                    <button
+                      className="px-3 py-1 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700"
+                      onClick={() => handleClaimReward(event._id)}
+                    >
+                      Claim Reward
+                    </button>
+                  ) : getEventStatus(event) === "Ongoing" ? (
+                    <span className="px-3 py-1 bg-yellow-500 text-white text-sm font-medium rounded">Ongoing...</span>
+                  ) : getEventStatus(event) === "Registered" ? (
+                    <span className="px-3 py-1 bg-green-600 text-white text-sm font-medium rounded">Registered</span>
+                  ) : (
+                    <button
+                      className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
+                      onClick={() => handleJoinEvent(event._id, event.title)}
+                    >
+                      Join Event
+                    </button>
+                  )
                 )}
               </div>
             </div>

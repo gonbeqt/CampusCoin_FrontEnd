@@ -98,14 +98,14 @@ class EventModel {
     }
   }
 
-  // Join event (Jo's branch)
+  // Join event
   async joinEvent(eventId) {
     try {
       const authModel = new AuthModel();
       const token = authModel.getToken();
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const response = await fetch(`${this.baseURL}/join/${eventId}`, {
+  const response = await fetch(`${this.baseURL}/${eventId}/join`, {
         method: 'POST',
         headers,
       });
@@ -121,14 +121,14 @@ class EventModel {
     }
   }
 
-  // Claim reward (Jo's branch)
+  // Claim reward
   async claimReward(eventId) {
     try {
       const authModel = new AuthModel();
       const token = authModel.getToken();
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const response = await fetch(`${this.baseURL}/claim-reward/${eventId}`, {
+  const response = await fetch(`${this.baseURL}/${eventId}/claim`, {
         method: 'POST',
         headers,
       });
@@ -144,14 +144,14 @@ class EventModel {
     }
   }
 
-  // Get joined & completed events count (Jo's branch)
+  // Get joined & completed events count
   async getJoinedCompletedEventsCount(userId) {
     try {
       const authModel = new AuthModel();
       const token = authModel.getToken();
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const response = await fetch(`${this.baseURL}/joined-completed-count/${userId}`, {
+  const response = await fetch(`${this.baseURL}/joined-completed-count/${userId}`, {
         method: 'GET',
         headers,
       });

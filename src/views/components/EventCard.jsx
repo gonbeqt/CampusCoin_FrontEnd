@@ -26,20 +26,21 @@ const EventCard = ({ event, admin }) => {
     statusText = 'Ongoing';
   }
 
-
   return (
     <div
       className={`border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-${admin ? 'pointer' : 'default'} relative`}
       onClick={admin ? handleCardClick : undefined}
     >
-      {/* Finalized/Not Finalized Banner */}
-      <div className="absolute top-0 left-0 w-full flex justify-center z-10">
-        {event.finalized ? (
-          <div className="bg-green-400 text-green-900 font-bold text-xs px-3 py-1 rounded-b shadow-md">Finalized</div>
-        ) : (
-          <div className="bg-yellow-400 text-yellow-900 font-bold text-xs px-3 py-1 rounded-b shadow-md">Not Finalized</div>
-        )}
-      </div>
+      {/* Finalized/Not Finalized Banner: only show for admin */}
+      {admin && (
+        <div className="absolute top-0 left-0 w-full flex justify-center z-10">
+          {event.finalized ? (
+            <div className="bg-green-400 text-green-900 font-bold text-xs px-3 py-1 rounded-b shadow-md">Finalized</div>
+          ) : (
+            <div className="bg-yellow-400 text-yellow-900 font-bold text-xs px-3 py-1 rounded-b shadow-md">Not Finalized</div>
+          )}
+        </div>
+      )}
       <div className="flex justify-between items-start mt-4">
         <div>
           <h3 className="font-bold text-lg text-gray-900">{event.title}</h3>
