@@ -16,6 +16,11 @@ const Events = ({ user }) => {
   const statusCategories = ['Upcoming', 'Ongoing', 'Registered', 'Claim Reward', 'Completed'];
   const [statusFilter, setStatusFilter] = useState('Upcoming');
   const [categoryFilter, setCategoryFilter] = useState('All');
+  // Claim Reward tab filters
+  const [sortOrder, setSortOrder] = useState('az'); // 'az' or 'za'
+  const [claimStatus, setClaimStatus] = useState('all'); // 'all', 'claimed', 'unclaimed', 'unclaimable'
+  const [rewardOrder, setRewardOrder] = useState('none'); // 'none', 'asc', 'desc'
+  const [dateOrder, setDateOrder] = useState('none'); // 'none', 'recent', 'oldest'
   const { balance, setBalance } = useBalance();
   const [allEvents, setAllEvents] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -128,25 +133,44 @@ const Events = ({ user }) => {
     return now >= eventStart && now <= eventEnd;
   };
 
-  // Filter events based on search and status
-  const filteredEvents = allEvents.filter(event => {
+  // Filter and sort events based on search, status, and Claim Reward tab filters
+  let filteredEvents = allEvents.filter(event => {
     const status = getEventStatus(event);
-    // Custom logic for Claim Reward tab
     if (statusFilter === 'Claim Reward') {
-      // Show if event is finalized and user is registered (claimed or not)
       const isFinalized = event.finalized === true;
       const isRegistered = Array.isArray(event.registeredStudents) && event.registeredStudents.includes(userId);
       if (!(isFinalized && isRegistered)) return false;
+      // Claim status filter
+      if (claimStatus === 'claimed' && !(event.claimedStudents && event.claimedStudents.includes(userId))) return false;
+      if (claimStatus === 'unclaimed' && !(Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) && !(event.claimedStudents && event.claimedStudents.includes(userId)))) return false;
+      if (claimStatus === 'unclaimable' && !(Array.isArray(event.absentStudents) && event.absentStudents.includes(userId))) return false;
     } else if (statusFilter !== 'All' && status !== statusFilter) {
       return false;
     }
-    // Filter by category
     if (categoryFilter !== 'All' && event.category !== categoryFilter) return false;
-    // Filter by search term
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          event.description.toLowerCase().includes(searchTerm.toLowerCase());
+      event.description.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
+
+  // Sort and reward/date order for Claim Reward tab
+  if (statusFilter === 'Claim Reward') {
+    if (sortOrder === 'az') {
+      filteredEvents = [...filteredEvents].sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortOrder === 'za') {
+      filteredEvents = [...filteredEvents].sort((a, b) => b.title.localeCompare(a.title));
+    }
+    if (rewardOrder === 'asc') {
+      filteredEvents = [...filteredEvents].sort((a, b) => (a.reward || 0) - (b.reward || 0));
+    } else if (rewardOrder === 'desc') {
+      filteredEvents = [...filteredEvents].sort((a, b) => (b.reward || 0) - (a.reward || 0));
+    }
+    if (dateOrder === 'recent') {
+      filteredEvents = [...filteredEvents].sort((a, b) => new Date(b.date) - new Date(a.date));
+    } else if (dateOrder === 'oldest') {
+      filteredEvents = [...filteredEvents].sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
+  }
 
   const handleJoinEvent = async (eventId, eventTitle) => {
     const res = await eventController.joinEvent(eventId);
@@ -250,164 +274,304 @@ const Events = ({ user }) => {
         ))}
       </div>
 
-      {/* Search bar */}
-      <div className="relative flex-1 mb-6">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <SearchIcon size={18} className="text-gray-400" />
+      {/* Search bar (and filter only for Claim Reward) */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+        <div className="relative w-full sm:w-64">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <SearchIcon size={18} className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search events..."
+            className="pl-10 pr-4 py-1.5 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-        <input
-          type="text"
-          placeholder="Search events..."
-          className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
-      {/* Events grid */}
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredEvents.length > 0 ? (
-        filteredEvents.map(event => (
-          <div key={event._id} className={`bg-white rounded-lg shadow overflow-hidden relative`}>
-            {/* Finalized banner: only show for admin/superadmin */}
-            {event.finalized && userData?.role && (userData.role === 'admin' || userData.role === 'superadmin') && (
-              <div className="absolute top-0 left-0 w-full flex justify-center z-20">
-                <div className="bg-green-500 text-white font-bold text-sm px-6 py-2 rounded-b shadow-md mt-0 mb-2">
-                  Finalized
-                </div>
-              </div>
-            )}
-            {/* Attendance status banner and background icon for Claim Reward tab */}
-            {statusFilter === 'Claim Reward' && (
-              <>
-                {/* Background icon: check for present, X for absent */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  {Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) ? (
-                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" className="opacity-10">
-                      <circle cx="12" cy="12" r="12" fill="#22c55e" />
-                      <path d="M7 13l3 3 7-7" stroke="#166534" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  ) : (
-                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" className="opacity-10">
-                      <circle cx="12" cy="12" r="12" fill="#ef4444" />
-                      <path d="M8 8l8 8M16 8l-8 8" stroke="#991b1b" strokeWidth="2.5" strokeLinecap="round" />
-                    </svg>
-                  )}
-                </div>
-                {/* Banner */}
-                <div className="absolute top-0 left-0 w-full flex justify-center z-10">
-                  {Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) ? (
-                    <div className="bg-green-500 text-white font-bold text-sm px-6 py-2 rounded-b shadow-md mt-0 mb-2">
-                      Marked Present
-                    </div>
-                  ) : (
-                    <div className="bg-red-500 text-white font-bold text-sm px-6 py-2 rounded-b shadow-md mt-0 mb-2">
-                      Marked Absent
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-            <div className="p-5 pt-10">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                    {event.category}
-                  </span>
-
-                  {isEventOngoing(event) && (
-                    <>
-                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                        Started
-                      </span>
-
-                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                        {timers[event._id] || 'loading...'}
-                      </span>
-                    </>
-                  )}
-                </div>
-                <span className="flex items-center text-blue-600 font-medium">
-                  <CalendarIcon size={16} className="mr-1" />
-                  {new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                </span>
-              </div>
-              <h3 className="mt-3 text-lg font-medium text-gray-900">{event.title}</h3>
-              <p className="mt-1 text-sm text-gray-500">{event.description?.substring(0, 60)}{event.description?.length > 60 ? '...' : ''}</p>
-
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center text-gray-500">
-                  <ClockIcon size={16} className="mr-1" />{event.time.start} - {event.time.end}</div>
-                <div className="flex items-center text-gray-500"><MapPinIcon size={16} className="mr-1" />{event.location}</div>
-              </div>
-              <div className="mt-4 flex items-center text-blue-600"><CoinsIcon size={16} className="mr-1" />{event.reward} CampusCoin reward</div>
-              <div className="mt-5 flex justify-between items-center relative">
-                <Link to={`/student/event/${event._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">View details</Link>
-
-                {/* Claim Now button for Claim Reward tab (enabled for present, disabled for absent) */}
-                {statusFilter === 'Claim Reward' && (
-                  event.claimedStudents && event.claimedStudents.includes(userId) ? (
-                    <button
-                      className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
-                      disabled
-                    >
-                      Claimed
-                    </button>
-                  ) : Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) ? (
-                    <button
-                      className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded shadow hover:bg-green-700 transition-colors"
-                      onClick={() => handleClaimReward(event._id)}
-                    >
-                      Claim Now
-                    </button>
-                  ) : (
-                    <button
-                      className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-red-400 text-white text-sm font-bold rounded shadow opacity-60 cursor-not-allowed"
-                      disabled
-                    >
-                      Claim Now
-                    </button>
-                  )
-                )}
-
-                {/* Existing status/claim/join buttons for other tabs */}
-                {statusFilter !== 'Claim Reward' && (
-                  getEventStatus(event) === "Completed" ? (
-                    <span className="px-3 py-1 bg-gray-400 text-white text-sm font-medium rounded">Completed</span>
-                  ) : getEventStatus(event) === "Claim Reward" ? (
-                    <button
-                      className="px-3 py-1 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700"
-                      onClick={() => handleClaimReward(event._id)}
-                    >
-                      Claim Reward
-                    </button>
-                  ) : getEventStatus(event) === "Ongoing" ? (
-                    <span className="px-3 py-1 bg-yellow-500 text-white text-sm font-medium rounded">Ongoing...</span>
-                  ) : getEventStatus(event) === "Registered" ? (
-                    <span className="px-3 py-1 bg-green-600 text-white text-sm font-medium rounded">Registered</span>
-                  ) : (
-                    <button
-                      className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
-                      onClick={() => handleJoinEvent(event._id, event.title)}
-                    >
-                      Join Event
-                    </button>
-                  )
-                )}
-              </div>
-            </div>
-          </div>
-        )
-        )) : (
-          <div className="col-span-full text-center py-10 bg-white rounded-lg shadow">
-            <CalendarIcon size={48} className="mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">No events found</h3>
-          </div>
+        {statusFilter === 'Claim Reward' && (
+          <>
+            {/* Sort by A-Z/Z-A */}
+            <select
+              className="w-full sm:w-40 px-2 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none"
+              value={sortOrder}
+              onChange={e => setSortOrder(e.target.value)}
+            >
+              <option value="az">A - Z</option>
+              <option value="za">Z - A</option>
+            </select>
+            {/* Filter by claim status */}
+            <select
+              className="w-full sm:w-48 px-2 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none"
+              value={claimStatus}
+              onChange={e => setClaimStatus(e.target.value)}
+            >
+              <option value="all">All</option>
+              <option value="claimed">Claimed Only</option>
+              <option value="unclaimed">Unclaimed Only</option>
+              <option value="unclaimable">Unclaimable Only</option>
+            </select>
+            {/* Filter by reward amount */}
+            <select
+              className="w-full sm:w-48 px-2 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none"
+              value={rewardOrder}
+              onChange={e => setRewardOrder(e.target.value)}
+            >
+              <option value="none">Reward (default)</option>
+              <option value="asc">Reward: Low to High</option>
+              <option value="desc">Reward: High to Low</option>
+            </select>
+            {/* Filter by date (recent/oldest) */}
+            <select
+              className="w-full sm:w-48 px-2 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none"
+              value={dateOrder}
+              onChange={e => setDateOrder(e.target.value)}
+            >
+              <option value="none">Date (default)</option>
+              <option value="recent">Most Recent</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </>
         )}
       </div>
+
+      {/* Events grid for Claim Reward tab: divided into sections */}
+      {statusFilter === 'Claim Reward' ? (
+        <div>
+          {/* Only show the relevant section for the selected claimStatus */}
+          {claimStatus === 'unclaimed' && (
+            <>
+              <h2 className="text-lg font-bold mb-2">Unclaimed Rewards</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {filteredEvents.filter(event =>
+                  Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) &&
+                  !(event.claimedStudents && event.claimedStudents.includes(userId))
+                ).map(event => (
+                  <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
+                ))}
+                {filteredEvents.filter(event =>
+                  Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) &&
+                  !(event.claimedStudents && event.claimedStudents.includes(userId))
+                ).length === 0 && (
+                  <div className="col-span-full text-center py-4 text-gray-500">No unclaimed rewards</div>
+                )}
+              </div>
+            </>
+          )}
+          {claimStatus === 'claimed' && (
+            <>
+              <h2 className="text-lg font-bold mb-2">Claimed Rewards</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {filteredEvents.filter(event =>
+                  event.claimedStudents && event.claimedStudents.includes(userId)
+                ).map(event => (
+                  <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
+                ))}
+                {filteredEvents.filter(event =>
+                  event.claimedStudents && event.claimedStudents.includes(userId)
+                ).length === 0 && (
+                  <div className="col-span-full text-center py-4 text-gray-500">No claimed rewards</div>
+                )}
+              </div>
+            </>
+          )}
+          {claimStatus === 'unclaimable' && (
+            <>
+              <h2 className="text-lg font-bold mb-2">Unclaimable Rewards</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredEvents.filter(event =>
+                  Array.isArray(event.absentStudents) && event.absentStudents.includes(userId)
+                ).map(event => (
+                  <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
+                ))}
+                {filteredEvents.filter(event =>
+                  Array.isArray(event.absentStudents) && event.absentStudents.includes(userId)
+                ).length === 0 && (
+                  <div className="col-span-full text-center py-4 text-gray-500">No unclaimable rewards</div>
+                )}
+              </div>
+            </>
+          )}
+          {claimStatus === 'all' && (
+            <>
+              {/* Unclaimed Rewards (claimable) */}
+              <h2 className="text-lg font-bold mb-2">Unclaimed Rewards</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {filteredEvents.filter(event =>
+                  Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) &&
+                  !(event.claimedStudents && event.claimedStudents.includes(userId))
+                ).map(event => (
+                  <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
+                ))}
+                {filteredEvents.filter(event =>
+                  Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) &&
+                  !(event.claimedStudents && event.claimedStudents.includes(userId))
+                ).length === 0 && (
+                  <div className="col-span-full text-center py-4 text-gray-500">No unclaimed rewards</div>
+                )}
+              </div>
+
+              {/* Claimed Rewards */}
+              <h2 className="text-lg font-bold mb-2">Claimed Rewards</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {filteredEvents.filter(event =>
+                  event.claimedStudents && event.claimedStudents.includes(userId)
+                ).map(event => (
+                  <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
+                ))}
+                {filteredEvents.filter(event =>
+                  event.claimedStudents && event.claimedStudents.includes(userId)
+                ).length === 0 && (
+                  <div className="col-span-full text-center py-4 text-gray-500">No claimed rewards</div>
+                )}
+              </div>
+
+              {/* Unclaimable Rewards */}
+              <h2 className="text-lg font-bold mb-2">Unclaimable Rewards</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredEvents.filter(event =>
+                  Array.isArray(event.absentStudents) && event.absentStudents.includes(userId)
+                ).map(event => (
+                  <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
+                ))}
+                {filteredEvents.filter(event =>
+                  Array.isArray(event.absentStudents) && event.absentStudents.includes(userId)
+                ).length === 0 && (
+                  <div className="col-span-full text-center py-4 text-gray-500">No unclaimable rewards</div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredEvents.length > 0 ? (
+            filteredEvents.map(event => (
+              <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-10 bg-white rounded-lg shadow">
+              <CalendarIcon size={48} className="mx-auto text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">No events found</h3>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
 
+// EventCard component for rendering each event in the grid
+const EventCard = ({ event, userId, timers, handleClaimReward, statusFilter }) => {
+  const userData = new AuthModel().getUserData();
+  // Helper to check if event is ongoing
+  const isEventOngoing = (event) => {
+    if (!event?.time?.start || !event?.time?.end || !event?.date) return false;
+    const now = new Date();
+    const eventStart = new Date(event.date);
+    const [startHourStr, startMinuteStr] = event.time.start.replace(/AM|PM/i, "").split(":");
+    let startHour = Number(startHourStr);
+    const startMinute = Number(startMinuteStr || 0);
+    if (/PM/i.test(event.time.start) && startHour !== 12) startHour += 12;
+    if (/AM/i.test(event.time.start) && startHour === 12) startHour = 0;
+    eventStart.setHours(startHour, startMinute, 0, 0);
+    const eventEnd = new Date(event.date);
+    const [endHourStr, endMinuteStr] = event.time.end.replace(/AM|PM/i, "").split(":");
+    let endHour = Number(endHourStr);
+    const endMinute = Number(endMinuteStr || 0);
+    if (/PM/i.test(event.time.end) && endHour !== 12) endHour += 12;
+    if (/AM/i.test(event.time.end) && endHour === 12) endHour = 0;
+    eventEnd.setHours(endHour, endMinute, 0, 0);
+    return now >= eventStart && now <= eventEnd;
+  };
+  return (
+    <div className={`bg-white rounded-lg shadow overflow-hidden relative`}>
+      {/* Finalized banner: only show for admin/superadmin */}
+      {event.finalized && userData?.role && (userData.role === 'admin' || userData.role === 'superadmin') && (
+        <div className="absolute top-0 left-0 w-full flex justify-center z-20">
+          <div className="bg-green-500 text-white font-bold text-sm px-6 py-2 rounded-b shadow-md mt-0 mb-2">
+            Finalized
+          </div>
+        </div>
+      )}
+      {/* Attendance status banner and background icon for Claim Reward tab */}
+      {statusFilter === 'Claim Reward' && (
+        <>
+          {/* Banner */}
+          <div className="absolute top-0 left-0 w-full flex justify-center z-10">
+            {Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) ? (
+              <div className="bg-green-500 text-white font-bold text-sm px-6 py-2 rounded-b shadow-md mt-0 mb-2">
+                Marked Present
+              </div>
+            ) : (
+              <div className="bg-red-500 text-white font-bold text-sm px-6 py-2 rounded-b shadow-md mt-0 mb-2">
+                Marked Absent
+              </div>
+            )}
+          </div>
+        </>
+      )}
+      <div className="p-5 pt-10">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+              {event.category}
+            </span>
+            {isEventOngoing(event) && (
+              <>
+                <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                  Started
+                </span>
+                <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                  {timers[event._id] || 'loading...'}
+                </span>
+              </>
+            )}
+          </div>
+          <span className="flex items-center text-blue-600 font-medium">
+            <CalendarIcon size={16} className="mr-1" />
+            {new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          </span>
+        </div>
+        <h3 className="mt-3 text-lg font-medium text-gray-900">{event.title}</h3>
+        <p className="mt-1 text-sm text-gray-500">{event.description?.substring(0, 60)}{event.description?.length > 60 ? '...' : ''}</p>
+        <div className="mt-4 space-y-2">
+          <div className="flex items-center text-gray-500">
+            <ClockIcon size={16} className="mr-1" />{event.time.start} - {event.time.end}
+          </div>
+          <div className="flex items-center text-gray-500"><MapPinIcon size={16} className="mr-1" />{event.location}</div>
+        </div>
+        <div className="mt-4 flex items-center text-blue-600"><CoinsIcon size={16} className="mr-1" />{event.reward} CampusCoin reward</div>
+        <div className="mt-5 flex justify-between items-center relative">
+          <Link to={`/student/event/${event._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">View details</Link>
+          {/* Claim Now button for Claim Reward tab (enabled for present, disabled for absent) */}
+          {statusFilter === 'Claim Reward' && (
+            event.claimedStudents && event.claimedStudents.includes(userId) ? (
+              <button
+                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
+                disabled
+              >
+                Claimed
+              </button>
+            ) : Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) ? (
+              <button
+                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded shadow hover:bg-green-700 transition-colors"
+                onClick={() => handleClaimReward(event._id)}
+              >
+                Claim Now
+              </button>
+            ) : (
+              <button
+                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-red-400 text-white text-sm font-bold rounded shadow opacity-60 cursor-not-allowed"
+                disabled
+              >
+                Claim Now
+              </button>
+            )
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
-export default Events
+export default Events;
