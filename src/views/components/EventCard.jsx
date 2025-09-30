@@ -1,10 +1,11 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { CalendarIcon, MapPinIcon, CoinsIcon, ClockIcon } from 'lucide-react'
-const EventCard = ({ event, onClick, admin }) => {
+
+// Merged: supports both admin and student view
+const EventCard = ({ event, admin }) => {
   const eventDate = new Date(event.date);
   const navigate = useNavigate();
-  // Use _id if present, else id
   const eventId = event._id || event.id;
 
   // If admin prop is true, make card clickable and remove buttons
@@ -24,6 +25,7 @@ const EventCard = ({ event, onClick, admin }) => {
     statusColor = 'bg-yellow-100 text-yellow-800';
     statusText = 'Ongoing';
   }
+
 
   return (
     <div
@@ -83,8 +85,19 @@ const EventCard = ({ event, onClick, admin }) => {
           </div>
         </div>
       </div>
-      {/* No buttons for admin */}
+      {/* Student view: show View details button, admin: no button */}
+      {!admin && (
+        <div className="mt-4 flex justify-between items-center">
+          <Link
+            to={`/student/event/${eventId}`}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            View details
+          </Link>
+        </div>
+      )}
     </div>
   );
 };
+
 export default EventCard;
