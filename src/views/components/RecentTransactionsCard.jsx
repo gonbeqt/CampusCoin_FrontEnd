@@ -1,17 +1,15 @@
 import React from 'react'
 import { ArrowUpIcon, ArrowDownIcon, XIcon, CoinsIcon } from 'lucide-react'
-import productController from '../../controllers/productController';
 
 const RecentTransactionsCard = ({ transactions }) => {
-  // same helpers as in TransactionHistory
   const getStatusClasses = (status) => {
     if (status === 'pending')
-      return { bg: 'bg-yellow-100', text: 'text-yellow-600', sign: '-' }
+      return { bg: 'bg-yellow-100', iconColor: 'text-yellow-600', sign: '-', amountColor: 'text-red-600' }
     if (status === 'paid')
-      return { bg: 'bg-green-100', text: 'text-green-600', sign: '-' }
+      return { bg: 'bg-green-100', iconColor: 'text-green-600', sign: '-', amountColor: 'text-red-600' }
     if (status === 'cancelled')
-      return { bg: 'bg-red-100', text: 'text-red-600', sign: '+' }
-    return { bg: 'bg-gray-100', text: 'text-gray-600', sign: '' }
+      return { bg: 'bg-red-100', iconColor: 'text-red-600', sign: '+', amountColor: 'text-green-600' }
+    return { bg: 'bg-gray-100', iconColor: 'text-gray-600', sign: '', amountColor: 'text-gray-600' }
   }
 
   const getStatusIcon = (status, textClass) => {
@@ -33,7 +31,7 @@ const RecentTransactionsCard = ({ transactions }) => {
           >
             {/* Status Icon */}
             <div className={`p-2 rounded-full ${classes.bg}`}>
-              {getStatusIcon(transaction.status, classes.text)}
+              {getStatusIcon(transaction.status, classes.iconColor)}
             </div>
 
             {/* Product Name + Date */}
@@ -52,8 +50,8 @@ const RecentTransactionsCard = ({ transactions }) => {
             </div>
 
             {/* Amount */}
-            <div className={`text-sm font-semibold flex items-center space-x-1 ${classes.text}`}>
-              <span>
+            <div className="flex items-center space-x-1">
+              <span className={`text-sm font-semibold ${classes.amountColor}`}>
                 {classes.sign}{transaction.totalPrice}
               </span>
               <CoinsIcon size={14} className="text-blue-600" />

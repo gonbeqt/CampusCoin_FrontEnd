@@ -1,8 +1,62 @@
 
+import AuthModel from './authModel';
+
 class EventModel {
   constructor() {
     this.baseURL = 'http://localhost:5000/api/events';
   }
+
+  // Finalize event
+  async finalizeEvent(eventId, finalizedBy) {
+    try {
+      const authModel = new AuthModel();
+      const token = authModel.getToken();
+      const response = await fetch(`${this.baseURL}/${eventId}/finalize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ finalizedBy }),
+      });
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? data : null,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('EventModel.finalizeEvent error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  // Mark student attendance
+  async markStudentAttendance(eventId, studentId, status) {
+    try {
+      const authModel = new AuthModel();
+      const token = authModel.getToken();
+      const response = await fetch(`${this.baseURL}/${eventId}/attendance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ studentId, status }),
+      });
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? data : null,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('EventModel.markStudentAttendance error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+
 
   // Get all events
   async getAllEvents() {
@@ -11,7 +65,6 @@ class EventModel {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
-
       const data = await response.json();
       return {
         success: response.ok,
@@ -20,6 +73,97 @@ class EventModel {
       };
     } catch (error) {
       console.error('EventModel.getAllEvents error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  // Get event by ID (merged: supports optional token)
+  async getEventById(eventId, token = null) {
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const response = await fetch(`${this.baseURL}/${eventId}`, {
+        method: 'GET',
+        headers,
+      });
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? data : null,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('EventModel.getEventById error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  // Join event
+  async joinEvent(eventId) {
+    try {
+      const authModel = new AuthModel();
+      const token = authModel.getToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+  const response = await fetch(`${this.baseURL}/${eventId}/join`, {
+        method: 'POST',
+        headers,
+      });
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? data : null,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('EventModel.joinEvent error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  // Claim reward
+  async claimReward(eventId) {
+    try {
+      const authModel = new AuthModel();
+      const token = authModel.getToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+  const response = await fetch(`${this.baseURL}/${eventId}/claim`, {
+        method: 'POST',
+        headers,
+      });
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? data : null,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('EventModel.claimReward error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  // Get joined & completed events count
+  async getJoinedCompletedEventsCount(userId) {
+    try {
+      const authModel = new AuthModel();
+      const token = authModel.getToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+  const response = await fetch(`${this.baseURL}/joined-completed-count/${userId}`, {
+        method: 'GET',
+        headers,
+      });
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? data : null,
+
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('EventModel.getJoinedCompletedEventsCount error:', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }

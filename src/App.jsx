@@ -15,6 +15,7 @@ import RewardMarketplace from './views/pages/student/RewardMarketplace'
 import TransactionHistory from './views/pages/student/TransactionHistory'
 import EventManagement from './views/pages/admin/EventManagement'
 import AttendanceVerification from './views/pages/admin/AttendanceVerification'
+import EventAttendanceDetails from './views/pages/admin/EventAttendanceDetails'
 import RewardManagement from './views/pages/admin/RewardManagement'
 import SellerDashboard from './views/pages/seller/Dashboard'
 import ProductManagement from './views/pages/seller/ProductManagement'
@@ -62,6 +63,7 @@ export default function App() {
               <Route index element={<AdminDashboard />} />
               <Route path="events" element={<EventManagement />} />
               <Route path="attendance" element={<AttendanceVerification />} />
+              <Route path="attendance/:eventId" element={<EventAttendanceDetails />} />
               <Route path="rewards" element={<RewardManagement />} />
               <Route path="users" element={<UserManagement/>}/>
             </Route>
