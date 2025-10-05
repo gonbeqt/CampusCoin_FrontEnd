@@ -36,18 +36,21 @@ const Events = ({ user }) => {
   useEffect(() => {
     const fetchEvents = async () => {
       const res = await eventController.getAllEvents()
-      if (res.success) setAllEvents(res.events)
-      else console.error('Error fetching events:', res.error)
+      if (res.success && Array.isArray(res.events)) setAllEvents(res.events)
+      else {
+        setAllEvents([]);
+        console.error('Error fetching events:', res.error || res.events)
+      }
       setLoading(false)
     }
     fetchEvents()
   }, [])
 
-  // Live timers for ongoing events
+  // Live timers for ongoing events (defensive: always use safeAllEvents)
   useEffect(() => {
     const interval = setInterval(() => {
       const updatedTimers = {};
-      allEvents.forEach(event => {
+      (Array.isArray(allEvents) ? allEvents : []).forEach(event => {
         if (isEventOngoing(event)) updatedTimers[event._id] = getTimeRemaining(event);
       });
       setTimers(updatedTimers);
@@ -134,7 +137,8 @@ const Events = ({ user }) => {
   };
 
   // Filter and sort events based on search, status, and Claim Reward tab filters
-  let filteredEvents = allEvents.filter(event => {
+  const safeAllEvents = Array.isArray(allEvents) ? allEvents : [];
+  let filteredEvents = safeAllEvents.filter(event => {
     const status = getEventStatus(event);
     if (statusFilter === 'Claim Reward') {
       const isFinalized = event.finalized === true;
@@ -227,7 +231,7 @@ const Events = ({ user }) => {
   };
 
   if (loading) return <div className="pt-16 md:ml-64 flex justify-center items-center h-64"><p className="text-gray-500">Loading events...</p></div>
-  const eventTypes = [...new Set(allEvents.map(event => event.category).filter(Boolean))];
+  const eventTypes = [...new Set((Array.isArray(allEvents) ? allEvents : []).map(event => event.category).filter(Boolean))];
 
   return (
   <div className="pt-16 md:ml-64">
@@ -446,7 +450,15 @@ const Events = ({ user }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEvents.length > 0 ? (
             filteredEvents.map(event => (
-              <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
+              <EventCard
+                key={event._id}
+                event={event}
+                userId={userId}
+                timers={timers}
+                handleClaimReward={handleClaimReward}
+                handleJoinEvent={handleJoinEvent}
+                statusFilter={statusFilter}
+              />
             ))
           ) : (
             <div className="col-span-full text-center py-10 bg-white rounded-lg shadow">
@@ -459,9 +471,8 @@ const Events = ({ user }) => {
     </div>
   )
 }
-
 // EventCard component for rendering each event in the grid
-const EventCard = ({ event, userId, timers, handleClaimReward, statusFilter }) => {
+const EventCard = ({ event, userId, timers, handleClaimReward, handleJoinEvent, statusFilter }) => {
   const userData = new AuthModel().getUserData();
   // Helper to check if event is ongoing
   const isEventOngoing = (event) => {
@@ -483,6 +494,19 @@ const EventCard = ({ event, userId, timers, handleClaimReward, statusFilter }) =
     eventEnd.setHours(endHour, endMinute, 0, 0);
     return now >= eventStart && now <= eventEnd;
   };
+  const hasEnded = (event) => {
+    if (!event?.time?.end || !event?.date) return false;
+    const eventEnd = new Date(event.date);
+    const [endHourStr, endMinuteStr] = event.time.end.replace(/AM|PM/i, "").split(":");
+    let endHour = Number(endHourStr);
+    const endMinute = Number(endMinuteStr || 0);
+    if (/PM/i.test(event.time.end) && endHour !== 12) endHour += 12;
+    if (/AM/i.test(event.time.end) && endHour === 12) endHour = 0;
+    eventEnd.setHours(endHour, endMinute, 0, 0);
+    return new Date() > eventEnd;
+  };
+  const hasJoined = Array.isArray(event.registeredStudents) && event.registeredStudents.includes(userId);
+  const isFull = typeof event.maxStudents === 'number' && Array.isArray(event.registeredStudents) && event.registeredStudents.length >= event.maxStudents;
   return (
     <div className={`bg-white rounded-lg shadow overflow-hidden relative`}>
       {/* Finalized banner: only show for admin/superadmin */}
@@ -568,10 +592,42 @@ const EventCard = ({ event, userId, timers, handleClaimReward, statusFilter }) =
               </button>
             )
           )}
+          {/* Register/Joined button for non-Claim Reward tabs */}
+          {statusFilter !== 'Claim Reward' && (
+            hasJoined ? (
+              <button
+                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
+                disabled
+              >
+                Registered
+              </button>
+            ) : isFull ? (
+              <button
+                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
+                disabled
+              >
+                Full
+              </button>
+            ) : hasEnded(event) ? (
+              <button
+                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
+                disabled
+              >
+                Closed
+              </button>
+            ) : (
+              <button
+                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded shadow hover:bg-blue-700 transition-colors"
+                onClick={() => handleJoinEvent(event._id, event.title)}
+              >
+                Register
+              </button>
+            )
+          )}
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default Events;
