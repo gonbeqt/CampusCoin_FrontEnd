@@ -37,7 +37,6 @@ export const NotificationProvider = ({ children }) => {
       if (notificationsData.status === 'fulfilled') {
         setNotifications(notificationsData.value.notifications || []);
       } else {
-        console.error('Notifications data failed:', notificationsData.reason);
         setNotifications([]);
       }
 
@@ -59,7 +58,6 @@ export const NotificationProvider = ({ children }) => {
         setStats({ total: 0, unread: 0, important: 0 });
       }
     } catch (error) {
-      console.error('Error loading initial notification data:', error);
       setError(error.message);
       setNotifications([]);
       setUnreadCount(0);
@@ -304,7 +302,6 @@ export const NotificationProvider = ({ children }) => {
     setNotifications(prev => {
       const exists = prev.some(n => n._id === notification._id || n.id === notification.id);
       if (exists) {
-        console.log('Notification already exists, skipping duplicate');
         return prev;
       }
       return [notification, ...prev];

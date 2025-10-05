@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bell, BellRing, X, Check, Star, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../views/components/NotificationContext';
 import socketService from '../services/socketService';
 
 const NotificationBell = () => {
-  const navigate = useNavigate();
   const {
     notifications,
     unreadCount,
@@ -16,7 +14,6 @@ const NotificationBell = () => {
     markAllAsRead,
     refreshNotifications,
     getNotificationIcon,
-    getNotificationColor,
     formatNotificationDate,
     showLocalNotification
   } = useNotifications();
@@ -31,17 +28,12 @@ const NotificationBell = () => {
     socketService.connect();
 
     // Listen for new notifications
-    const handleNewNotification = (notification) => {
-      console.log('New notification received via socket:', notification);
-      // The notification context will handle updating the state
-      // Don't create duplicate notifications - just refresh the list
+    const handleNewNotification = () => {
       refreshNotifications();
     };
 
     // Listen for notification updates
-    const handleNotificationUpdate = (data) => {
-      console.log('Notification updated via socket:', data);
-      // Refresh notifications from context
+    const handleNotificationUpdate = () => {
       refreshNotifications();
     };
 
@@ -76,11 +68,6 @@ const NotificationBell = () => {
 
   // Filter notifications based on selected filter
   const filteredNotifications = notifications.filter(notification => {
-    // Debug: Log notification structure to understand the data
-    console.log('Processing notification:', notification);
-    console.log('Notification title type:', typeof notification.title);
-    console.log('Notification title value:', notification.title);
-    
     switch (filter) {
       case 'unread':
         return !notification.read;

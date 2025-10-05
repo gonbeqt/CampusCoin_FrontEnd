@@ -13,12 +13,10 @@ class SocketService {
     const token = localStorage.getItem('authToken');
     
     if (!token) {
-      console.error('No auth token found for socket connection');
       return;
     }
 
     if (this.socket && this.isConnected) {
-      console.log('Socket already connected');
       return;
     }
 
@@ -46,45 +44,37 @@ class SocketService {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('Connected to notification server');
       this.isConnected = true;
       this.emit('connected');
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('Disconnected from notification server:', reason);
       this.isConnected = false;
       this.emit('disconnected', reason);
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
       this.emit('error', error);
     });
 
     // Notification events
     this.socket.on('new_notification', (notification) => {
-      console.log('New notification received:', notification);
       this.emit('new_notification', notification);
     });
 
     this.socket.on('notification_updated', (data) => {
-      console.log('Notification updated:', data);
       this.emit('notification_updated', data);
     });
 
     this.socket.on('notification_read', (data) => {
-      console.log('Notification marked as read:', data);
       this.emit('notification_read', data);
     });
 
     this.socket.on('notification_important_updated', (data) => {
-      console.log('Notification importance updated:', data);
       this.emit('notification_important_updated', data);
     });
 
     this.socket.on('notification_deleted', (data) => {
-      console.log('Notification deleted:', data);
       this.emit('notification_deleted', data);
     });
   }
@@ -113,7 +103,7 @@ class SocketService {
         try {
           callback(data);
         } catch (error) {
-          console.error('Error in socket event callback:', error);
+          // Silently handle callback errors
         }
       });
     }

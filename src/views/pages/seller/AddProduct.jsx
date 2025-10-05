@@ -97,17 +97,12 @@ const AddProduct = () => {
     }
 
     setErrors(newErrors)
-    if (Object.keys(newErrors).length > 0) {
-      console.log('Validation errors:', newErrors); // Debug log
-    }
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('handleSubmit called'); // Debug log
     if (!validateForm()) {
-      console.log('Validation failed, preventing submission.'); // Debug log
       return;
     }
 
@@ -131,7 +126,6 @@ const AddProduct = () => {
     if (formData.imageFile) {
       productFormData.append('image', formData.imageFile) // Backend expects 'image' field for the file
     }
-    console.log('Form data being sent:', formData); // Debug log
 
     try {
 const result = await ProductController.addProduct(productFormData, token);

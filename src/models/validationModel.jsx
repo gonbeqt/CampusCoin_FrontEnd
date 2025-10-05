@@ -11,7 +11,6 @@ class ValidationModel {
       const result = await response.json();
       return { success: response.ok, ...result };
     } catch (error) {
-      console.error('[ValidationModel] getPendingValidations error:', error);
       return { success: false, error: 'Network error while fetching pending validations.' };
     }
   }
@@ -25,7 +24,6 @@ class ValidationModel {
       const result = await response.json();
       return { success: response.ok, ...result };
     } catch (error) {
-      console.error('[ValidationModel] getValidationDetails error:', error);
       return { success: false, error: 'Network error while fetching validation details.' };
     }
   }
@@ -39,7 +37,6 @@ class ValidationModel {
       const result = await response.json();
       return { success: response.ok, ...result };
     } catch (error) {
-      console.error('[ValidationModel] approveUser error:', error);
       return { success: false, error: 'Network error while approving user.' };
     }
   }
@@ -57,7 +54,6 @@ class ValidationModel {
       const result = await response.json();
       return { success: response.ok, ...result };
     } catch (error) {
-      console.error('[ValidationModel] rejectUser error:', error);
       return { success: false, error: 'Network error while rejecting user.' };
     }
   }
@@ -75,7 +71,6 @@ class ValidationModel {
       const result = await response.json();
       return { success: response.ok, ...result };
     } catch (error) {
-      console.error('[ValidationModel] suspendUser error:', error);
       return { success: false, error: 'Network error while suspending user.' };
     }
   }
@@ -89,7 +84,6 @@ class ValidationModel {
       const result = await response.json();
       return { success: response.ok, ...result };
     } catch (error) {
-      console.error('[ValidationModel] reactivateUser error:', error);
       return { success: false, error: 'Network error while reactivating user.' };
     }
   }
@@ -110,7 +104,6 @@ class ValidationModel {
       const blob = await response.blob();
       return { success: true, blob };
     } catch (error) {
-      console.error('[ValidationModel] getDocument error:', error);
       return { success: false, error: 'Network error while fetching document.' };
     }
   }
@@ -124,7 +117,6 @@ class ValidationModel {
       const result = await response.json();
       return { success: response.ok, ...result };
     } catch (error) {
-      console.error('[ValidationModel] getValidationStats error:', error);
       return { success: false, error: 'Network error while fetching stats.' };
     }
   }
@@ -142,7 +134,6 @@ class ValidationModel {
       const result = await response.json();
       return { success: response.ok, ...result };
     } catch (error) {
-      console.error('[ValidationModel] getAllUsersForSuperAdmin error:', error);
       return { success: false, error: 'Network error while fetching users.' };
     }
   }

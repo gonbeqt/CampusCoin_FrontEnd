@@ -17,8 +17,7 @@ class UserModel {
         error: response.ok ? null : data.error || data.message,
       };
     } catch (error) {
-      console.error('UserModel.getUserById error:', error);
-      return { success: false, error: 'Network error. Please try again.' };
+      return { success: false, error: 'Failed to fetch user data' };
     }
   }
 }

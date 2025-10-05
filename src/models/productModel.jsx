@@ -24,7 +24,6 @@ class ProductModel {
 
       return { success: true, message: data.message, product: data.product };
     } catch (error) {
-      console.error('ProductModel.addProduct error:', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -91,7 +90,6 @@ class ProductModel {
         },
       };
     } catch (err) {
-      console.error('SellerModel.getDashboardStats error:', err);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }

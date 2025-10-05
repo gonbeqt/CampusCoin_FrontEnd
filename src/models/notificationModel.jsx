@@ -15,7 +15,6 @@ class NotificationModel {
 
     try {
         const url = `${this.baseURL}?page=${page}&limit=${limit}`;
-      console.log('Fetching notifications from:', url);
       
       const response = await fetch(url, {
         headers: {
@@ -24,24 +23,18 @@ class NotificationModel {
         }
       });
       
-      console.log('Response status:', response.status);
       const data = await response.json();
-      console.log('Response data:', data);
       
       if (response.ok) {
         this.notifications = data.notifications || [];
-        console.log('Set notifications:', this.notifications);
         this.notifyListeners();
         return data;
       } else {
         throw new Error(data.message || 'Failed to fetch notifications');
       }
     } catch (error) {
-      console.error('Error fetching notifications:', error);
-      
       // Fallback: If backend is not available, use empty array
       if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-        console.log('Backend not available, using empty notifications');
         this.notifications = [];
         this.notifyListeners();
         return { notifications: [], pagination: { totalNotifications: 0 }, unreadCount: 0 };
@@ -70,7 +63,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to fetch filtered notifications');
       }
     } catch (error) {
-      console.error('Error fetching filtered notifications:', error);
       throw error;
     }
   }
@@ -93,7 +85,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to search notifications');
       }
     } catch (error) {
-      console.error('Error searching notifications:', error);
       throw error;
     }
   }
@@ -116,7 +107,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to fetch notification stats');
       }
     } catch (error) {
-      console.error('Error fetching notification stats:', error);
       throw error;
     }
   }
@@ -138,7 +128,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to fetch important notifications');
       }
     } catch (error) {
-      console.error('Error fetching important notifications:', error);
       throw error;
     }
   }
@@ -160,7 +149,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to fetch notifications by category');
       }
     } catch (error) {
-      console.error('Error fetching notifications by category:', error);
       throw error;
     }
   }
@@ -183,7 +171,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to fetch unread count');
       }
     } catch (error) {
-      console.error('Error fetching unread count:', error);
       throw error;
     }
   }
@@ -215,7 +202,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to mark notification as read');
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error);
       throw error;
     }
   }
@@ -246,7 +232,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to mark notification as important');
       }
     } catch (error) {
-      console.error('Error marking notification as important:', error);
       throw error;
     }
   }
@@ -276,7 +261,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to mark all notifications as read');
       }
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
       throw error;
     }
   }
@@ -302,7 +286,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to delete notification');
       }
     } catch (error) {
-      console.error('Error deleting notification:', error);
       throw error;
     }
   }
@@ -327,7 +310,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to fetch notification preferences');
       }
     } catch (error) {
-      console.error('Error fetching notification preferences:', error);
       throw error;
     }
   }
@@ -354,7 +336,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to update notification preferences');
       }
     } catch (error) {
-      console.error('Error updating notification preferences:', error);
       throw error;
     }
   }
@@ -381,7 +362,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to update notification type preference');
       }
     } catch (error) {
-      console.error('Error updating notification type preference:', error);
       throw error;
     }
   }
@@ -408,7 +388,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to update frequency preferences');
       }
     } catch (error) {
-      console.error('Error updating frequency preferences:', error);
       throw error;
     }
   }
@@ -435,7 +414,6 @@ class NotificationModel {
         throw new Error(data.message || 'Failed to update quiet hours');
       }
     } catch (error) {
-      console.error('Error updating quiet hours:', error);
       throw error;
     }
   }

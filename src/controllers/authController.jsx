@@ -14,7 +14,6 @@ class AuthController {
       }
 
       const result = await this.model.login(credentials);
-      console.log('[AuthController] Login result:', result);
 
       if (result.success) {
         const token = result.token;
@@ -65,7 +64,6 @@ class AuthController {
         return errorResponse;
       }
     } catch (error) {
-      console.error('[AuthController] Login error:', error);
       return { success: false, error: 'An unexpected error occurred during login' };
     }
   }
@@ -80,19 +78,15 @@ class AuthController {
         return { success: false, error: result.error || 'Failed to fetch profile' };
       }
     } catch (error) {
-      console.error('[AuthController] Error fetching profile:', error);
       return { success: false, error: 'An unexpected error occurred during profile fetch' };
     }
   }
 
   async register(userData) {
     try {
-      console.log('[AuthController] Starting registration with data:', userData);
       const result = await this.model.register(userData);
-      console.log('[AuthController] Registration result:', result);
       return result;
     } catch (error) {
-      console.error('[AuthController] Registration error:', error);
       return { success: false, error: 'An unexpected error occurred during registration.' };
     }
   }
@@ -102,7 +96,6 @@ class AuthController {
       const result = await this.model.verifyEmail({ email, code });
       return result;
     } catch (error) {
-      console.error('[AuthController] Email verification error:', error);
       return { success: false, error: 'An unexpected error occurred during email verification.' };
     }
   }
@@ -112,26 +105,20 @@ class AuthController {
       const result = await this.model.resendVerificationCode(email);
       return result;
     } catch (error) {
-      console.error('[AuthController] Resend verification code error:', error);
       return { success: false, error: 'An unexpected error occurred while resending verification code.' };
     }
   }
 
   async logout() {
     try {
-      console.log('[AuthController] Starting logout process');
-      
       // Call backend logout
       const result = await this.model.logout();
       
       // Clear local data regardless of backend response
       this.model.clearAuthData();
       
-      console.log('[AuthController] Logout completed');
       return { success: true, message: 'Logged out successfully' };
     } catch (error) {
-      console.error('[AuthController] Logout error:', error);
-      
       // Still clear local data on error
       this.model.clearAuthData();
       
@@ -145,7 +132,6 @@ class AuthController {
       const result = await this.model.requestPasswordReset(email);
       return result;
     } catch (error) {
-      console.error('[AuthController] Password reset request error:', error);
       return { success: false, error: 'An unexpected error occurred during password reset request.' };
     }
   }
@@ -155,7 +141,6 @@ class AuthController {
       const result = await this.model.verifyResetCode(email, code);
       return result;
     } catch (error) {
-      console.error('[AuthController] Reset code verification error:', error);
       return { success: false, error: 'An unexpected error occurred during reset code verification.' };
     }
   }
@@ -192,7 +177,6 @@ class AuthController {
       const result = await this.model.createSuperAdmin(adminData);
       return result;
     } catch (error) {
-      console.error('[AuthController] Super admin creation error:', error);
       return { success: false, error: 'An unexpected error occurred during super admin creation.' };
     }
   }

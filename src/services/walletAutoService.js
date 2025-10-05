@@ -16,14 +16,12 @@ class WalletAutoService {
     if (this.isInitialized) return;
     
     this.isInitialized = true;
-    console.log('Wallet Auto Service initialized');
   }
 
   // Auto-reconnect wallet on login
   async autoReconnectWallet() {
     if (!this.autoReconnectEnabled) return null;
 
-    console.log('Attempting wallet auto-reconnect...');
     this.reconnectAttempts = 0;
 
     return await this.attemptWalletConnection();
@@ -34,22 +32,15 @@ class WalletAutoService {
     try {
       // Check if user is authenticated
       if (!AuthController.isAuthenticated()) {
-        console.log('User not authenticated, skipping wallet reconnection');
         return null;
       }
 
       this.reconnectAttempts++;
-      console.log(`Wallet reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
 
       // Try to get existing wallet
       const result = await WalletController.refreshWalletData();
       
       if (result.success && result.wallet) {
-        console.log('Wallet auto-reconnected successfully:', {
-          address: WalletController.getFormattedAddress(result.wallet.address),
-          balance: WalletController.formatAmount(result.balance)
-        });
-        
         this.reconnectAttempts = 0; // Reset attempts on success
         return {
           success: true,
@@ -57,7 +48,6 @@ class WalletAutoService {
           balance: result.balance
         };
       } else {
-        console.log('No existing wallet found for user');
         return {
           success: false,
           error: 'No wallet found',
@@ -66,16 +56,11 @@ class WalletAutoService {
       }
 
     } catch (error) {
-      console.error(`Wallet reconnection attempt ${this.reconnectAttempts} failed:`, error);
-
       // Retry if we haven't exceeded max attempts
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
-        console.log(`Retrying wallet connection in ${this.reconnectDelay}ms...`);
-        
         await this.delay(this.reconnectDelay);
         return await this.attemptWalletConnection();
       } else {
-        console.error('Max wallet reconnection attempts reached');
         this.reconnectAttempts = 0;
         return {
           success: false,
