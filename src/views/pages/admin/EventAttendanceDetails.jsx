@@ -102,8 +102,8 @@ const EventAttendanceDetails = () => {
     <div className="pt-16 md:ml-64 relative">
       {/* Finalized badge */}
       {event?.finalized && (
-        <div className="fixed top-0 right-56 flex items-center bg-yellow-200 border-2 border-yellow-500 text-yellow-800 px-6 py-3 rounded-lg shadow-lg text-2xl font-bold z-50">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mr-2 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" /></svg>
+        <div className="absolute top-8 right-12 flex items-center bg-yellow-200 bg-opacity-70 border-2 border-yellow-400 text-yellow-900 px-10 py-6 rounded-2xl shadow-2xl text-4xl font-extrabold z-40" style={{backdropFilter: 'blur(2px)'}}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mr-4 text-yellow-500 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" /></svg>
           FINALIZED
         </div>
       )}

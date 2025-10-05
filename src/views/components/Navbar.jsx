@@ -11,18 +11,21 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
     await AuthController.logout()
     navigate('/login')
   }
+
+  // Robust name extraction for admin display
   const nameParts = [
-  user?.first_name,
-  user?.middle_name,
-  user?.last_name,
-].filter(part => part != null && part !== '').map(part => part.trim());
-
-const suffix = user?.suffix && user.suffix.trim() ? user.suffix.trim() : null;
-
-let fullName = nameParts.join(' ').trim();
-if (suffix) {
-  fullName = fullName ? `${fullName} ${suffix}` : suffix;
-}
+    user?.first_name || user?.firstName,
+    user?.middle_name || user?.middleName,
+    user?.last_name || user?.lastName
+  ].filter(Boolean).map(part => part.trim());
+  const suffix = user?.suffix && user.suffix.trim() ? user.suffix.trim() : null;
+  let fullName = nameParts.join(' ').trim();
+  if (!fullName) {
+    fullName = user?.name || user?.fullName || '';
+  }
+  if (suffix) {
+    fullName = fullName ? `${fullName} ${suffix}` : suffix;
+  }
 
   // Notification functionality moved to NotificationBell component
 
@@ -42,13 +45,14 @@ if (suffix) {
           </span>
         </div>
         <div className="flex items-center">
-          <NotificationBell />
-          <NotificationModal />
           <div className="flex items-center">
-            <div className="mr-3 hidden md:block">
-              <div className="text-sm font-medium text-gray-900">
-                {fullName}
-              </div>
+            <NotificationBell />
+            <div className="ml-3 hidden md:block text-right">
+              {user?.role !== 'student' && fullName && (
+                <div className="text-sm font-semibold text-gray-900 leading-tight mb-0.5">
+                  {fullName}
+                </div>
+              )}
               <div className="text-xs text-gray-500">
                 {user?.role === 'student'
                   ? `ID: ${user?.studentId}`
@@ -57,11 +61,12 @@ if (suffix) {
             </div>
             <button
               onClick={handleLogout}
-              className="text-sm text-blue-600 hover:underline"
+              className="ml-3 text-sm text-blue-600 hover:underline"
             >
               Logout
             </button>
           </div>
+          <NotificationModal />
         </div>
       </div>
     </nav>

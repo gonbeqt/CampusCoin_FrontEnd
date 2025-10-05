@@ -12,7 +12,14 @@ const AttendanceVerification = () => {
     const fetchEvents = async () => {
       const res = await eventController.getAllEvents();
       if (res.success) {
-        setEvents(res.events);
+        // Support both array and { events: [...] }
+        if (Array.isArray(res.events)) {
+          setEvents(res.events);
+        } else if (res.events && Array.isArray(res.events.events)) {
+          setEvents(res.events.events);
+        } else {
+          setEvents([]);
+        }
       } else {
         setEvents([]);
       }
