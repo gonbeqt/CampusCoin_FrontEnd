@@ -145,13 +145,13 @@ class EventModel {
   }
 
   // Get joined & completed events count
-  async getJoinedCompletedEventsCount(userId) {
+  async getJoinedCompletedEventsCount() {
     try {
       const authModel = new AuthModel();
       const token = authModel.getToken();
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-  const response = await fetch(`${this.baseURL}/joined-completed-count/${userId}`, {
+  const response = await fetch(`${this.baseURL}/events/joined/completed/count`, {
         method: 'GET',
         headers,
       });

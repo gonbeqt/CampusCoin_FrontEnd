@@ -41,50 +41,50 @@ export default function App() {
       <AuthProvider>
         <NotificationProvider>
           <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/" element={<Navigate to="/login" replace />} />
-              {/* Super Admin Routes */}
-             <Route path="/superadmin" element={<SuperAdminLayout />}>
-              <Route index element={<SuperAdminDashboard />} />
-              <Route path="validate/admin" element={<ValidateAdmin />} />
-              <Route path="validate/student" element={<ValidateStudent />} />
-              <Route path="validate/seller" element={<ValidateSeller />} />
-              <Route path="users" element={< AllUser/>}/>
-            </Route>
-            {/* Student Routes */}
-            <Route path="/student" element={<Layout />}>
-              <Route index element={<StudentDashboard />} />
-              <Route path="event/:id" element={<EventDetails />} />
-              <Route path="events" element={< Events/>}/>
-              <Route path="rewards" element={<RewardMarketplace />} />
-              <Route path="transactions" element={<TransactionHistory />} />
-              <Route path="notifications" element={<NotificationCenter />} />
-              <Route path="notifications/preferences" element={<NotificationPreferences />} />
-            </Route>
-            {/* Admin Routes */}
-            <Route path="/admin" element={<Layout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="events" element={<EventManagement />} />
-              <Route path="attendance" element={<AttendanceVerification />} />
-              <Route path="attendance/:eventId" element={<EventAttendanceDetails />} />
-              <Route path="rewards" element={<RewardManagement />} />
-              <Route path="users" element={<UserManagement/>}/>
-              <Route path="notifications" element={<NotificationCenter />} />
-              <Route path="notifications/preferences" element={<NotificationPreferences />} />
-            </Route>
-            {/* Seller Routes */}
-            <Route path="/seller" element={<Layout />}>
-              <Route index element={<SellerDashboard />} />
-              <Route path="products" element={<ProductManagement />} />
-              <Route path="products/add" element={<AddProduct />} />
-              <Route path="sales" element={<Sales/>} />
-              <Route path="notifications" element={<NotificationCenter />} />
-              <Route path="notifications/preferences" element={<NotificationPreferences />} />
-            </Route>
-          </Routes>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/" element={<Navigate to="/login" replace />} />
+                {/* Super Admin Routes */}
+              <Route path="/superadmin" element={<SuperAdminLayout />}>
+                <Route index element={<SuperAdminDashboard />} />
+                <Route path="validate/admin" element={<ValidateAdmin />} />
+                <Route path="validate/student" element={<ValidateStudent />} />
+                <Route path="validate/seller" element={<ValidateSeller />} />
+                <Route path="users" element={< AllUser/>}/>
+              </Route>
+              {/* Student Routes */}
+              <Route path="/student" element={<Layout />}>
+                <Route index element={<StudentDashboard />} />
+                <Route path="event/:id" element={<EventDetails />} />
+                <Route path="events" element={< Events/>}/>
+                <Route path="rewards" element={<RewardMarketplace />} />
+                <Route path="transactions" element={<TransactionHistory />} />
+                <Route path="notifications" element={<NotificationCenter />} />
+                <Route path="notifications/preferences" element={<NotificationPreferences />} />
+              </Route>
+              {/* Admin Routes */}
+              <Route path="/admin" element={<Layout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="events" element={<EventManagement />} />
+                <Route path="attendance" element={<AttendanceVerification />} />
+                <Route path="attendance/:eventId" element={<EventAttendanceDetails />} />
+                <Route path="rewards" element={<RewardManagement />} />
+                <Route path="users" element={<UserManagement/>}/>
+                <Route path="notifications" element={<NotificationCenter />} />
+                <Route path="notifications/preferences" element={<NotificationPreferences />} />
+              </Route>
+              {/* Seller Routes */}
+              <Route path="/seller" element={<Layout />}>
+                <Route index element={<SellerDashboard />} />
+                <Route path="products" element={<ProductManagement />} />
+                <Route path="products/add" element={<AddProduct />} />
+                <Route path="sales" element={<Sales/>} />
+                <Route path="notifications" element={<NotificationCenter />} />
+                <Route path="notifications/preferences" element={<NotificationPreferences />} />
+              </Route>
+            </Routes>
           </Router>
         </NotificationProvider>
       </AuthProvider>

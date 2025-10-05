@@ -1,9 +1,12 @@
 import React from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { CalendarIcon, MapPinIcon, CoinsIcon, ClockIcon } from 'lucide-react'
+import { useBalance } from "./BalanceContext";
+
 
 // Merged: supports both admin and student view
 const EventCard = ({ event, admin }) => {
+  const { balance } = useBalance()
   const eventDate = new Date(event.date);
   const navigate = useNavigate();
   const eventId = event._id || event.id;
@@ -81,7 +84,8 @@ const EventCard = ({ event, admin }) => {
             {event.category}
           </span>
           <div className="flex items-center text-blue-600">
-            <CoinsIcon size={16} className="mr-1" />
+            <span className="mr-1">{balance}</span>
+            <CoinsIcon size={16} className="mr-2" />
             <span>{event.reward}</span>
           </div>
         </div>

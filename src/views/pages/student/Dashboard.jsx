@@ -12,8 +12,10 @@ import WalletCard from '../../../views/components/WalletCard'
 import RecentTransactionsCard from '../../../views/components/RecentTransactionsCard'
 import productController from '../../../controllers/productController';
 import eventController from '../../../controllers/eventController';
+import { useBalance } from "../../../views/components/BalanceContext";
 
 const StudentDashboard = ({ user }) => {
+  const { balance } = useBalance()
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [allEvents, setAllEvents] = useState([]);
   const [attendanceCount, setAttendanceCount] = useState(0);
@@ -59,6 +61,7 @@ const StudentDashboard = ({ user }) => {
     const fetchAttendance = async () => {
       const res = await eventController.getJoinedCompletedEventsCount();
       if (res.success) {
+        console.log("Attendance count:", res.count);
         setAttendanceCount(res.count);
       } else {
         console.error("Error fetching attendance:", res.error);
@@ -85,46 +88,6 @@ const StudentDashboard = ({ user }) => {
   .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   const nextEvent = upcomingEvents[0] || null;
-
-  const claimableEvents = allEvents.filter(ev => {
-    const hasJoined = ev.registeredStudents?.includes(user?._id || user?.id);
-    const rewardClaimed = ev.claimedStudents?.includes(user?._id || user?.id);
-    const now = new Date();
-
-    if (!ev?.time?.end || !ev?.date) return false;
-
-    // build event end time
-    const eventEnd = new Date(ev.date);
-    const [endHourStr, endMinuteStr] = ev.time.end.replace(/AM|PM/i, "").split(":");
-    let endHour = Number(endHourStr);
-    const endMinute = Number(endMinuteStr || 0);
-    if (/PM/i.test(ev.time.end) && endHour !== 12) endHour += 12;
-    if (/AM/i.test(ev.time.end) && endHour === 12) endHour = 0;
-    eventEnd.setHours(endHour, endMinute, 0, 0);
-
-    return hasJoined && !rewardClaimed && now > eventEnd;
-  });
-
-  const handleClaimReward = async (eventId) => {
-    const res = await eventController.claimReward(eventId);
-    if (res.success) {
-      user.balance = res.newBalance;
-
-      setAllEvents(prev =>
-        prev.map(ev =>
-          ev._id === eventId
-            ? { ...ev, claimedStudents: [...(ev.claimedStudents || []), user._id || user.id] }
-            : ev
-        )
-      );
-
-      setAllEvents(prev => prev.filter(ev => ev._id !== eventId));
-
-      alert("Reward claimed successfully!");
-    } else {
-      alert(res.error || "Failed to claim reward");
-    }
-  };
 
   return (
     <div className="pt-16 md:ml-64">
@@ -185,8 +148,9 @@ const StudentDashboard = ({ user }) => {
                 <span className="text-sm">{nextEvent.location}</span>
               </div>
               <div className="mt-3 flex items-center text-blue-600">
-                <CoinsIcon size={16} className="mr-1" />
+                <CoinsIcon size={16} className="mr-1" /> <p>{balance} 
                 <span>{nextEvent.reward} CampusCoin reward</span>
+                </p>
               </div>
             </div>
           ) : (
