@@ -10,6 +10,7 @@ export const NotificationProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState(null);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -319,6 +320,19 @@ export const NotificationProvider = ({ children }) => {
     setError(null);
   }, []);
 
+  // Notification panel/modal controls
+  const toggleNotificationsPanel = useCallback(() => {
+    setIsNotificationsOpen(prev => !prev);
+  }, []);
+
+  const openNotificationsPanel = useCallback(() => {
+    setIsNotificationsOpen(true);
+  }, []);
+
+  const closeNotificationsPanel = useCallback(() => {
+    setIsNotificationsOpen(false);
+  }, []);
+
   const value = {
     // State
     notifications,
@@ -347,6 +361,11 @@ export const NotificationProvider = ({ children }) => {
     isWithinQuietHours,
     showLocalNotification,
     clearError,
+  // Panel controls
+  isNotificationsOpen,
+  toggleNotificationsPanel,
+  openNotificationsPanel,
+  closeNotificationsPanel,
     
     // Constants
     notificationTypes: notificationController.getNotificationTypes(),

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { MenuIcon, XIcon } from 'lucide-react'
 import AuthController from '../../controllers/authController'
 import NotificationBell from '../../components/NotificationBell'
+import NotificationModal from '../../components/NotificationModal'
 const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
   const navigate = useNavigate()
 
@@ -42,6 +43,7 @@ if (suffix) {
         </div>
         <div className="flex items-center">
           <NotificationBell />
+          <NotificationModal />
           <div className="flex items-center">
             <div className="mr-3 hidden md:block">
               <div className="text-sm font-medium text-gray-900">
