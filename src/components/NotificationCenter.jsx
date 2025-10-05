@@ -123,10 +123,7 @@ const NotificationCenter = () => {
     if (!notification.read) {
       await markAsRead(notification._id);
     }
-    
-    if (notification.actionUrl) {
-      window.location.href = notification.actionUrl;
-    }
+   
   };
 
   const handleMarkAsImportant = async (e, notificationId, isImportant) => {

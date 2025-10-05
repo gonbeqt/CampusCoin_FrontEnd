@@ -22,3 +22,29 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Dependency manager files & caches
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.pnp.cjs
+.pnp.js
+.pnpm-debug.log*
+.pnpm-store
+.yarn/*
+.yarnrc.yml
+
+# Tooling caches
+.cache
+.vite
+.parcel-cache
+.eslintcache
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Optional build / output
+out/
+.serverless/
+

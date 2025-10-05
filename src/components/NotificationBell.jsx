@@ -115,12 +115,7 @@ const NotificationBell = () => {
       // Also update local state
       markAsRead(notificationId);
     }
-    
-    // Navigate to action URL if available
-    if (notification.actionUrl) {
-      navigate(notification.actionUrl);
-      setIsOpen(false);
-    }
+    // Do not navigate on item click; only mark as read (per student behavior)
   };
 
   const handleMarkAsImportant = async (e, notificationId, isImportant) => {
