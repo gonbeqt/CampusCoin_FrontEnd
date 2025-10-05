@@ -25,6 +25,9 @@ import Events from './views/pages/student/Events'
 import Sales from './views/pages/seller/Sales'
 import UserManagement from './views/pages/admin/UserManagement'
 import { BalanceProvider } from "./views/components/BalanceContext";
+import { NotificationProvider } from "./views/components/NotificationContext";
+import NotificationCenter from "./components/NotificationCenter";
+import NotificationPreferences from "./components/NotificationPreferences";
 import SuperAdminLayout from './views/components/SuperAdminLayout'
 import SuperAdminDashboard from './views/pages/superadmin/Dashboard'
 import ValidateAdmin from './views/pages/superadmin/ValidateAdmin'
@@ -36,7 +39,8 @@ export default function App() {
   return (
     <BalanceProvider>
       <AuthProvider>
-        <Router>
+        <NotificationProvider>
+          <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -57,6 +61,8 @@ export default function App() {
               <Route path="events" element={< Events/>}/>
               <Route path="rewards" element={<RewardMarketplace />} />
               <Route path="transactions" element={<TransactionHistory />} />
+              <Route path="notifications" element={<NotificationCenter />} />
+              <Route path="notifications/preferences" element={<NotificationPreferences />} />
             </Route>
             {/* Admin Routes */}
             <Route path="/admin" element={<Layout />}>
@@ -66,6 +72,8 @@ export default function App() {
               <Route path="attendance/:eventId" element={<EventAttendanceDetails />} />
               <Route path="rewards" element={<RewardManagement />} />
               <Route path="users" element={<UserManagement/>}/>
+              <Route path="notifications" element={<NotificationCenter />} />
+              <Route path="notifications/preferences" element={<NotificationPreferences />} />
             </Route>
             {/* Seller Routes */}
             <Route path="/seller" element={<Layout />}>
@@ -73,9 +81,12 @@ export default function App() {
               <Route path="products" element={<ProductManagement />} />
               <Route path="products/add" element={<AddProduct />} />
               <Route path="sales" element={<Sales/>} />
+              <Route path="notifications" element={<NotificationCenter />} />
+              <Route path="notifications/preferences" element={<NotificationPreferences />} />
             </Route>
           </Routes>
-        </Router>
+          </Router>
+        </NotificationProvider>
       </AuthProvider>
     </BalanceProvider>
   )
