@@ -94,6 +94,20 @@ const EventAttendanceDetails = () => {
     setUpdating(false);
   };
 
+  // Compute whether all registered students have been marked as present or absent
+  // Prefer the actual fetched studentDetails (source of truth) to determine registered IDs;
+  // fall back to event.registeredStudents if needed.
+  const registeredIds = (Array.isArray(studentDetails) && studentDetails.length > 0)
+    ? studentDetails.map((s) => String(s._id))
+    : (Array.isArray(event?.registeredStudents)
+        ? event.registeredStudents.map((id) => String(id))
+        : []);
+  const attendedSet = new Set((event?.attendedStudents || []).map((id) => String(id)));
+  const absentSet = new Set((event?.absentStudents || []).map((id) => String(id)));
+  const unmarkedIds = registeredIds.filter((id) => !attendedSet.has(id) && !absentSet.has(id));
+  const allStudentsMarked = unmarkedIds.length === 0; // true if every registered student is either present or absent
+  const unmarkedCount = unmarkedIds.length;
+
   if (loading) return <div className="pt-16 md:ml-64 text-center py-10 text-gray-500">Loading event details...</div>;
   if (error) return <div className="pt-16 md:ml-64 text-center py-10 text-red-500">{error}</div>;
   if (!event) return null;
@@ -219,31 +233,47 @@ const EventAttendanceDetails = () => {
             {/* Finalize Modal Logic */}
             {!event.finalized && event.status === 'completed' && (
               <>
-                <button
-                  className="px-8 py-3 bg-yellow-500 text-white rounded-lg text-lg font-bold shadow hover:bg-yellow-600 disabled:opacity-50"
-                  onClick={() => setShowFinalizeModal(true)}
-                  disabled={updating}
-                >
-                  Finalize & Give Rewards
-                </button>
+                <div className="inline-block relative group">
+                  <button
+                    className={`px-8 py-3 rounded-lg text-lg font-bold shadow text-white disabled:opacity-50 disabled:cursor-not-allowed ${
+                      (!allStudentsMarked || updating)
+                        ? 'bg-gray-300'
+                        : 'bg-yellow-500 hover:bg-yellow-600'
+                    }`}
+                    onClick={() => setShowFinalizeModal(true)}
+                    disabled={updating || !allStudentsMarked}
+                    title={!allStudentsMarked ? "Please verify all students' attendance" : undefined}
+                  >
+                    Finalize & Give Rewards
+                  </button>
+                  {!allStudentsMarked && (
+                    <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-max max-w-xs bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none">
+                      Please verify all students' attendance{unmarkedCount > 0 ? ` (${unmarkedCount} remaining)` : ''}
+                    </div>
+                  )}
+                </div>
+
                 {showFinalizeModal && (
                   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
                     <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative">
                       <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl" onClick={() => setShowFinalizeModal(false)}>&times;</button>
                       <h2 className="text-xl font-bold mb-4 text-yellow-700">Confirm Finalization</h2>
+                      {!allStudentsMarked && (
+                        <div className="mb-3 text-sm text-red-600 font-semibold">All students must be marked as present or absent before finalizing.</div>
+                      )}
                       <input
                         type="text"
                         className="w-full border border-gray-300 rounded px-3 py-2 mb-2"
                         placeholder="Type FINALIZE to confirm"
                         value={finalizeInput}
                         onChange={e => setFinalizeInput(e.target.value)}
-                        disabled={updating}
+                        disabled={updating || !allStudentsMarked}
                         autoFocus
                       />
                       <div className="text-sm text-gray-600 mb-4">To lock in finalization type <span className="font-mono font-bold text-yellow-700">FINALIZE</span> on the field</div>
                       <button
                         className="w-full py-2 bg-yellow-600 text-white rounded font-bold text-lg disabled:opacity-50"
-                        disabled={finalizeInput !== 'FINALIZE' || updating}
+                        disabled={finalizeInput !== 'FINALIZE' || updating || !allStudentsMarked}
                         onClick={async () => {
                           setUpdating(true);
                           const adminName = user && user.fullName ? user.fullName : '';

@@ -123,19 +123,31 @@ const EventManagement = () => {
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      if (sortOrder === "oldest") {
-        return dateA - dateB;
-      } else {
-        return dateB - dateA;
-      }
+      const getTime = (e) => {
+        if (e?.createdAt) {
+          const t = new Date(e.createdAt).getTime();
+          if (!Number.isNaN(t)) return t;
+        }
+        if (e?.date) {
+          const t = new Date(e.date).getTime();
+          if (!Number.isNaN(t)) return t;
+        }
+        return 0;
+      };
+      const timeA = getTime(a);
+      const timeB = getTime(b);
+      return sortOrder === "oldest" ? timeA - timeB : timeB - timeA;
     });
 
   // Handle form input change
   const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    // Always parse reward as float to avoid off-by-one/rounding issues
+    if (name === 'reward') {
+      setForm((prev) => ({ ...prev, [name]: value === '' ? '' : String(Math.max(0, parseFloat(value))) }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   // Handle event create/edit submit
@@ -151,7 +163,7 @@ const EventManagement = () => {
         time: { start: form.timeStart, end: form.timeEnd },
         location: form.location,
         category: form.category,
-        reward: form.reward,
+        reward: form.reward === '' ? 0 : parseFloat(form.reward),
         description: form.description,
         speakers: form.speakers,
         organizedBy: form.organizedBy,

@@ -21,7 +21,7 @@ const Events = ({ user }) => {
   const [claimStatus, setClaimStatus] = useState('all'); // 'all', 'claimed', 'unclaimed', 'unclaimable'
   const [rewardOrder, setRewardOrder] = useState('none'); // 'none', 'asc', 'desc'
   const [dateOrder, setDateOrder] = useState('none'); // 'none', 'recent', 'oldest'
-  const { balance, setBalance } = useBalance();
+  const { balance, setBalance, refreshBalance } = useBalance();
   const [allEvents, setAllEvents] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [joinedEvents, setJoinedEvents] = useState([])
@@ -206,6 +206,8 @@ const Events = ({ user }) => {
     const res = await eventController.claimReward(eventId);
     if (res.success) {
       setBalance(res.newBalance);
+      // Also refresh from backend to ensure global consistency
+      try { await refreshBalance(); } catch {}
 
       // Update local event state
       setAllEvents(prev =>
