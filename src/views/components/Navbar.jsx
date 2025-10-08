@@ -27,7 +27,18 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
     fullName = fullName ? `${fullName} ${suffix}` : suffix;
   }
 
-  // Notification functionality moved to NotificationBell component
+  // Map common role values to user-friendly labels
+  const roleLabel = (() => {
+    const r = (user?.role || '').toString().toLowerCase();
+    const map = {
+      admin: 'Admin',
+      superadmin: 'Super Admin',
+      student: 'Student',
+      seller: 'Seller'
+    };
+    return map[r] || (r ? r.charAt(0).toUpperCase() + r.slice(1) : '');
+  })();
+
 
   return (
     <nav className="bg-white border-b border-gray-200 px-4 py-2.5 fixed top-0 left-0 right-0 z-50 md:left-64">
@@ -48,16 +59,24 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
           <div className="flex items-center">
             <NotificationBell />
             <div className="ml-3 hidden md:block text-right">
-              {user?.role !== 'student' && fullName && (
-                <div className="text-sm font-semibold text-gray-900 leading-tight mb-0.5">
-                  {fullName}
-                </div>
+              {/* Display name (or student ID fallback) and show role label underneath */}
+              {(fullName || user?.role) && (
+                <>
+                  {fullName ? (
+                    <div className="text-sm font-semibold text-gray-900 leading-tight mb-0.5">{fullName}</div>
+                  ) : user?.role === 'student' && user?.student_id ? (
+                    <div className="text-sm font-semibold text-gray-900 leading-tight mb-0.5">ID: {user.student_id}</div>
+                  ) : (
+                    <div className="text-sm font-semibold text-gray-900 leading-tight mb-0.5">{user?.email || ''}</div>
+                  )}
+
+                  <div className="text-xs text-gray-500 text-start">
+                    {user?.role
+                      ? `${roleLabel}`
+                      : roleLabel}
+                  </div>
+                </>
               )}
-              <div className="text-xs text-gray-500">
-                {user?.role === 'student'
-                  ? `ID: ${user?.student_id}` // <-- updated to match Postman response
-                  : 'Administrator'}
-              </div>
             </div>
             <button
               onClick={handleLogout}

@@ -11,6 +11,8 @@ import productController from '../../../controllers/productController';
 const TransactionHistory = ({ user }) => {
   const [transactionsData, setTransactionsData] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -37,6 +39,22 @@ const TransactionHistory = ({ user }) => {
     if (filter === 'all') return true;
     return transaction.status === filter;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
+
+  // Reset to first page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
+
+  // Clamp currentPage if filtered data shrinks
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedTransactions = filteredTransactions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   // Tailwind classes based on status
   const getStatusClasses = (status) => {
@@ -109,7 +127,7 @@ const TransactionHistory = ({ user }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredTransactions.map(transaction => {
+              {paginatedTransactions.map(transaction => {
                 const classes = getStatusClasses(transaction.status);
                 return (
                   <tr key={transaction._id}>
@@ -163,6 +181,30 @@ const TransactionHistory = ({ user }) => {
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination controls */}
+        <div className="px-4 py-3 border-t flex items-center justify-between bg-white">
+          <div className="text-sm text-gray-700">
+            Showing {(filteredTransactions.length === 0) ? 0 : ( (currentPage - 1) * PAGE_SIZE + 1 )} to {Math.min(currentPage * PAGE_SIZE, filteredTransactions.length)} of {filteredTransactions.length} transactions
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded-md text-sm ${currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50 border'}`}
+            >
+              Previous
+            </button>
+            <div className="text-sm text-gray-600">Page {currentPage} / {totalPages}</div>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded-md text-sm ${currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50 border'}`}
+            >
+              Next
+            </button>
+          </div>
         </div>
 
         {filteredTransactions.length === 0 && (

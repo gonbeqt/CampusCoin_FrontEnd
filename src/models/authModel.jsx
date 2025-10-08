@@ -332,12 +332,19 @@ class AuthModel {
 
   removeUserData() {
     localStorage.removeItem('userData');
+    localStorage.removeItem('balanceStats'); 
+    localStorage.removeItem('adminRole');
+    localStorage.removeItem('admin_device_id');
+    localStorage.removeItem('notificationUpdate');
+    localStorage.removeItem('transactionHistory');
+    localStorage.removeItem('walletData');
   }
 
   // Clear all auth data
   clearAuthData() {
     this.removeToken();
     this.removeUserData();
+
   }
 
   // Check if user is authenticated

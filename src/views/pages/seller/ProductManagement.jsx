@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  PlusIcon, SearchIcon, FilterIcon, PackageIcon,
+  PlusIcon, SearchIcon, FilterIcon, PackageIcon, X as XIcon,
 } from 'lucide-react'
 import ProductCard from '../../../views/components/ProductCard'
 import ProductController from '../../../controllers/productController'
@@ -206,66 +206,104 @@ const ProductManagement = () => {
 
       {/* Edit Modal */}
       {editModalOpen && productToEdit && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Product</h3>
-
-            <div className="space-y-3">
-              <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-             Product Name:
-              </span>
-              <input
-                type="text"
-                value={productToEdit.name}
-                onChange={(e) => setProductToEdit({ ...productToEdit, name: e.target.value })}
-                placeholder="Product Name"
-                className="w-full px-3 py-2 border rounded-md"
-              />
-                <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-             Description:
-           
-          </span>
-              <textarea
-                value={productToEdit.description}
-                onChange={(e) => setProductToEdit({ ...productToEdit, description: e.target.value })}
-                placeholder="Description"
-                className="w-full px-3 py-2 border rounded-md"
-              />
-               <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-             Price:
-              </span>
-              <input
-                type="number"
-                value={productToEdit.price}
-                onChange={(e) => setProductToEdit({ ...productToEdit, price: e.target.value })}
-                placeholder="Price"
-                className="w-full px-3 py-2 border rounded-md"
-              />
-               <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-             Category:
-              </span>
-              <input
-                type="text"
-                value={productToEdit.category}
-                onChange={(e) => setProductToEdit({ ...productToEdit, category: e.target.value })}
-                placeholder="Category"
-                className="w-full px-3 py-2 border rounded-md"
-              />
-               <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-             Quantity:
-              </span>
-              <input
-                type="number"
-                value={productToEdit.stockQuantity}
-                onChange={(e) => setProductToEdit({ ...productToEdit, stockQuantity: e.target.value })}
-                placeholder="Quantity"
-                className="w-full px-3 py-2 border rounded-md"
-              />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6 md:p-8">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">Edit Product</h3>
+                <p className="text-sm text-gray-500">Update product details and click Save to apply changes.</p>
+              </div>
+              <button
+                onClick={() => { setEditModalOpen(false); setProductToEdit(null); }}
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-md"
+                aria-label="Close edit modal"
+              >
+                <XIcon size={18} />
+              </button>
             </div>
 
-            <div className="flex justify-end space-x-3 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Left: image preview */}
+              <div className="md:col-span-1 flex items-center justify-center">
+                <div className="w-full">
+                  <div className="h-40 w-full bg-gray-100 rounded-md flex items-center justify-center overflow-hidden border border-gray-200">
+                    {productToEdit.image || productToEdit.images?.[0] ? (
+                      <img
+                        src={`http://localhost:5000/api/products/image/${productToEdit.image}`}
+                        alt={productToEdit.name || 'Product image'}
+                        className="object-contain h-full w-full"
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-400">No image</div>
+                    )}
+                  </div>
+                  <div className="mt-3 text-xs text-gray-500">To change the image, edit the product in the Add Product flow.</div>
+                </div>
+              </div>
+
+              {/* Right: fields */}
+              <div className="md:col-span-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Product Name</label>
+                    <input
+                      type="text"
+                      value={productToEdit.name}
+                      onChange={(e) => setProductToEdit({ ...productToEdit, name: e.target.value })}
+                      placeholder="Product Name"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Category</label>
+                    <input
+                      type="text"
+                      value={productToEdit.category}
+                      onChange={(e) => setProductToEdit({ ...productToEdit, category: e.target.value })}
+                      placeholder="Category"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Price</label>
+                    <input
+                      type="number"
+                      value={productToEdit.price}
+                      onChange={(e) => setProductToEdit({ ...productToEdit, price: e.target.value })}
+                      placeholder="Price"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
+                    <input
+                      type="number"
+                      value={productToEdit.stockQuantity}
+                      onChange={(e) => setProductToEdit({ ...productToEdit, stockQuantity: e.target.value })}
+                      placeholder="Quantity"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                  <textarea
+                    value={productToEdit.description}
+                    onChange={(e) => setProductToEdit({ ...productToEdit, description: e.target.value })}
+                    placeholder="Description"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md h-28 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 mt-6">
               <button
-                onClick={() => setEditModalOpen(false)}
+                onClick={() => { setEditModalOpen(false); setProductToEdit(null); }}
                 className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 Cancel
