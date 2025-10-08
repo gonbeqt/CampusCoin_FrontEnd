@@ -340,6 +340,20 @@ class AuthController {
     
     return fullName;
   }
+
+    async fetchBalanceStats() {
+    try {
+      const result = await this.model.fetchBalanceStats();
+      if (result.success) {
+        return { success: true, data: result.data };
+      } else {
+        return { success: false, error: result.error || 'Failed to fetch balance stats' };
+      }
+    } catch (error) {
+      console.error('[AuthController] Balance stats fetch error:', error);
+      return { success: false, error: 'An unexpected error occurred while fetching balance stats.' };
+    }
+  }
 }
 
 export default new AuthController();

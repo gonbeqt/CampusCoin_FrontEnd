@@ -274,6 +274,34 @@ class AuthModel {
     }
   }
 
+  async fetchBalanceStats() {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        return { success: false, error: 'No authentication token found' };
+      }
+
+      const response = await fetch(`${API_URL}/balance`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      return {
+        success: response.ok,
+        data: response.ok ? result : null,
+        error: response.ok ? null : result.error || result.message,
+      };
+    } catch (error) {
+      console.error('[AuthModel] Balance stats fetch network error:', error);
+      return { success: false, error: 'Network error occurred while fetching balance stats' };
+    }
+  }
+
   // Token management
   saveToken(token) {
     localStorage.setItem('authToken', token);
