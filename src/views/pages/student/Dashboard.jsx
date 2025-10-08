@@ -48,10 +48,11 @@ const StudentDashboard = ({ user }) => {
   useEffect(() => {
     const fetchEvents = async () => {
       const res = await eventController.getAllEvents();
-      if (res.success) {
+      if (res.success && Array.isArray(res.events)) {
         setAllEvents(res.events);
       } else {
-        console.error("Error fetching events:", res.error);
+        setAllEvents([]);
+        console.error("Error fetching events:", res.error || res.events);
       }
     };
     fetchEvents();
@@ -71,23 +72,46 @@ const StudentDashboard = ({ user }) => {
     fetchAttendance();
   }, []);
 
-  const upcomingEvents = allEvents
-  .filter(event => {
-    if (!event?.date || !event?.time?.start) return false;
+  const safeAllEvents = Array.isArray(allEvents) ? allEvents : [];
+  const upcomingEvents = safeAllEvents
+    .filter(event => {
+      if (!event?.date || !event?.time?.start) return false;
 
-    const start = new Date(event.date);
-    const [h, m] = event.time.start.replace(/AM|PM/i, "").split(":");
-    let hour = Number(h);
-    const minute = Number(m || 0);
-    if (/PM/i.test(event.time.start) && hour !== 12) hour += 12;
-    if (/AM/i.test(event.time.start) && hour === 12) hour = 0;
-    start.setHours(hour, minute, 0, 0);
+      const start = new Date(event.date);
+      const [h, m] = event.time.start.replace(/AM|PM/i, "").split(":");
+      let hour = Number(h);
+      const minute = Number(m || 0);
+      if (/PM/i.test(event.time.start) && hour !== 12) hour += 12;
+      if (/AM/i.test(event.time.start) && hour === 12) hour = 0;
+      start.setHours(hour, minute, 0, 0);
 
-    return start > new Date();
-  })
-  .sort((a, b) => new Date(a.date) - new Date(b.date));
+      return start > new Date();
+    })
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   const nextEvent = upcomingEvents[0] || null;
+
+
+  const handleClaimReward = async (eventId) => {
+    const res = await eventController.claimReward(eventId);
+    if (res.success) {
+      user.balance = res.newBalance;
+
+      setAllEvents(prev =>
+        prev.map(ev =>
+          ev._id === eventId
+            ? { ...ev, claimedStudents: [...(ev.claimedStudents || []), user._id || user.id] }
+            : ev
+        )
+      );
+
+      setAllEvents(prev => prev.filter(ev => ev._id !== eventId));
+
+      alert("Reward claimed successfully!");
+    } else {
+      alert(res.error || "Failed to claim reward");
+    }
+  };
 
   return (
     <div className="pt-16 md:ml-64">

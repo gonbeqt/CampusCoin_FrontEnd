@@ -12,15 +12,22 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
     navigate('/login')
   }
 
-  // Construct full name with optional middle name and suffix
+  // Robust name extraction for admin display
   const nameParts = [
-    user?.first_name,
-    user?.middle_name,
-    user?.last_name
-  ].filter(Boolean).map(part => part.trim())
+    user?.first_name || user?.firstName,
+    user?.middle_name || user?.middleName,
+    user?.last_name || user?.lastName
+  ].filter(Boolean).map(part => part.trim());
+  const suffix = user?.suffix && user.suffix.trim() ? user.suffix.trim() : null;
+  let fullName = nameParts.join(' ').trim();
+  if (!fullName) {
+    fullName = user?.name || user?.fullName || '';
+  }
+  if (suffix) {
+    fullName = fullName ? `${fullName} ${suffix}` : suffix;
+  }
 
-  const suffix = user?.suffix?.trim()
-  const fullName = suffix ? `${nameParts.join(' ')} ${suffix}` : nameParts.join(' ')
+  // Notification functionality moved to NotificationBell component
 
   return (
     <nav className="bg-white border-b border-gray-200 px-4 py-2.5 fixed top-0 left-0 right-0 z-50 md:left-64">
@@ -38,11 +45,14 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
           </span>
         </div>
         <div className="flex items-center">
-          <NotificationBell />
-          <NotificationModal />
           <div className="flex items-center">
-            <div className="mr-3 hidden md:block">
-              <div className="text-sm font-medium text-gray-900">{fullName}</div>
+            <NotificationBell />
+            <div className="ml-3 hidden md:block text-right">
+              {user?.role !== 'student' && fullName && (
+                <div className="text-sm font-semibold text-gray-900 leading-tight mb-0.5">
+                  {fullName}
+                </div>
+              )}
               <div className="text-xs text-gray-500">
                 {user?.role === 'student'
                   ? `ID: ${user?.student_id}` // <-- updated to match Postman response
@@ -51,11 +61,12 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
             </div>
             <button
               onClick={handleLogout}
-              className="text-sm text-blue-600 hover:underline"
+              className="ml-3 text-sm text-blue-600 hover:underline"
             >
               Logout
             </button>
           </div>
+          <NotificationModal />
         </div>
       </div>
     </nav>

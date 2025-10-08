@@ -26,10 +26,24 @@ const EventDetails = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       const res = await eventController.getEventById(id)
-      if (res.success) {
+      if (res.success && res.event) {
         setEvent(res.event)
       } else {
-        setError(res.error)
+        setEvent(null);
+        setError(res.error || res.event)
+      }
+      setLoading(false)
+    }
+    fetchEvent()
+  }, [id])
+  useEffect(() => {
+    const fetchEvent = async () => {
+      const res = await eventController.getEventById(id)
+      if (res.success && res.event) {
+        setEvent(res.event)
+      } else {
+        setEvent(null);
+        setError(res.error || res.event)
       }
       setLoading(false)
     }

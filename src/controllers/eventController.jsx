@@ -39,9 +39,10 @@ class EventController {
       if (!result.success) {
         return { success: false, error: result.error || 'Failed to fetch events' };
       }
+      // Backend returns { events: [...] }, unwrap to an array for consumers
       return {
         success: true,
-        events: result.data || [],
+        events: (result.data && Array.isArray(result.data.events)) ? result.data.events : [],
       };
     } catch (error) {
       console.error('EventController.getAllEvents error:', error);
@@ -107,11 +108,8 @@ class EventController {
 
   async getJoinedCompletedEventsCount() {
     try {
-      const token = this.auth.getToken();
-      if (!token) {
-        return { success: false, error: "No authentication token found" };
-      }
-      const result = await this.model.getJoinedCompletedEventsCount(token);
+      // Model handles token and endpoint; no params needed
+      const result = await this.model.getJoinedCompletedEventsCount();
       if (!result.success) {
         return { success: false, error: result.error || "Failed to fetch attendance" };
       }

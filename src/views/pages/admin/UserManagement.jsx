@@ -13,6 +13,8 @@ function Toast({ message, type, show }) {
 }
 import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, XIcon, UserPlusIcon } from 'lucide-react'
 const UserManagement = () => {
+  // Delete confirmation input state (for delete modal)
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
   // Course filter state
   const [courseFilter, setCourseFilter] = useState("");
   const [users, setUsers] = useState([]);
@@ -119,7 +121,7 @@ const UserManagement = () => {
         first_name: currentStudent.first_name,
         middle_name: currentStudent.middle_name,
         last_name: currentStudent.last_name,
-        suffix: currentStudent.suffix,
+        suffix: currentStudent.suffix === '' ? null : currentStudent.suffix,
         course: currentStudent.course,
         // email is not updatable
       };
@@ -327,7 +329,51 @@ const UserManagement = () => {
       )}
       {/* Add Student Modal */}
       {/* Add Student modal removed */}
-      {/* Edit Student Modal */}
+      {/* Delete Student Modal */}
+      {showDeleteModal && studentToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Confirm Delete</h3>
+            </div>
+            <div className="mb-4">
+              <p>Are you sure you want to delete the user <span className="font-semibold">"{studentToDelete.first_name} {studentToDelete.last_name}"</span>?</p>
+              <p className="text-red-600 font-semibold mt-2">This action cannot be undone.</p>
+            </div>
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                if (deleteConfirmInput === 'DELETE ACCOUNT') confirmDeleteStudent();
+              }}
+            >
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-red-400"
+                placeholder="Type DELETE ACCOUNT to confirm"
+                value={deleteConfirmInput}
+                onChange={e => setDeleteConfirmInput(e.target.value)}
+                autoFocus
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  onClick={() => { setShowDeleteModal(false); setStudentToDelete(null); setDeleteConfirmInput(''); }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-50"
+                  disabled={deleteConfirmInput !== 'DELETE ACCOUNT'}
+                >
+                  Delete
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {showEditModal && currentStudent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
@@ -347,7 +393,7 @@ const UserManagement = () => {
               }}
             >
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label htmlFor="edit_first_name" className="block text-sm font-medium text-gray-700">First Name</label>
                     <input
@@ -369,6 +415,18 @@ const UserManagement = () => {
                       className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       value={currentStudent.middle_name || ''}
                       onChange={e => setCurrentStudent({ ...currentStudent, middle_name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit_last_name" className="block text-sm font-medium text-gray-700">Last Name</label>
+                    <input
+                      id="edit_last_name"
+                      name="edit_last_name"
+                      type="text"
+                      required
+                      className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      value={currentStudent.last_name || ''}
+                      onChange={e => setCurrentStudent({ ...currentStudent, last_name: e.target.value })}
                     />
                   </div>
                 </div>

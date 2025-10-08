@@ -68,6 +68,7 @@ class EventModel {
       const data = await response.json();
       return {
         success: response.ok,
+        // backend returns { events: [...] }
         data: response.ok ? data : null,
         error: response.ok ? null : data.error || data.message,
       };
@@ -151,7 +152,8 @@ class EventModel {
       const token = authModel.getToken();
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-  const response = await fetch(`${this.baseURL}/events/joined/completed/count`, {
+      // Backend route: /events/joined/completed/count (protected)
+      const response = await fetch(`${this.baseURL}/events/joined/completed/count`, {
         method: 'GET',
         headers,
       });

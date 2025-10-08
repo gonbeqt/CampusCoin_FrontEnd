@@ -46,6 +46,8 @@ const EventManagement = () => {
   // Delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
+  // State for delete confirmation input
+  const [deleteEventConfirmInput, setDeleteEventConfirmInput] = useState("");
 
     // Toast notification state
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -88,7 +90,14 @@ const EventManagement = () => {
     try {
       const res = await fetch("http://localhost:5000/api/events/all-events", { method: "GET" });
       const data = await res.json();
-      setEvents(data);
+      // Support both array and { events: [...] }
+      if (Array.isArray(data)) {
+        setEvents(data);
+      } else if (data && Array.isArray(data.events)) {
+        setEvents(data.events);
+      } else {
+        setEvents([]);
+      }
     } catch (err) {
       setError("Failed to fetch events");
     } finally {
@@ -101,20 +110,44 @@ const EventManagement = () => {
   }, []);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // 'all', 'upcoming', 'completed'
+  const [sortOrder, setSortOrder] = useState("newest"); // 'newest', 'oldest'
   const [showModal, setShowModal] = useState(false);
-  const filteredEvents = events.filter((event) => {
-    const matchesSearch =
-      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || event.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Filter and sort events
+  const filteredEvents = events
+    .filter((event) => {
+      const matchesSearch =
+        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.location.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus =
+        statusFilter === "all" || event.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      const getTime = (e) => {
+        if (e?.createdAt) {
+          const t = new Date(e.createdAt).getTime();
+          if (!Number.isNaN(t)) return t;
+        }
+        if (e?.date) {
+          const t = new Date(e.date).getTime();
+          if (!Number.isNaN(t)) return t;
+        }
+        return 0;
+      };
+      const timeA = getTime(a);
+      const timeB = getTime(b);
+      return sortOrder === "oldest" ? timeA - timeB : timeB - timeA;
+    });
 
   // Handle form input change
   const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    // Always parse reward as float to avoid off-by-one/rounding issues
+    if (name === 'reward') {
+      setForm((prev) => ({ ...prev, [name]: value === '' ? '' : String(Math.max(0, parseFloat(value))) }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   // Handle event create/edit submit
@@ -130,7 +163,7 @@ const EventManagement = () => {
         time: { start: form.timeStart, end: form.timeEnd },
         location: form.location,
         category: form.category,
-        reward: form.reward,
+        reward: form.reward === '' ? 0 : parseFloat(form.reward),
         description: form.description,
         speakers: form.speakers,
         organizedBy: form.organizedBy,
@@ -254,27 +287,44 @@ const EventManagement = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <div className="flex items-center">
-                <FilterIcon size={16} className="text-gray-500 mr-2" />
-                <span className="text-gray-700 font-medium">Status:</span>
-                <div className="ml-3 space-x-2">
+              <div className="flex items-center flex-wrap gap-4">
+                <div className="flex items-center">
+                  <FilterIcon size={16} className="text-gray-500 mr-2" />
+                  <span className="text-gray-700 font-medium">Status:</span>
+                  <div className="ml-3 space-x-2">
+                    <button
+                      className={`px-3 py-1 rounded-full text-sm ${statusFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      onClick={() => setStatusFilter('all')}
+                    >
+                      All
+                    </button>
+                    <button
+                      className={`px-3 py-1 rounded-full text-sm ${statusFilter === 'upcoming' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      onClick={() => setStatusFilter('upcoming')}
+                    >
+                      Upcoming
+                    </button>
+                    <button
+                      className={`px-3 py-1 rounded-full text-sm ${statusFilter === 'completed' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      onClick={() => setStatusFilter('completed')}
+                    >
+                      Completed
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center ml-6">
+                  <span className="text-gray-700 font-medium mr-2">Order:</span>
                   <button
-                    className={`px-3 py-1 rounded-full text-sm ${statusFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                    onClick={() => setStatusFilter('all')}
+                    className={`px-3 py-1 rounded-full text-sm ${sortOrder === 'newest' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    onClick={() => setSortOrder('newest')}
                   >
-                    All
+                    Newest
                   </button>
                   <button
-                    className={`px-3 py-1 rounded-full text-sm ${statusFilter === 'upcoming' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                    onClick={() => setStatusFilter('upcoming')}
+                    className={`px-3 py-1 rounded-full text-sm ${sortOrder === 'oldest' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    onClick={() => setSortOrder('oldest')}
                   >
-                    Upcoming
-                  </button>
-                  <button
-                    className={`px-3 py-1 rounded-full text-sm ${statusFilter === 'completed' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                    onClick={() => setStatusFilter('completed')}
-                  >
-                    Completed
+                    Oldest
                   </button>
                 </div>
               </div>
@@ -366,7 +416,47 @@ const EventManagement = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {event.registered} students
+                      <div className="flex items-center justify-center">
+                        {(() => {
+                          const reg = Array.isArray(event.registeredStudents) ? event.registeredStudents.length : (typeof event.registered === 'number' ? event.registered : 0);
+                          const min = event.minRegistrations ?? event.minStudents;
+                          const max = event.maxRegistrations ?? event.maxStudents;
+                          // If max exists, always show reg/max
+                          if (typeof max === 'number') {
+                            if (typeof min === 'number' && reg < min) {
+                              return (
+                                <span className="relative group">
+                                  <span className="text-red-600 font-semibold cursor-help">{reg}<sup>*</sup></span>
+                                  <span className="mx-1">/</span>
+                                  <span>{max}</span>
+                                  <span className="absolute left-1/2 -translate-x-1/2 mt-2 w-max bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none z-20 whitespace-nowrap">
+                                    {min} minimum
+                                  </span>
+                                </span>
+                              );
+                            } else {
+                              return <span>{reg} / {max}</span>;
+                            }
+                          }
+                          // Only min
+                          if (typeof min === 'number') {
+                            if (reg < min) {
+                              return (
+                                <span className="relative group">
+                                  <span className="text-red-600 font-semibold cursor-help">{reg}<sup>*</sup></span>
+                                  <span className="absolute left-1/2 -translate-x-1/2 mt-2 w-max bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none z-20 whitespace-nowrap">
+                                    {min} minimum
+                                  </span>
+                                </span>
+                              );
+                            } else {
+                              return <span>{reg}</span>;
+                            }
+                          }
+                          // Neither min nor max
+                          return <span>{reg}</span>;
+                        })()}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
@@ -385,37 +475,6 @@ const EventManagement = () => {
                       >
                         <TrashIcon size={18} />
                       </button>
-      {/* Delete confirmation modal */}
-      {showDeleteModal && eventToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-[90vw] max-w-md">
-            <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900 text-center">Confirm Delete</h3>
-            </div>
-            <div className="p-6">
-              <p className="mb-4 text-gray-700 break-words text-center" style={{ wordBreak: 'break-word', whiteSpace: 'pre-line' }}>
-                Are you sure you want to delete the event <span className="font-semibold">"{eventToDelete.title}"</span>?
-                <br />
-                <span className="text-red-600 font-medium text-center block">This action cannot be undone.</span>
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                <button
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  onClick={() => { setShowDeleteModal(false); setEventToDelete(null); }}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
-                  onClick={confirmDeleteEvent}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
                     </td>
                   </tr>
                 ))}
@@ -431,6 +490,56 @@ const EventManagement = () => {
           )}
         </div>
       )}
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && eventToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 w-full text-center">Confirm Delete</h3>
+            </div>
+            <div className="mb-4 text-center">
+              <p>Are you sure you want to delete the event <span className="font-semibold">"{eventToDelete.title}"</span>?</p>
+              <p className="text-red-600 font-semibold mt-2">This action cannot be undone.</p>
+            </div>
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                if (deleteEventConfirmInput === 'DELETE EVENT') {
+                  confirmDeleteEvent();
+                  setDeleteEventConfirmInput("");
+                }
+              }}
+            >
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-red-400 text-center"
+                placeholder="Type DELETE EVENT to confirm"
+                value={deleteEventConfirmInput}
+                onChange={e => setDeleteEventConfirmInput(e.target.value)}
+                autoFocus
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  onClick={() => { setShowDeleteModal(false); setEventToDelete(null); setDeleteEventConfirmInput(""); }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-50"
+                  disabled={deleteEventConfirmInput !== 'DELETE EVENT'}
+                >
+                  Delete
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">

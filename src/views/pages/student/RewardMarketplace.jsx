@@ -35,11 +35,12 @@ const RewardMarketplace = ({ user }) => {
   const [processingOrders, setProcessingOrders] = useState({})
   const { balance, setBalance, refreshBalance } = useBalance();
 
+  // Defensive fetchProducts
   const fetchProducts = async () => {
     try {
       setLoading(true);
       const result = await productController.getAllProducts();
-      if (result.success) {
+      if (result.success && Array.isArray(result.products)) {
         setProducts(result.products);
         // Initialize quantities and redeem states
         const initialQuantities = {}
@@ -52,9 +53,11 @@ const RewardMarketplace = ({ user }) => {
         setRedeemStates(initialRedeemStates)
         setError(null)
       } else {
+        setProducts([]);
         setError(result.error)
       }
     } catch (err) {
+      setProducts([]);
       setError(err.message)
     } finally {
       setLoading(false)
@@ -62,33 +65,8 @@ const RewardMarketplace = ({ user }) => {
   }
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const result = await productController.getAllProducts();
-        if (result.success) {
-          // console.log('Product data example:', result.products[0]); // Debug log
-          setProducts(result.products);
-          // Initialize quantities and redeem states
-          const initialQuantities = {}
-          const initialRedeemStates = {}
-          result.products.forEach(product => {
-            initialQuantities[product._id] = product.stockQuantity > 0 ? 1 : 0
-            initialRedeemStates[product._id] = false
-          })
-          setQuantities(initialQuantities)
-          setRedeemStates(initialRedeemStates)
-          setLoading(false)
-        } else {
-          setError(result.error)
-          setLoading(false)
-        }
-      } catch (err) {
-        setError(err.message)
-        setLoading(false)
-      }
-    }
-    fetchProducts()
-  }, [])
+    fetchProducts();
+  }, []);
   const handleQuantityChange = (productId, delta) => {
     setQuantities(prev => ({
       ...prev,

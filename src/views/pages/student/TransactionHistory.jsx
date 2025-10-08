@@ -32,7 +32,8 @@ const TransactionHistory = ({ user }) => {
   }, []);
 
   // Filter transactions by status
-  const filteredTransactions = transactionsData.filter(transaction => {
+  const safeTransactions = Array.isArray(transactionsData) ? transactionsData : [];
+  const filteredTransactions = safeTransactions.filter(transaction => {
     if (filter === 'all') return true;
     return transaction.status === filter;
   });
