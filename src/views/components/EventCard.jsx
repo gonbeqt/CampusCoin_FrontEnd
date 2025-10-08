@@ -41,7 +41,8 @@ const EventCard = ({ event, admin }) => {
           )}
         </div>
       )}
-      <div className="flex justify-between items-start mt-4">
+      <div className="flex justify-between mt-4">
+        {/* Left column */}
         <div>
           <h3 className="font-bold text-lg text-gray-900">{event.title}</h3>
           <div className="flex items-center text-gray-500 mt-2">
@@ -68,11 +69,13 @@ const EventCard = ({ event, admin }) => {
             <span className="text-sm">{event.location}</span>
           </div>
           {event.organizedBy && (
-            <div className="flex items-center text-gray-500 mt-1">
-              <span className="text-xs italic">Organized by: {event.organizedBy}</span>
-            </div>
+            <span className="text-xs italic text-gray-500 mt-1 block">
+              Organized by: {event.organizedBy}
+            </span>
           )}
         </div>
+
+        {/* Right column */}
         <div className="flex flex-col items-end">
           <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${statusColor} mb-2`}>
             {statusText}
@@ -80,12 +83,14 @@ const EventCard = ({ event, admin }) => {
           <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 mb-2">
             {event.category}
           </span>
-          <div className="flex items-center text-blue-600">
+          {/* Reward moved here */}
+          <div className="flex items-center text-blue-600 mt-auto">
             <CoinsIcon size={16} className="mr-1" />
-            <span>{event.reward}</span>
+            <span>{event.reward} CampusCoin reward</span>
           </div>
         </div>
       </div>
+
       {/* Student view: show View details button, admin: no button */}
       {!admin && (
         <div className="mt-4 flex justify-between items-center">

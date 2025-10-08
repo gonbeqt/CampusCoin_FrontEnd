@@ -102,9 +102,9 @@ const SellerDashboard = ({ user }) => {
         <div className="bg-white rounded-lg shadow p-5">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500">Total Revenue</p>
+              <p className="text-gray-500">Total Sales</p>
               <p className="text-2xl font-bold mt-1 flex items-center">
-                <CoinsIcon className="w-5 h-5 mr-1 text-yellow-500" /> {stats.totalRevenue}  ETH
+                <CoinsIcon className="w-5 h-5 mr-1 text-yellow-500" /> {stats.totalSales}  ETH
               </p>
             </div>
             <div className="p-2 bg-yellow-100 rounded-lg">

@@ -11,6 +11,8 @@ import productController from '../../../controllers/productController';
 const TransactionHistory = ({ user }) => {
   const [transactionsData, setTransactionsData] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -37,6 +39,14 @@ const TransactionHistory = ({ user }) => {
     if (filter === 'all') return true;
     return transaction.status === filter;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentTransactions = filteredTransactions.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePrev = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+  const handleNext = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
 
   // Tailwind classes based on status
   const getStatusClasses = (status) => {
@@ -69,30 +79,15 @@ const TransactionHistory = ({ user }) => {
           <FilterIcon size={16} className="text-gray-500 mr-2" />
           <span className="text-gray-700 font-medium">Filter:</span>
           <div className="ml-3 space-x-2">
-            <button
-              className={`px-3 py-1 rounded-full text-sm ${filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              onClick={() => setFilter('all')}
-            >
-              All Orders
-            </button>
-            <button
-              className={`px-3 py-1 rounded-full text-sm ${filter === 'pending' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              onClick={() => setFilter('pending')}
-            >
-              Pending Orders
-            </button>
-            <button
-              className={`px-3 py-1 rounded-full text-sm ${filter === 'paid' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              onClick={() => setFilter('paid')}
-            >
-              Paid Orders
-            </button>
-            <button
-              className={`px-3 py-1 rounded-full text-sm ${filter === 'cancelled' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              onClick={() => setFilter('cancelled')}
-            >
-              Cancelled Orders
-            </button>
+            {['all','pending','paid','cancelled'].map(f => (
+              <button
+                key={f}
+                className={`px-3 py-1 rounded-full text-sm ${filter === f ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                onClick={() => { setFilter(f); setCurrentPage(1); }}
+              >
+                {f === 'all' ? 'All Orders' : `${f.charAt(0).toUpperCase() + f.slice(1)} Orders`}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -109,7 +104,7 @@ const TransactionHistory = ({ user }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredTransactions.map(transaction => {
+              {currentTransactions.map(transaction => {
                 const classes = getStatusClasses(transaction.status);
                 return (
                   <tr key={transaction._id}>
@@ -164,6 +159,33 @@ const TransactionHistory = ({ user }) => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {filteredTransactions.length > itemsPerPage && (
+          <div className="flex justify-end items-center space-x-2 p-4 border-t">
+            <button
+              onClick={handlePrev}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded text-black ${
+                currentPage === 1
+                  ? 'bg-gray-100 opacity-50 cursor-default'
+                  : 'bg-gray-100 hover:bg-blue-600 hover:text-white'
+              }`}
+            >
+              Previous
+            </button>
+            <span className="text-gray-700 text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 bg-gray-100 rounded text-black hover:bg-blue-600 hover:text-white disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        )}
 
         {filteredTransactions.length === 0 && (
           <div className="text-center py-10">

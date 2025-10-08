@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import YearSelector from '../../../views/components/yearSelector';
 import {
   BarChart2Icon,
   CalendarIcon,
@@ -26,9 +27,11 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  LineChart,
+  Line
 } from 'recharts'
-
+import { motion, AnimatePresence} from "framer-motion";
 // Import your controllers
 import WalletController from '../../../controllers/walletController'
 import ProductController from '../../../controllers/productController'
@@ -55,6 +58,9 @@ const Sales = ({ user }) => {
   const [statsLoading, setStatsLoading] = useState(false)
   const [statsError, setStatsError] = useState(null)
 
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
+  const [availableYears, setAvailableYears] = useState([])
+
   // Transaction states
   const [transactions, setTransactions] = useState([])
   const [pagination, setPagination] = useState({ page: 1, limit: 10, totalPages: 1 })
@@ -75,8 +81,18 @@ const Sales = ({ user }) => {
       const result = await ProductController.getDashboardStats(token)
       
       if (result.success) {
-        // The backend returns the full dashboard data structure
-        setDashboardStats(result.stats || result)
+        const statsData = result.stats || result
+
+        // Detect available years from monthly sales
+        const years = Object.keys(statsData.salesByCategory || {}).map(Number);
+        setAvailableYears(years.sort((a, b) => a - b))
+        setDashboardStats(statsData)
+
+        // Default to the latest available year if possible
+        if (years.length > 0) {
+          setCurrentYear(Math.max(...years))
+        }
+
       } else {
         setStatsError(result.error)
       }
@@ -130,6 +146,15 @@ const Sales = ({ user }) => {
     return matchesSearch && matchesStatus;
   });
 
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+  const filteredMonthlySales = months.map(month => {
+    const found = dashboardStats.monthlySales?.find(
+      item => item.year === currentYear && item.month === month
+    )
+    return found || { year: currentYear, month, totalETH: 0, totalProducts: 0 }
+  })
+
   // Handle pagination
   const handlePrevious = () => {
     if (pagination.page > 1) {
@@ -142,29 +167,18 @@ const Sales = ({ user }) => {
     }
   }
 
-  // Transform category data for pie chart
-  const getCategorySalesData = () => {
-    if (!dashboardStats.salesByCategory) return []
-    
-    return Object.entries(dashboardStats.salesByCategory)
-      .filter(([key, value]) => value > 0)
-      .map(([key, value]) => ({
-        name: key.charAt(0).toUpperCase() + key.slice(1).toLowerCase(),
-        value: parseFloat(value)
-      }))
-  }
+  const getCategorySalesData = (year) => {
+    if (!dashboardStats.salesByCategory || !dashboardStats.salesByCategory[year]) return [];
 
-  // Custom tooltip for charts to show ETH values
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="text-gray-600">{`${label} : ${payload[0].value} ETH`}</p>
-        </div>
-      );
-    }
-    return null;
-  }
+    return Object.entries(dashboardStats.salesByCategory[year])
+      .map(([category, data]) => ({
+        name: category,
+        value: data.totalETH || 0,
+        totalSold: data.totalSold || 0,
+        bestSeller: data.bestSeller || null,
+      }))
+      .filter(item => item.value > 0);
+  };
 
   return (
     <div className="pt-16 md:ml-64">
@@ -228,33 +242,77 @@ const Sales = ({ user }) => {
               </div>
               <TrendingUpIcon className="text-yellow-500" size={28} />
             </div>
-                 <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Products Sold</p>
-                <h3 className="text-xl font-bold">{dashboardStats.totalSalesProduct || 0}</h3>
-              </div>
-              <TrendingUpIcon className="text-green-500" size={28} />
+            {/* Year Selector */}
+            <div className="flex items-center justify-end mb-2">
+              <YearSelector
+                availableYears={availableYears}
+                currentYear={currentYear}
+                setCurrentYear={setCurrentYear}
+              />
             </div>
-           
-          </div>
-
+          </div>   
         
           {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Monthly Sales Bar Chart */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-lg font-semibold mb-4">Monthly Sales (ETH)</h2>
-              {dashboardStats.monthlySales && dashboardStats.monthlySales.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={dashboardStats.monthlySales}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Bar dataKey="sales" fill="#3B82F6" />
-                  </BarChart>
-                </ResponsiveContainer>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 no-focus-outline">
+            {/* Monthly Sales Line Chart */}
+            <div className="bg-white p-6 rounded-lg shadow"
+              onMouseDown={(e) => e.preventDefault()}
+              onFocus={(e) => e.target.blur()}
+              >
+              <h2 className="text-lg font-semibold mb-4">Monthly Sales (ETH & Products)</h2>
+              {Array.isArray(filteredMonthlySales) && filteredMonthlySales.length > 0 ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={filteredMonthlySales}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip
+                        content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            const eth = payload.find((p) => p.dataKey === 'totalETH')?.value ?? 0;
+                            const products = payload.find((p) => p.dataKey === 'totalProducts')?.value ?? 0;
+                            return (
+                              <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                                <p className="font-semibold text-gray-800 mb-1">{label}</p>
+                                <p className="text-blue-600 text-sm">
+                                  💰 Total ETH: <span className="font-semibold">{eth.toFixed(6)}</span>
+                                </p>
+                                <p className="text-green-600 text-sm">
+                                  📦 Products Sold: <span className="font-semibold">{products}</span>
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="totalETH"
+                        name="ETH Sales"
+                        stroke="#3B82F6"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="totalProducts"
+                        name="Products Sold"
+                        stroke="#10B981"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </motion.div>
               ) : (
                 <div className="h-[300px] flex items-center justify-center text-gray-500">
                   No monthly sales data available
@@ -263,28 +321,62 @@ const Sales = ({ user }) => {
             </div>
 
             {/* Category Pie Chart */}
-            <div className="bg-white p-6 rounded-lg shadow">
+            <div className="bg-white p-6 rounded-lg shadow"   
+              onMouseDown={(e) => e.preventDefault()}
+              onFocus={(e) => e.target.blur()}
+              >
               <h2 className="text-lg font-semibold mb-4">Sales by Category (ETH)</h2>
-              {getCategorySalesData().length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={getCategorySalesData()}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, value }) => `${name}: ${value} ETH`}
-                    >
-                      {getCategorySalesData().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => [`${value} ETH`, 'Sales']} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+              {getCategorySalesData(currentYear).length > 0 ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={getCategorySalesData(currentYear)}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, value }) => `${name}: ${value.toFixed(6)} ETH`}
+                      >
+                        {getCategorySalesData(currentYear).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+
+                      {/* Detailed Tooltip */}
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const category = payload[0].name
+                            const data = dashboardStats.salesByCategory?.[currentYear]?.[category]
+                            if (!data) return null
+                            return (
+                              <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                                <p className="font-semibold text-gray-800 mb-1">{category}</p>
+                                <p className="text-blue-600 text-sm">
+                                  💰 Total ETH: <span className="font-semibold">{data.totalETH.toFixed(6)}</span>
+                                </p>
+                                <p className="text-green-600 text-sm">
+                                  📦 Total Sold: <span className="font-semibold">{data.totalSold}</span>
+                                </p>
+                                <p className="text-purple-600 text-sm">
+                                  ⭐ Best Seller: <span className="font-semibold">{data.bestSeller?.name}</span> ({data.bestSeller?.sold})
+                                </p>
+                              </div>
+                            )
+                          }
+                          return null
+                        }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </motion.div>
               ) : (
                 <div className="h-[300px] flex items-center justify-center text-gray-500">
                   No category sales data available
