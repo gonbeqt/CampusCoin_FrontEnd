@@ -343,8 +343,8 @@ class AuthController {
     
     return fullName;
   }
-
-    async fetchBalanceStats() {
+  
+  async fetchBalanceStats() {
     try {
       const result = await this.model.fetchBalanceStats();
       if (result.success) {

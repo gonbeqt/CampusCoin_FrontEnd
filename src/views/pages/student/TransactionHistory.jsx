@@ -12,7 +12,7 @@ const TransactionHistory = ({ user }) => {
   const [transactionsData, setTransactionsData] = useState([]);
   const [filter, setFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 10;
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -40,21 +40,13 @@ const TransactionHistory = ({ user }) => {
     return transaction.status === filter;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
+  // Pagination logic
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentTransactions = filteredTransactions.slice(startIndex, startIndex + itemsPerPage);
 
-  // Reset to first page when filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filter]);
-
-  // Clamp currentPage if filtered data shrinks
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
-
-  const paginatedTransactions = filteredTransactions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const handlePrev = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+  const handleNext = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
 
   // Tailwind classes based on status
   const getStatusClasses = (status) => {
@@ -87,30 +79,15 @@ const TransactionHistory = ({ user }) => {
           <FilterIcon size={16} className="text-gray-500 mr-2" />
           <span className="text-gray-700 font-medium">Filter:</span>
           <div className="ml-3 space-x-2">
-            <button
-              className={`px-3 py-1 rounded-full text-sm ${filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              onClick={() => setFilter('all')}
-            >
-              All Orders
-            </button>
-            <button
-              className={`px-3 py-1 rounded-full text-sm ${filter === 'pending' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              onClick={() => setFilter('pending')}
-            >
-              Pending Orders
-            </button>
-            <button
-              className={`px-3 py-1 rounded-full text-sm ${filter === 'paid' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              onClick={() => setFilter('paid')}
-            >
-              Paid Orders
-            </button>
-            <button
-              className={`px-3 py-1 rounded-full text-sm ${filter === 'cancelled' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              onClick={() => setFilter('cancelled')}
-            >
-              Cancelled Orders
-            </button>
+            {['all','pending','paid','cancelled'].map(f => (
+              <button
+                key={f}
+                className={`px-3 py-1 rounded-full text-sm ${filter === f ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                onClick={() => { setFilter(f); setCurrentPage(1); }}
+              >
+                {f === 'all' ? 'All Orders' : `${f.charAt(0).toUpperCase() + f.slice(1)} Orders`}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -127,7 +104,7 @@ const TransactionHistory = ({ user }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedTransactions.map(transaction => {
+              {currentTransactions.map(transaction => {
                 const classes = getStatusClasses(transaction.status);
                 return (
                   <tr key={transaction._id}>
@@ -183,29 +160,32 @@ const TransactionHistory = ({ user }) => {
           </table>
         </div>
 
-        {/* Pagination controls */}
-        <div className="px-4 py-3 border-t flex items-center justify-between bg-white">
-          <div className="text-sm text-gray-700">
-            Showing {(filteredTransactions.length === 0) ? 0 : ( (currentPage - 1) * PAGE_SIZE + 1 )} to {Math.min(currentPage * PAGE_SIZE, filteredTransactions.length)} of {filteredTransactions.length} transactions
-          </div>
-          <div className="flex items-center space-x-2">
+        {/* Pagination Controls */}
+        {filteredTransactions.length > itemsPerPage && (
+          <div className="flex justify-end items-center space-x-2 p-4 border-t">
             <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              onClick={handlePrev}
               disabled={currentPage === 1}
-              className={`px-3 py-1 rounded-md text-sm ${currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50 border'}`}
+              className={`px-3 py-1 rounded text-black ${
+                currentPage === 1
+                  ? 'bg-gray-100 opacity-50 cursor-default'
+                  : 'bg-gray-100 hover:bg-blue-600 hover:text-white'
+              }`}
             >
               Previous
             </button>
-            <div className="text-sm text-gray-600">Page {currentPage} / {totalPages}</div>
+            <span className="text-gray-700 text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
             <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              onClick={handleNext}
               disabled={currentPage === totalPages}
-              className={`px-3 py-1 rounded-md text-sm ${currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50 border'}`}
+              className="px-3 py-1 bg-gray-100 rounded text-black hover:bg-blue-600 hover:text-white disabled:opacity-50"
             >
               Next
             </button>
           </div>
-        </div>
+        )}
 
         {filteredTransactions.length === 0 && (
           <div className="text-center py-10">

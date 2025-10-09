@@ -66,6 +66,7 @@ class ProductModel {
       return { error: err.message }
     }
   }
+  
   async getDashboardStats(token) {
     try {
       const res = await fetch(`${this.baseURL}/dashboard`, {
@@ -86,7 +87,15 @@ class ProductModel {
         stats: {
           totalProducts: data.totalProducts || 0,
           totalSales: data.totalSales || 0,
-          totalRevenue: data.totalRevenue || 0,
+          salesCount: data.salesCount || 0,
+          avgOrder: data.avgOrder || 0,
+          totalSalesProduct:
+            Object.values(data.salesByCategory || {}).reduce(
+              (sum, cat) => sum + (cat.totalSold || 0),
+              0
+            ) || 0,
+          monthlySales: data.monthlySales || [],
+          salesByCategory: data.salesByCategory || {},
         },
       };
     } catch (err) {
