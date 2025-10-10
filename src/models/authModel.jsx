@@ -108,6 +108,45 @@ class AuthModel {
     }
   }
 
+  async initiateResubmission(email) {
+    try {
+      const response = await fetch(`${API_URL}/resubmit/initiate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const result = await response.json();
+      return {
+        success: response.ok,
+        message: result.message,
+        error: response.ok ? null : result.error || result.message,
+        data: result.user || null
+      };
+    } catch (error) {
+      console.error('Resubmission initiate network error:', error);
+      return { success: false, error: 'Network error occurred while checking resubmission eligibility' };
+    }
+  }
+
+  async submitResubmission(formData) {
+    try {
+      const response = await fetch(`${API_URL}/resubmit/submit`, {
+        method: 'POST',
+        body: formData
+      });
+      const result = await response.json();
+      return {
+        success: response.ok,
+        message: result.message,
+        error: response.ok ? null : result.error || result.message,
+        data: result.data || null
+      };
+    } catch (error) {
+      console.error('Resubmission submit network error:', error);
+      return { success: false, error: 'Network error occurred while submitting documents' };
+    }
+  }
+
   async profile() {
     try {
       const token = this.getToken();
