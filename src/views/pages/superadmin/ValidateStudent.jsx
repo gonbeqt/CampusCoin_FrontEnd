@@ -18,6 +18,9 @@ const ValidateStudent = () => {
   const [students, setstudents] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [message, setMessage] = useState(null)
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
+  const [rejectTargetId, setRejectTargetId] = useState(null)
 
   useEffect(() => {
     const fetchstudents = async () => {
@@ -91,18 +94,28 @@ const ValidateStudent = () => {
     }
   }
 
-  // Reject student
-  const handleReject = async (studentId) => {
+  // Open reject modal
+  const handleReject = (studentId) => {
+    setRejectTargetId(studentId)
+    setRejectReason('')
+    setShowRejectModal(true)
+  }
+
+  // Perform reject (called from modal)
+  const performReject = async () => {
+    if (!rejectTargetId) return
     setIsLoading(true)
     try {
       const token = localStorage.getItem('authToken')
-      const reason = 'Not eligible' // TODO: replace with modal input
-      const result = await ValidationController.rejectUser(studentId, reason, token)
+      const result = await ValidationController.rejectUser(rejectTargetId, rejectReason || 'Not eligible', token)
 
       if (result.success) {
         setMessage({ type: 'success', text: 'student rejected' })
-        setstudents(students.filter((student) => student.id !== studentId))
-        if (selectedstudent?.id === studentId) setSelectedstudent(null)
+        setstudents(students.filter((student) => student.id !== rejectTargetId))
+        if (selectedstudent?.id === rejectTargetId) setSelectedstudent(null)
+        setShowRejectModal(false)
+        setRejectTargetId(null)
+        setRejectReason('')
       } else {
         setMessage({ type: 'error', text: result.error || 'Failed to reject student' })
       }
@@ -425,6 +438,38 @@ const ValidateStudent = () => {
           </div>
         </div>
       </div>
+      {/* Reject Reason Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold mb-2">Reject Student</h3>
+            <p className="text-sm text-gray-600 mb-4">Provide a reason for rejection (optional)</p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              rows={4}
+              className="w-full border border-gray-300 rounded p-2 mb-4"
+              placeholder="Enter rejection reason"
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => { setShowRejectModal(false); setRejectTargetId(null); setRejectReason('') }}
+                className="px-4 py-2 border rounded bg-white"
+                disabled={isLoading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={performReject}
+                className="px-4 py-2 bg-red-600 text-white rounded"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Processing...' : 'Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

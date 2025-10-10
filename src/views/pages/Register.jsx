@@ -324,32 +324,6 @@ const Register = () => {
           </p>
         </div>
 
-        {/* Message Display */}
-        {message && (
-          <div className={`rounded-md p-4 ${
-            message.type === 'success' 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-red-50 border border-red-200'
-          }`}>
-            <div className="flex">
-              <div className="flex-shrink-0">
-                {message.type === 'success' ? (
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 text-red-400" />
-                )}
-              </div>
-              <div className="ml-3">
-                <p className={`text-sm ${
-                  message.type === 'success' ? 'text-green-700' : 'text-red-700'
-                }`}>
-                  {message.text}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {showVerification ? (
           // ================= Verification Form =================
           <div className="mt-8 space-y-6">

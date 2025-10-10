@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 // Helper to fetch student details by array of IDs
 async function fetchStudentDetails(studentIds) {
   if (!studentIds || studentIds.length === 0) return [];
@@ -35,14 +35,13 @@ const EventAttendanceDetails = () => {
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
   const [finalizeInput, setFinalizeInput] = useState('');
 
-  useEffect(() => {
-    const fetchEventAndStudents = async () => {
-      setLoading(true);
+  const loadEventData = useCallback(async (showLoader = true) => {
+    if (showLoader) setLoading(true);
+    try {
       const res = await eventController.getEventById(eventId);
       if (res.success) {
         setEvent(res.event);
         const students = await fetchStudentDetails(res.event.registeredStudents);
-        // Sort students by full name A-Z
         students.sort((a, b) => {
           const nameA = (a.first_name + ' ' + a.last_name).toLowerCase();
           const nameB = (b.first_name + ' ' + b.last_name).toLowerCase();
@@ -51,34 +50,57 @@ const EventAttendanceDetails = () => {
         setStudentDetails(students);
         setPresentDetails(await fetchStudentDetails(res.event.attendedStudents));
         setAbsentDetails(await fetchStudentDetails(res.event.absentStudents));
-
-        // Pre-check attendance based on current status
-        const attendedSet = new Set(res.event.attendedStudents.map(String));
-        const absentSet = new Set(res.event.absentStudents.map(String));
-        const initialAttendance = {};
-        students.forEach((student) => {
-          if (attendedSet.has(String(student._id))) {
-            initialAttendance[student._id] = 'present';
-          } else if (absentSet.has(String(student._id))) {
-            initialAttendance[student._id] = 'absent';
-          }
-        });
-        setAttendance(initialAttendance);
+  setAttendance({});
+        setError(null);
       } else {
         setError(res.error || 'Failed to fetch event');
       }
-      setLoading(false);
-    };
-    fetchEventAndStudents();
-  }, [eventId, updating]);
+    } catch (err) {
+      console.error('Failed to load event attendance data:', err);
+      setError('Failed to fetch event');
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  }, [eventId]);
+
+  useEffect(() => {
+    loadEventData(true);
+  }, [loadEventData]);
 
 
   // Handle checkbox change
+  const attendedSet = useMemo(() => new Set((event?.attendedStudents || []).map((id) => String(id))), [event]);
+  const absentSet = useMemo(() => new Set((event?.absentStudents || []).map((id) => String(id))), [event]);
+  const qrScannedSet = useMemo(() => new Set((event?.qrScannedStudents || []).map((id) => String(id))), [event]);
+
   const handleCheckboxChange = (studentId, status) => {
-    setAttendance((prev) => ({
-      ...prev,
-      [studentId]: prev[studentId] === status ? null : status,
-    }));
+    const id = String(studentId);
+    if (status === 'absent' && qrScannedSet.has(id)) {
+      return;
+    }
+    const baseStatus = attendedSet.has(id)
+      ? 'present'
+      : absentSet.has(id)
+        ? 'absent'
+        : null;
+
+    setAttendance((prev) => {
+      const currentOverride = prev[id];
+      const currentStatus = currentOverride !== undefined ? currentOverride : baseStatus;
+      const nextStatus = currentStatus === status ? null : status;
+
+      // Normalize overrides map: only store values that differ from base status
+      if (nextStatus === null || nextStatus === baseStatus) {
+        if (prev[id] === undefined) return prev;
+        const { [id]: _, ...rest } = prev;
+        return rest;
+      }
+
+      return {
+        ...prev,
+        [id]: nextStatus,
+      };
+    });
   };
 
   // Submit all attendance changes
@@ -90,6 +112,7 @@ const EventAttendanceDetails = () => {
         eventController.markStudentAttendance(eventId, studentId, status === 'present' ? 'attended' : 'absent')
       );
     await Promise.all(promises);
+    await loadEventData(false);
     setAttendance({});
     setUpdating(false);
   };
@@ -102,8 +125,6 @@ const EventAttendanceDetails = () => {
     : (Array.isArray(event?.registeredStudents)
         ? event.registeredStudents.map((id) => String(id))
         : []);
-  const attendedSet = new Set((event?.attendedStudents || []).map((id) => String(id)));
-  const absentSet = new Set((event?.absentStudents || []).map((id) => String(id)));
   const unmarkedIds = registeredIds.filter((id) => !attendedSet.has(id) && !absentSet.has(id));
   const allStudentsMarked = unmarkedIds.length === 0; // true if every registered student is either present or absent
   const unmarkedCount = unmarkedIds.length;
@@ -182,12 +203,28 @@ const EventAttendanceDetails = () => {
                   })
                   .slice(0, 10)
                   .map((student, idx) => {
-                    const presentChecked = attendance[student._id] === 'present';
-                    const absentChecked = attendance[student._id] === 'absent';
+                    const id = String(student._id);
+                    const overrideStatus = attendance[id];
+                    const baseStatus = attendedSet.has(id)
+                      ? 'present'
+                      : absentSet.has(id)
+                        ? 'absent'
+                        : null;
+                    const currentStatus = overrideStatus !== undefined ? overrideStatus : baseStatus;
+                    const presentChecked = currentStatus === 'present';
+                    const absentChecked = currentStatus === 'absent';
+                    const qrLocked = qrScannedSet.has(id);
                     return (
-                      <tr key={student._id || idx} className="border-b border-gray-200">
+                      <tr key={student._id || idx} className={`border-b border-gray-200 ${qrLocked ? 'bg-blue-50' : ''}`}>
                         <td className="px-4 py-2 whitespace-nowrap font-mono text-sm text-gray-800 border-r border-gray-200">{student.student_id || student._id}</td>
-                        <td className="px-4 py-2 whitespace-nowrap text-gray-900 border-r border-gray-200">{student.first_name} {student.last_name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-gray-900 border-r border-gray-200">
+                          {student.first_name} {student.last_name}
+                          {qrLocked && (
+                            <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-600" title="Attendance recorded via QR scan">
+                              QR
+                            </span>
+                          )}
+                        </td>
                         <td className="px-4 py-2 whitespace-nowrap text-gray-700 border-r border-gray-200">{student.course}</td>
                         <td className="px-4 py-2 whitespace-nowrap text-gray-700 border-r border-gray-200">{student.email}</td>
                         <td className="px-4 py-2 whitespace-nowrap text-center">
@@ -196,7 +233,7 @@ const EventAttendanceDetails = () => {
                             className="form-checkbox h-5 w-5 text-green-600"
                             checked={presentChecked}
                             onChange={() => handleCheckboxChange(student._id, 'present')}
-                            disabled={updating || event.finalized}
+                            disabled={updating || event.finalized || qrLocked}
                             style={{ accentColor: 'green' }}
                           />
                         </td>
@@ -206,7 +243,7 @@ const EventAttendanceDetails = () => {
                             className="form-checkbox h-5 w-5 text-red-600"
                             checked={absentChecked}
                             onChange={() => handleCheckboxChange(student._id, 'absent')}
-                            disabled={updating || event.finalized}
+                            disabled={updating || event.finalized || qrLocked}
                             style={{ accentColor: 'red' }}
                           />
                         </td>
@@ -318,7 +355,7 @@ const EventAttendanceDetails = () => {
               </thead>
               <tbody className="bg-white">
                 {presentDetails.map((student, idx) => {
-                  const received = event && event.rewardedStudents && event.rewardedStudents.includes(student._id);
+                  const received = event && event.rewardedStudents && event.rewardedStudents.some(id => String(id) === String(student._id));
                   return (
                     <tr key={student._id || idx} className="border-b border-gray-200">
                       <td className="px-4 py-2 whitespace-nowrap font-mono text-sm text-gray-800 border-r border-gray-200">{student.student_id || student._id}</td>

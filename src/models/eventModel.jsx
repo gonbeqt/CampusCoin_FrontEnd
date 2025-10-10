@@ -169,6 +169,30 @@ class EventModel {
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
+  async generateAttendanceQr(eventId, studentId) {
+    try {
+      const authModel = new AuthModel();
+      const token = authModel.getToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(`${this.baseURL}/${eventId}/attendance/${studentId}/qr`, {
+        method: 'GET',
+        headers
+      });
+
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? data : null,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('EventModel.generateAttendanceQr error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
 }
 
 export default EventModel;
