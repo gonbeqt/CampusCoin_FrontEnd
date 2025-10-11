@@ -7,6 +7,7 @@ import {
 } from 'react-router-dom'
 import Login from './views/pages/Login'
 import Register from './views/pages/Register'
+import ResubmitDocuments from './views/pages/ResubmitDocuments'
 import ForgotPassword from './views/pages/ForgotPassword'
 import StudentDashboard from './views/pages/student/Dashboard'
 import AdminDashboard from './views/pages/admin/Dashboard'
@@ -44,6 +45,7 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/resubmit-documents" element={<ResubmitDocuments />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/" element={<Navigate to="/login" replace />} />
                 {/* Super Admin Routes */}

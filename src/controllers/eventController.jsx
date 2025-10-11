@@ -32,7 +32,18 @@ class EventController {
       return { success: false, error: 'Unexpected error occurred' };
     }
   }
-
+async generateAttendanceQr(eventId, studentId) {
+    try {
+      const result = await this.model.generateAttendanceQr(eventId, studentId);
+      if (!result.success) {
+        return { success: false, error: result.error || 'Failed to generate QR code' };
+      }
+      return { success: true, data: result.data };
+    } catch (error) {
+      console.error('EventController.generateAttendanceQr error:', error);
+      return { success: false, error: 'Unexpected error occurred' };
+    }
+  }
   async getAllEvents() {
     try {
       const result = await this.model.getAllEvents();

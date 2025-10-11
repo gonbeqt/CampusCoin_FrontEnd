@@ -105,64 +105,9 @@ class NotificationController {
       throw error;
     }
   }
+  
 
-  // Notification preferences
-  async getNotificationPreferences() {
-    try {
-      return await this.model.getNotificationPreferences();
-    } catch (error) {
-      console.error('NotificationController: Error getting notification preferences', error);
-      throw error;
-    }
-  }
-
-  async updateNotificationPreferences(preferences) {
-    try {
-      return await this.model.updateNotificationPreferences(preferences);
-    } catch (error) {
-      console.error('NotificationController: Error updating notification preferences', error);
-      throw error;
-    }
-  }
-
-  async updateNotificationTypePreference(type, channel, enabled) {
-    try {
-      return await this.model.updateNotificationTypePreference(type, channel, enabled);
-    } catch (error) {
-      console.error('NotificationController: Error updating notification type preference', error);
-      throw error;
-    }
-  }
-
-  async updateFrequencyPreferences(frequency) {
-    try {
-      return await this.model.updateFrequencyPreferences(frequency);
-    } catch (error) {
-      console.error('NotificationController: Error updating frequency preferences', error);
-      throw error;
-    }
-  }
-
-  async updateQuietHours(quietHours) {
-    try {
-      return await this.model.updateQuietHours(quietHours);
-    } catch (error) {
-      console.error('NotificationController: Error updating quiet hours', error);
-      throw error;
-    }
-  }
-
-  async resetNotificationPreferences() {
-    try {
-      return await this.model.resetNotificationPreferences();
-    } catch (error) {
-      console.error('NotificationController: Error resetting notification preferences', error);
-      throw error;
-    }
-  }
-
-  // Note: Web-push functionality removed as per requirements
-  // Only in-app notifications are supported
+  
 
   // Helper methods for creating notifications
   createNotification(type, title, message, data = {}) {

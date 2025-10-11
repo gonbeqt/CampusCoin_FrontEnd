@@ -11,7 +11,7 @@ const Login = () => {
     email: '',
     password: ''
   })
-  
+
   const [viewState, setViewState] = useState({
     isLoading: false,
     error: '',
@@ -29,7 +29,7 @@ const Login = () => {
       ...prev,
       [name]: value
     }))
-    
+
     // Clear error when user starts typing
     if (viewState.error) {
       setViewState(prev => ({ ...prev, error: '' }))
@@ -59,7 +59,7 @@ const Login = () => {
     if (e && e.nativeEvent && typeof e.nativeEvent.stopImmediatePropagation === 'function') {
       e.nativeEvent.stopImmediatePropagation()
     }
-    
+
     setViewState(prev => ({ ...prev, isLoading: true, error: '' }))
     setAccountStatusInfo(null)
 
@@ -76,7 +76,7 @@ const Login = () => {
       } else {
         // Handle different types of errors
         const errorData = result.data || {}
-        
+
         if (errorData.accountStatus) {
           setAccountStatusInfo({
             status: errorData.accountStatus,
@@ -187,7 +187,7 @@ const Login = () => {
                   {accountStatusInfo.status === 'pending' && (
                     <p className="mt-2">
                       <strong>What happens next?</strong><br />
-                      Your account documents are being reviewed by our administrators. 
+                      Your account documents are being reviewed by our administrators.
                       You'll receive an email notification once your account is approved.
                     </p>
                   )}
@@ -202,6 +202,18 @@ const Login = () => {
                       </Link>
                     </div>
                   )}
+                  {accountStatusInfo.status === 'rejected' && (
+                    <p className="mt-2">
+                      <strong>What happens next?</strong><br />
+                      Please check your email for more details and instructions on how to resubmit your documents.
+                      <span className="block mt-2">
+                        <Link to="/resubmit-documents" className="text-blue-600 hover:underline">
+                          Resubmit documents now
+                        </Link>
+                      </span>
+                    </p>
+                  )}
+
                 </div>
               </div>
             </div>

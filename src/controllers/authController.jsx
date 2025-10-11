@@ -109,6 +109,27 @@ class AuthController {
     }
   }
 
+  async initiateResubmission(email) {
+    try {
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return { success: false, error: 'Please enter a valid email address.' };
+      }
+      const result = await this.model.initiateResubmission(email.trim());
+      return result;
+    } catch (error) {
+      return { success: false, error: 'An unexpected error occurred while checking resubmission eligibility.' };
+    }
+  }
+
+  async submitResubmission(formData) {
+    try {
+      const result = await this.model.submitResubmission(formData);
+      return result;
+    } catch (error) {
+      return { success: false, error: 'An unexpected error occurred while submitting documents.' };
+    }
+  }
+
   async logout() {
     try {
       // Call backend logout

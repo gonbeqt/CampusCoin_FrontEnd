@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CalendarIcon,
@@ -32,6 +32,19 @@ const Events = ({ user }) => {
   const userData = authModel.getUserData();
   const userId = userData?._id || userData?.id;
 
+  const matchesUser = useCallback((entry) => {
+    if (!entry || !userId) return false;
+    if (typeof entry === 'string') return entry === String(userId);
+    if (typeof entry === 'object') {
+      const entryId = entry._id || entry.id;
+      if (entryId) return String(entryId) === String(userId);
+      if (typeof entry.toString === 'function') return entry.toString() === String(userId);
+    }
+    return false;
+  }, [userId]);
+
+  const arrayHasUser = useCallback((arr) => Array.isArray(arr) && arr.some(matchesUser), [matchesUser]);
+
   // Fetch events from backend
   useEffect(() => {
     const fetchEvents = async () => {
@@ -61,8 +74,13 @@ const Events = ({ user }) => {
   // Determine event status dynamically
   const getEventStatus = (event) => {
     const now = new Date();
-    const hasJoined = event.registeredStudents?.includes(userId);
-    const rewardClaimed = event.claimedStudents?.includes(userId);
+    if (event.status) {
+      const normalizedStatus = event.status.toLowerCase().trim();
+      if (normalizedStatus === 'completed') return 'Completed';
+      if (normalizedStatus === 'cancelled') return 'Cancelled';
+    }
+    const hasJoined = arrayHasUser(event.registeredStudents);
+    const rewardClaimed = arrayHasUser(event.claimedStudents);
 
     if (!event?.time?.start || !event?.time?.end || !event?.date) return 'Upcoming';
 
@@ -142,14 +160,23 @@ const Events = ({ user }) => {
     const status = getEventStatus(event);
     if (statusFilter === 'Claim Reward') {
       const isFinalized = event.finalized === true;
-      const isRegistered = Array.isArray(event.registeredStudents) && event.registeredStudents.includes(userId);
+      const isRegistered = arrayHasUser(event.registeredStudents);
       if (!(isFinalized && isRegistered)) return false;
       // Claim status filter
-      if (claimStatus === 'claimed' && !(event.claimedStudents && event.claimedStudents.includes(userId))) return false;
-      if (claimStatus === 'unclaimed' && !(Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) && !(event.claimedStudents && event.claimedStudents.includes(userId)))) return false;
-      if (claimStatus === 'unclaimable' && !(Array.isArray(event.absentStudents) && event.absentStudents.includes(userId))) return false;
-    } else if (statusFilter !== 'All' && status !== statusFilter) {
-      return false;
+      if (claimStatus === 'claimed' && !arrayHasUser(event.claimedStudents)) return false;
+      if (
+        claimStatus === 'unclaimed' &&
+        !(arrayHasUser(event.attendedStudents) && !arrayHasUser(event.claimedStudents))
+      ) return false;
+      if (claimStatus === 'unclaimable' && !arrayHasUser(event.absentStudents)) return false;
+    } else if (statusFilter !== 'All') {
+      // Special-case: show completed events in the 'Registered' tab if the user had registered
+      if (statusFilter === 'Registered') {
+        if (status === 'Registered') return true;
+        if (arrayHasUser(event.registeredStudents) && status === 'Completed') return true;
+        return false;
+      }
+      if (status !== statusFilter) return false;
     }
     if (categoryFilter !== 'All' && event.category !== categoryFilter) return false;
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -349,14 +376,12 @@ const Events = ({ user }) => {
               <h2 className="text-lg font-bold mb-2">Unclaimed Rewards</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {filteredEvents.filter(event =>
-                  Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) &&
-                  !(event.claimedStudents && event.claimedStudents.includes(userId))
+                  arrayHasUser(event.attendedStudents) && !arrayHasUser(event.claimedStudents)
                 ).map(event => (
                   <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
                 ))}
                 {filteredEvents.filter(event =>
-                  Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) &&
-                  !(event.claimedStudents && event.claimedStudents.includes(userId))
+                  arrayHasUser(event.attendedStudents) && !arrayHasUser(event.claimedStudents)
                 ).length === 0 && (
                   <div className="col-span-full text-center py-4 text-gray-500">No unclaimed rewards</div>
                 )}
@@ -368,12 +393,12 @@ const Events = ({ user }) => {
               <h2 className="text-lg font-bold mb-2">Claimed Rewards</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {filteredEvents.filter(event =>
-                  event.claimedStudents && event.claimedStudents.includes(userId)
+                  arrayHasUser(event.claimedStudents)
                 ).map(event => (
                   <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
                 ))}
                 {filteredEvents.filter(event =>
-                  event.claimedStudents && event.claimedStudents.includes(userId)
+                  arrayHasUser(event.claimedStudents)
                 ).length === 0 && (
                   <div className="col-span-full text-center py-4 text-gray-500">No claimed rewards</div>
                 )}
@@ -385,12 +410,12 @@ const Events = ({ user }) => {
               <h2 className="text-lg font-bold mb-2">Unclaimable Rewards</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredEvents.filter(event =>
-                  Array.isArray(event.absentStudents) && event.absentStudents.includes(userId)
+                  arrayHasUser(event.absentStudents)
                 ).map(event => (
                   <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
                 ))}
                 {filteredEvents.filter(event =>
-                  Array.isArray(event.absentStudents) && event.absentStudents.includes(userId)
+                  arrayHasUser(event.absentStudents)
                 ).length === 0 && (
                   <div className="col-span-full text-center py-4 text-gray-500">No unclaimable rewards</div>
                 )}
@@ -403,14 +428,12 @@ const Events = ({ user }) => {
               <h2 className="text-lg font-bold mb-2">Unclaimed Rewards</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {filteredEvents.filter(event =>
-                  Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) &&
-                  !(event.claimedStudents && event.claimedStudents.includes(userId))
+                  arrayHasUser(event.attendedStudents) && !arrayHasUser(event.claimedStudents)
                 ).map(event => (
                   <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
                 ))}
                 {filteredEvents.filter(event =>
-                  Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) &&
-                  !(event.claimedStudents && event.claimedStudents.includes(userId))
+                  arrayHasUser(event.attendedStudents) && !arrayHasUser(event.claimedStudents)
                 ).length === 0 && (
                   <div className="col-span-full text-center py-4 text-gray-500">No unclaimed rewards</div>
                 )}
@@ -420,12 +443,12 @@ const Events = ({ user }) => {
               <h2 className="text-lg font-bold mb-2">Claimed Rewards</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {filteredEvents.filter(event =>
-                  event.claimedStudents && event.claimedStudents.includes(userId)
+                  arrayHasUser(event.claimedStudents)
                 ).map(event => (
                   <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
                 ))}
                 {filteredEvents.filter(event =>
-                  event.claimedStudents && event.claimedStudents.includes(userId)
+                  arrayHasUser(event.claimedStudents)
                 ).length === 0 && (
                   <div className="col-span-full text-center py-4 text-gray-500">No claimed rewards</div>
                 )}
@@ -435,12 +458,12 @@ const Events = ({ user }) => {
               <h2 className="text-lg font-bold mb-2">Unclaimable Rewards</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredEvents.filter(event =>
-                  Array.isArray(event.absentStudents) && event.absentStudents.includes(userId)
+                  arrayHasUser(event.absentStudents)
                 ).map(event => (
                   <EventCard key={event._id} event={event} userId={userId} timers={timers} handleClaimReward={handleClaimReward} statusFilter={statusFilter} />
                 ))}
                 {filteredEvents.filter(event =>
-                  Array.isArray(event.absentStudents) && event.absentStudents.includes(userId)
+                  arrayHasUser(event.absentStudents)
                 ).length === 0 && (
                   <div className="col-span-full text-center py-4 text-gray-500">No unclaimable rewards</div>
                 )}
@@ -476,6 +499,17 @@ const Events = ({ user }) => {
 // EventCard component for rendering each event in the grid
 const EventCard = ({ event, userId, timers, handleClaimReward, handleJoinEvent, statusFilter }) => {
   const userData = new AuthModel().getUserData();
+  const matchesUser = (entry) => {
+    if (!entry || !userId) return false;
+    if (typeof entry === 'string') return entry === String(userId);
+    if (typeof entry === 'object') {
+      const entryId = entry._id || entry.id;
+      if (entryId) return String(entryId) === String(userId);
+      if (typeof entry.toString === 'function') return entry.toString() === String(userId);
+    }
+    return false;
+  };
+  const arrayHasUser = (arr) => Array.isArray(arr) && arr.some(matchesUser);
   // Helper to check if event is ongoing
   const isEventOngoing = (event) => {
     if (!event?.time?.start || !event?.time?.end || !event?.date) return false;
@@ -507,7 +541,7 @@ const EventCard = ({ event, userId, timers, handleClaimReward, handleJoinEvent, 
     eventEnd.setHours(endHour, endMinute, 0, 0);
     return new Date() > eventEnd;
   };
-  const hasJoined = Array.isArray(event.registeredStudents) && event.registeredStudents.includes(userId);
+  const hasJoined = arrayHasUser(event.registeredStudents);
   const isFull = typeof event.maxStudents === 'number' && Array.isArray(event.registeredStudents) && event.registeredStudents.length >= event.maxStudents;
   return (
     <div className={`bg-white rounded-lg shadow overflow-hidden relative`}>
@@ -524,7 +558,7 @@ const EventCard = ({ event, userId, timers, handleClaimReward, handleJoinEvent, 
         <>
           {/* Banner */}
           <div className="absolute top-0 left-0 w-full flex justify-center z-10">
-            {Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) ? (
+            {arrayHasUser(event.attendedStudents) ? (
               <div className="bg-green-500 text-white font-bold text-sm px-6 py-2 rounded-b shadow-md mt-0 mb-2">
                 Marked Present
               </div>
@@ -571,14 +605,14 @@ const EventCard = ({ event, userId, timers, handleClaimReward, handleJoinEvent, 
           <Link to={`/student/event/${event._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">View details</Link>
           {/* Claim Now button for Claim Reward tab (enabled for present, disabled for absent) */}
           {statusFilter === 'Claim Reward' && (
-            event.claimedStudents && event.claimedStudents.includes(userId) ? (
+            arrayHasUser(event.claimedStudents) ? (
               <button
                 className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
                 disabled
               >
                 Claimed
               </button>
-            ) : Array.isArray(event.attendedStudents) && event.attendedStudents.includes(userId) ? (
+            ) : arrayHasUser(event.attendedStudents) ? (
               <button
                 className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded shadow hover:bg-green-700 transition-colors"
                 onClick={() => handleClaimReward(event._id)}
