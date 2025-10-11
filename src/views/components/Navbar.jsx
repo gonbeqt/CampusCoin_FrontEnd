@@ -49,8 +49,14 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
               </div>
               <div className="text-xs text-gray-500">
                 {user?.role === 'student'
-                  ? `${user?.student_id || 'N/A'}`
-                  : 'Administrator'}
+                  ? user?.student_id || 'N/A'
+                  : user?.role === 'seller'
+                  ? 'Seller'
+                  : user?.role === 'admin'
+                  ? 'Admin'
+                  : user?.role === 'superadmin'
+                  ? 'Operator'
+                  : 'N/A'}
               </div>
             </div>
             <button
