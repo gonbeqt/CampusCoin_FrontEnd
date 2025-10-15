@@ -84,7 +84,7 @@ const EventCard = ({ event, admin }) => {
           <span className={`cc-pill ${statusColor}`}>{statusText}</span>
           <div className="flex items-center gap-2 rounded-full bg-emerald-600/10 px-4 py-2 text-sm font-semibold text-emerald-700">
             <CoinsIcon size={18} />
-            <span>{event.reward} CampusCoin reward</span>
+            <span>{event.reward} CampusCoin</span>
           </div>
         </div>
       </div>

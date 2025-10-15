@@ -63,15 +63,13 @@ const SellerDashboard = ({ user }) => {
   }
 
   return (
-    <div className="pt-16 md:ml-64 ">
-      <div className="flex flex-wrap items-center justify-between mb-6">
+    <div className="pt-20 md:ml-64 min-h-screen  px-4 pb-12 sm:px-6 lg:px-8">
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Seller Dashboard</h1>
-          <p className="text-gray-600">
-            Welcome, {sellerProfile?.name}. Here's an overview of your store.
-          </p>
+          <h1 className="text-3xl font-semibold text-gray-900">Seller Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-600">Welcome, {sellerProfile?.name}. Here's an overview of your store.</p>
         </div>
-        <div className="mt-4 md:mt-0">
+        <div className="mt-2 md:mt-0">
           <WalletConnect
             onConnect={handleWalletConnect}
             isConnected={isWalletConnected}
@@ -81,15 +79,15 @@ const SellerDashboard = ({ user }) => {
       </div>
 
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-5">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2 mb-6">
+        <div className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-gray-500">Total Products</p>
               <p className="text-2xl font-bold mt-1">{stats.totalProducts}</p>
             </div>
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <PackageIcon size={24} className="text-blue-600" />
+            <div className="p-2 rounded-lg bg-emerald-50">
+              <PackageIcon size={24} className="text-emerald-600" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm">
@@ -99,16 +97,16 @@ const SellerDashboard = ({ user }) => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-5">
+        <div className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-gray-500">Total Sales</p>
               <p className="text-2xl font-bold mt-1 flex items-center">
-                <CoinsIcon className="w-5 h-5 mr-1 text-yellow-500" /> {stats.totalSales}  ETH
+                <CoinsIcon className="w-5 h-5 mr-1 text-amber-500" /> {stats.totalSales}  ETH
               </p>
             </div>
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <CoinsIcon size={24} className="text-yellow-600" />
+            <div className="p-2 rounded-lg bg-emerald-50">
+              <CoinsIcon size={24} className="text-emerald-600" />
             </div>
           </div>
         </div>
@@ -117,15 +115,10 @@ const SellerDashboard = ({ user }) => {
       {/* Transactions Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow p-5 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-700">Recent Transactions</h2>
-              <Link
-                to="/seller/sales"
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              >
-                View all
-              </Link>
+          <div className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Recent Transactions</h2>
+              <Link to="/seller/sales" className="text-sm font-medium text-emerald-600 hover:text-emerald-800">View all</Link>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -173,26 +166,26 @@ const SellerDashboard = ({ user }) => {
 
         {/* Store Info */}
         <div>
-          <div className="bg-white rounded-lg shadow p-5 mb-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Quick Actions</h2>
+          <div className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
             <div className="space-y-2">
               <Link
                 to="/seller/products/add"
-                className="flex items-center w-full text-left px-4 py-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
+                className="flex items-center w-full text-left px-4 py-2 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
               >
                 <PlusCircleIcon size={18} className="mr-2" />
                 Add new product
               </Link>
               <Link
                 to="/seller/products"
-                className="flex items-center w-full text-left px-4 py-2 bg-green-50 text-green-700 rounded hover:bg-green-100"
+                className="flex items-center w-full text-left px-4 py-2 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
               >
                 <PackageIcon size={18} className="mr-2" />
                 Manage inventory
               </Link>
               <Link
                 to="/seller/sales"
-                className="flex items-center w-full text-left px-4 py-2 bg-yellow-50 text-yellow-700 rounded hover:bg-yellow-100"
+                className="flex items-center w-full text-left px-4 py-2 rounded bg-amber-50 text-amber-700 hover:bg-amber-100"
               >
                 <BarChart2Icon size={18} className="mr-2" />
                 View sales reports
@@ -200,8 +193,8 @@ const SellerDashboard = ({ user }) => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-5">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Store Information</h2>
+          <div className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Store Information</h2>
             <div className="space-y-3">
               <div>
                 <p className="text-sm text-gray-500">Seller Name</p>
@@ -224,7 +217,7 @@ const SellerDashboard = ({ user }) => {
               </div>
               <Link
                 to="/seller/profile"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                className="inline-flex items-center px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-medium"
               >
                 View Profile
               </Link>

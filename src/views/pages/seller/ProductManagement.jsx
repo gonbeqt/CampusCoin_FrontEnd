@@ -98,45 +98,39 @@ const ProductManagement = () => {
   }
 
   return (
-    <div className="pt-16 md:ml-64">
+    <div className="pt-20 md:ml-64 min-h-screen px-4 pb-12 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Product Management</h1>
-          <p className="text-gray-600">Manage your store inventory</p>
+          <h1 className="text-3xl font-semibold text-gray-900">Product Management</h1>
+          <p className="mt-1 text-sm text-gray-600">Manage your store inventory</p>
         </div>
-        <Link
-          to="/seller/products/add"
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
+        <Link to="/seller/products/add" className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
           <PlusIcon size={16} className="mr-2" /> Add Product
         </Link>
       </div>
 
       {/* Search + Filter */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-4 border-b flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="mb-6 rounded-3xl border border-emerald-100 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="relative w-full md:w-64">
-            <SearchIcon
-              size={18}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            />
+            <SearchIcon size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search products..."
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full rounded-md border border-emerald-100 py-2 pl-10 pr-4 text-sm text-gray-700 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center">
-            <FilterIcon size={16} className="text-gray-500 mr-2" />
-            <span className="text-gray-700 font-medium">Category:</span>
-            <div className="ml-3 space-x-2 flex flex-wrap">
+          <div className="flex items-center gap-3">
+            <FilterIcon size={16} className="text-emerald-600" />
+            <span className="text-sm font-medium text-gray-700">Category:</span>
+            <div className="ml-3 flex flex-wrap gap-2">
               {categories.map((c) => (
                 <button
                   key={c}
-                  className={`px-3 py-1 rounded-full text-sm ${categoryFilter === c ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  className={`rounded-full px-3 py-1 text-sm font-medium transition ${categoryFilter === c ? 'bg-emerald-600 text-white shadow-sm' : 'border border-emerald-100 bg-white text-gray-700 hover:bg-emerald-50'}`}
                   onClick={() => setCategoryFilter(c)}
                 >
                   {c}
@@ -169,12 +163,7 @@ const ProductManagement = () => {
               ? 'Try adjusting your search or filter'
               : 'Get started by adding your first product'}
           </p>
-          <Link
-            to="/seller/products/add"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            <PlusIcon size={16} className="mr-2" /> Add Product
-          </Link>
+
         </div>
       )}
 
