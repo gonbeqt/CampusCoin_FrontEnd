@@ -35,20 +35,20 @@ const AttendanceVerification = () => {
   const categories = Array.from(new Set((events || []).map(e => e.category).filter(Boolean)));
 
   return (
-    <div className="pt-16 md:ml-64">
+    <div className="pt-16 md:ml-64 min-h-screen ">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Attendance Verification</h1>
         <p className="text-gray-600 mb-2">Select an event to verify student attendance</p>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3">
           <input
             type="text"
-            className="w-full md:w-1/2 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full md:w-1/2 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             placeholder="Search events... (title, category, organizer, location)"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
           <select
-            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
             title="Status"
@@ -59,7 +59,7 @@ const AttendanceVerification = () => {
             <option value="cancelled">Cancelled</option>
           </select>
           <select
-            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             value={finalizedFilter}
             onChange={e => setFinalizedFilter(e.target.value)}
             title="Finalization"
@@ -69,7 +69,7 @@ const AttendanceVerification = () => {
             <option value="not_finalized">Not Finalized</option>
           </select>
           <select
-            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             value={categoryFilter}
             onChange={e => setCategoryFilter(e.target.value)}
             title="Category"
@@ -80,7 +80,7 @@ const AttendanceVerification = () => {
             ))}
           </select>
           <select
-            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             value={sortOrder}
             onChange={e => setSortOrder(e.target.value)}
             title="Sort order"

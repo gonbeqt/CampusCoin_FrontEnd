@@ -202,8 +202,7 @@ const UserManagement = () => {
       })
     )
   }
-  // Filter users by search term (name or email)
-  // Filter users for each table
+ 
   const students = users.filter(u =>
     u.role === 'student' &&
     (
@@ -215,7 +214,7 @@ const UserManagement = () => {
   );
 
   return (
-    <div className="pt-16 md:ml-64">
+    <div className="pt-16 md:ml-64 min-h-screen">
       {/* Toast notification */}
       <Toast message={toast.message} type={toast.type} show={toast.show} />
       {loading ? (
@@ -227,11 +226,9 @@ const UserManagement = () => {
               <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
               <p className="text-gray-600">Manage students and track their attendance.</p>
             </div>
-            <div className="flex flex-row items-center justify-between gap-2 w-full">
-              {/* No global search bar, replaced by per-table search */}
-              <div className="flex-1" />
-                {/* Add User button removed */}
-            </div>
+              <div className="flex flex-row items-center justify-between gap-2 w-full">
+                <div className="flex-1" />
+              </div>
           </div>
           {/* Students Table */}
           <div className="bg-white rounded-lg shadow overflow-hidden mb-10 border-t-4 border-blue-200">

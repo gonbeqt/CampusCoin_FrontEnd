@@ -107,7 +107,7 @@ const AdminDashboard = ({ user }) => {
     setWalletBalance(balance);
   };
   return (
-    <div className="pt-16 md:ml-64">
+    <div className="pt-16 md:ml-64 min-h-screen ">
       {/* Main grid: make columns equal height */}
       <div className="flex flex-wrap items-center justify-between mb-6">
         <div>
@@ -131,8 +131,8 @@ const AdminDashboard = ({ user }) => {
               <p className="text-gray-500">Total Events</p>
               <p className="text-2xl font-bold mt-1">{stats.totalEvents}</p>
             </div>
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <CalendarIcon size={24} className="text-blue-600" />
+            <div className="p-2 bg-emerald-100 rounded-lg">
+              <CalendarIcon size={24} className="text-emerald-600" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm">
@@ -147,8 +147,8 @@ const AdminDashboard = ({ user }) => {
               <p className="text-gray-500">Total Students</p>
               <p className="text-2xl font-bold mt-1">{stats.totalStudents}</p>
             </div>
-            <div className="p-2 bg-green-100 rounded-lg">
-              <UsersIcon size={24} className="text-green-600" />
+            <div className="p-2 bg-emerald-100 rounded-lg">
+              <UsersIcon size={24} className="text-emerald-600" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm">
@@ -187,7 +187,7 @@ const AdminDashboard = ({ user }) => {
               </h2>
               <Link
                 to="/admin/events"
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                className="text-emerald-600 hover:text-emerald-800 text-sm font-medium"
               >
                 Manage events
               </Link>
@@ -388,24 +388,9 @@ const AdminDashboard = ({ user }) => {
               </h2>
             </div>
             <div className="space-y-2">
-              <Link
-                to="/admin/events"
-                className="block w-full text-left px-4 py-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
-              >
-                Create new event
-              </Link>
-              <Link
-                to="/admin/attendance"
-                className="block w-full text-left px-4 py-2 bg-green-50 text-green-700 rounded hover:bg-green-100"
-              >
-                Verify attendance
-              </Link>
-              <Link
-                to="/admin/rewards"
-                className="block w-full text-left px-4 py-2 bg-yellow-50 text-yellow-700 rounded hover:bg-yellow-100"
-              >
-                Manage rewards
-              </Link>
+                <Link to="/admin/events" className="block w-full text-left px-4 py-2 bg-emerald-50 text-emerald-700 rounded hover:bg-emerald-100">Create new event</Link>
+                <Link to="/admin/attendance" className="block w-full text-left px-4 py-2 bg-green-50 text-green-700 rounded hover:bg-green-100">Verify attendance</Link>
+                <Link to="/admin/rewards" className="block w-full text-left px-4 py-2 bg-yellow-50 text-yellow-700 rounded hover:bg-yellow-100">Manage rewards</Link>
             </div>
           </div>
         </div>

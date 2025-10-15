@@ -248,20 +248,15 @@ const EventManagement = () => {
     setShowModal(true);
   };
   return (
-    <div className="pt-16 md:ml-64">
+    <div className="pt-16 md:ml-64 min-h-screen ">
       {/* Toast notification */}
       <Toast message={toast.message} type={toast.type} show={toast.show} />
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Event Management</h1>
-          <p className="text-gray-600">
-            Create and manage events for students to attend
-          </p>
+          <p className="text-gray-600">Create and manage events for students to attend</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
+        <button onClick={() => setShowModal(true)} className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
           <PlusIcon size={16} className="mr-2" />
           Create Event
         </button>
@@ -282,7 +277,7 @@ const EventManagement = () => {
                 <input
                   type="text"
                   placeholder="Search events..."
-                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -293,19 +288,19 @@ const EventManagement = () => {
                   <span className="text-gray-700 font-medium">Status:</span>
                   <div className="ml-3 space-x-2">
                     <button
-                      className={`px-3 py-1 rounded-full text-sm ${statusFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      className={`px-3 py-1 rounded-full text-sm ${statusFilter === 'all' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                       onClick={() => setStatusFilter('all')}
                     >
                       All
                     </button>
                     <button
-                      className={`px-3 py-1 rounded-full text-sm ${statusFilter === 'upcoming' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      className={`px-3 py-1 rounded-full text-sm ${statusFilter === 'upcoming' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                       onClick={() => setStatusFilter('upcoming')}
                     >
                       Upcoming
                     </button>
                     <button
-                      className={`px-3 py-1 rounded-full text-sm ${statusFilter === 'completed' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      className={`px-3 py-1 rounded-full text-sm ${statusFilter === 'completed' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                       onClick={() => setStatusFilter('completed')}
                     >
                       Completed
@@ -314,18 +309,8 @@ const EventManagement = () => {
                 </div>
                 <div className="flex items-center ml-6">
                   <span className="text-gray-700 font-medium mr-2">Order:</span>
-                  <button
-                    className={`px-3 py-1 rounded-full text-sm ${sortOrder === 'newest' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                    onClick={() => setSortOrder('newest')}
-                  >
-                    Newest
-                  </button>
-                  <button
-                    className={`px-3 py-1 rounded-full text-sm ${sortOrder === 'oldest' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                    onClick={() => setSortOrder('oldest')}
-                  >
-                    Oldest
-                  </button>
+                  <button className={`px-3 py-1 rounded-full text-sm ${sortOrder === 'newest' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`} onClick={() => setSortOrder('newest')}>Newest</button>
+                  <button className={`px-3 py-1 rounded-full text-sm ${sortOrder === 'oldest' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`} onClick={() => setSortOrder('oldest')}>Oldest</button>
                 </div>
               </div>
             </div>

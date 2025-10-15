@@ -134,7 +134,7 @@ const EventAttendanceDetails = () => {
   if (!event) return null;
 
   return (
-    <div className="pt-16 md:ml-64 relative">
+    <div className="pt-16 md:ml-64 relative min-h-screen bg-[#f6faf8]">
       {/* Finalized badge */}
       {event?.finalized && (
         <div className="absolute top-8 right-12 flex items-center bg-yellow-200 bg-opacity-70 border-2 border-yellow-400 text-yellow-900 px-10 py-6 rounded-2xl shadow-2xl text-4xl font-extrabold z-40" style={{backdropFilter: 'blur(2px)'}}>
@@ -167,11 +167,11 @@ const EventAttendanceDetails = () => {
           )}
         </div>
       </div>
-      <div className="bg-white rounded-lg shadow p-6">
+  <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold mb-4">Registered Students</h2>
         <input
           type="text"
-          className="w-full md:w-1/2 border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full md:w-1/2 border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-400"
           placeholder="Search students..."
           value={studentSearch}
           onChange={e => setStudentSearch(e.target.value)}

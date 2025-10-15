@@ -163,7 +163,7 @@ const OrderManagement = () => {
   };
 
   return (
-    <div className="pt-16 md:ml-64">
+    <div className="pt-16 md:ml-64 min-h-screen ">
       <Toast message={toast.message} type={toast.type} show={toast.show} />
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -300,16 +300,7 @@ const OrderManagement = () => {
                 </div>
 
                 <div className="flex-1 text-right">
-                  <button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-md text-sm font-medium ${currentPage === totalPages
-                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                      }`}
-                  >
-                    Next
-                  </button>
+                  <button onClick={handleNextPage} disabled={currentPage === totalPages} className={`px-4 py-2 rounded-md text-sm font-medium ${currentPage === totalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>Next</button>
                 </div>
               </div>
             )}
