@@ -60,7 +60,7 @@ const SuperAdminDashboard = ({ user }) => {
   }, [])
 
   return (
-    <div className="pt-16 md:ml-64">
+    <div className="pt-16 md:ml-64 min-h-screen ">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Super Admin Dashboard</h1>
         <p className="text-gray-600">
@@ -84,8 +84,8 @@ const SuperAdminDashboard = ({ user }) => {
                     {dashboardData.totalUsers}
                   </p>
                 </div>
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <UsersIcon size={24} className="text-purple-600" />
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                  <UsersIcon size={24} className="text-emerald-600" />
                 </div>
               </div>
             
@@ -99,8 +99,8 @@ const SuperAdminDashboard = ({ user }) => {
                     {dashboardData.totalPending}
                   </p>
                 </div>
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <ShieldCheckIcon size={24} className="text-blue-600" />
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                  <ShieldCheckIcon size={24} className="text-emerald-600" />
                 </div>
               </div>
              
@@ -115,8 +115,8 @@ const SuperAdminDashboard = ({ user }) => {
                     {dashboardData.totalApproved}
                   </p>
                 </div>
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <ShieldCheckIcon size={24} className="text-green-600" />
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                  <ShieldCheckIcon size={24} className="text-emerald-600" />
                 </div>
               </div>
               
@@ -199,29 +199,22 @@ const SuperAdminDashboard = ({ user }) => {
             {/* Summary */}
             <div>
               <div className="bg-white rounded-lg shadow p-5 mb-6">
-                <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                  Validation Summary
-                </h2>
+                <h2 className="text-lg font-semibold text-gray-700 mb-4">Validation Summary</h2>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center">
                       <CheckCircleIcon size={20} className="text-red-500 mr-2" />
                       <span className="text-sm text-gray-700">Rejected Users</span>
                     </div>
-                    <span className="text-sm font-medium">
-                      {dashboardData.totalRejected}
-                    </span>
+                    <span className="text-sm font-medium">{dashboardData.totalRejected}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center">
                       <ClipboardCheckIcon size={20} className="text-yellow-500 mr-2" />
                       <span className="text-sm text-gray-700">Suspended Users</span>
                     </div>
-                    <span className="text-sm font-medium">
-                      {dashboardData.totalSuspended}
-                    </span>
+                    <span className="text-sm font-medium">{dashboardData.totalSuspended}</span>
                   </div>
-
                 </div>
               </div>
 
@@ -231,24 +224,9 @@ const SuperAdminDashboard = ({ user }) => {
                   Quick Actions
                 </h2>
                 <div className="space-y-2">
-                  <Link
-                    to="/superadmin/validate/admin"
-                    className="block w-full text-left px-4 py-2 bg-purple-50 text-purple-700 rounded hover:bg-purple-100"
-                  >
-                    Validate admin accounts
-                  </Link>
-                  <Link
-                    to="/superadmin/validate/student"
-                    className="block w-full text-left px-4 py-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
-                  >
-                    Validate student accounts
-                  </Link>
-                  <Link
-                    to="/superadmin/validate/seller"
-                    className="block w-full text-left px-4 py-2 bg-green-50 text-green-700 rounded hover:bg-green-100"
-                  >
-                    Validate seller accounts
-                  </Link>
+                  <Link to="/superadmin/validate/admin" className="block w-full text-left px-4 py-2 bg-emerald-50 text-emerald-700 rounded hover:bg-emerald-100">Validate admin accounts</Link>
+                  <Link to="/superadmin/validate/student" className="block w-full text-left px-4 py-2 bg-emerald-50 text-emerald-700 rounded hover:bg-emerald-100">Validate student accounts</Link>
+                  <Link to="/superadmin/validate/seller" className="block w-full text-left px-4 py-2 bg-emerald-50 text-emerald-700 rounded hover:bg-emerald-100">Validate seller accounts</Link>
                 </div>
               </div>
             </div>

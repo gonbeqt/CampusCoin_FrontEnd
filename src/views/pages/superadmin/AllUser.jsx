@@ -141,7 +141,7 @@ const AllUser = () => {
     })
 
     return (
-        <div className="pt-16 md:ml-64">
+        <div className="pt-16 md:ml-64 min-h-screen ">
             {/* ... keep your header, search bar, etc. */}
 
             {/* MAIN GRID */}
@@ -154,7 +154,7 @@ const AllUser = () => {
                         </div>
                         {isLoading ? (
                             <div className="flex justify-center items-center h-64">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-700"></div>
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-700"></div>
                             </div>
                         ) : filteredAdmins.length === 0 ? (
                             <div className="p-5 text-center text-gray-500">No users found</div>
@@ -172,14 +172,14 @@ const AllUser = () => {
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {filteredAdmins.map((admin) => (
-                                            <tr key={admin.id} onClick={() => setSelectedAdmin(admin)}>
+                                            <tr key={admin.id} onClick={() => setSelectedAdmin(admin)} className="hover:bg-emerald-50 cursor-pointer">
                                                 <td className="px-6 py-4">{admin.name}</td>
                                                 <td className="px-6 py-4">{admin.email}</td>
                                                 <td
                                                     className={`inline-block px-3 py-1 rounded-full text-white text-sm mt-3 ml- ${admin.accountStatus === 'pending'
                                                             ? 'bg-yellow-500'
                                                             : admin.accountStatus === 'approved'
-                                                                ? 'bg-green-500'
+                                                                ? 'bg-emerald-500'
                                                                 : admin.accountStatus === 'rejected'
                                                                     ? 'bg-red-500'
                                                                     : admin.accountStatus === 'suspended'

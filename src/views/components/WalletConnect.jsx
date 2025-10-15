@@ -15,6 +15,7 @@ const WalletConnect = ({
   const [isConnected, setIsConnected] = useState(externalIsConnected || false)
   const [walletData, setWalletData] = useState(null)
   const [walletBalance, setWalletBalance] = useState(externalWalletBalance)
+  const [showDisconnectModal, setShowDisconnectModal] = useState(false)
 
   useEffect(() => {
     // Check if wallet exists on component mount
@@ -105,6 +106,29 @@ const WalletConnect = ({
     }
   }
 
+  const handleDisconnect = async () => {
+    try {
+      setIsLoading(true)
+      const result = await WalletController.disconnectWallet()
+      if (result.success) {
+        setIsConnected(false)
+        setWalletData(null)
+        setWalletBalance(0)
+        if (onConnect) {
+          onConnect(0, null)
+        }
+      } else {
+        setError(result.error || 'Failed to disconnect wallet')
+      }
+    } catch (err) {
+      console.error('Wallet disconnect error:', err)
+      setError('An unexpected error occurred while disconnecting wallet')
+    } finally {
+      setIsLoading(false)
+      setShowDisconnectModal(false)
+    }
+  }
+
   return (
     <>
       {isConnected && walletData ? (
@@ -121,12 +145,22 @@ const WalletConnect = ({
               {parseFloat(walletBalance).toFixed(4)} ETH
             </p>
           </div>
-          <button
-            onClick={refreshBalance}
-            className="ml-2 text-blue-600 hover:text-blue-800 text-xs"
-          >
-            Refresh
-          </button>
+          <div className="ml-3 flex items-center space-x-2">
+            <button
+              onClick={refreshBalance}
+              className="text-blue-600 hover:text-blue-800 text-xs"
+              disabled={isLoading}
+            >
+              Refresh
+            </button>
+            <button
+              onClick={() => setShowDisconnectModal(true)}
+              className="text-red-600 hover:text-red-800 text-xs"
+              disabled={isLoading}
+            >
+              Disconnect
+            </button>
+          </div>
         </div>
       ) : (
         <button
@@ -203,6 +237,36 @@ const WalletConnect = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Disconnect Confirmation Modal */}
+      {showDisconnectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Disconnect Wallet</h3>
+              <p className="text-sm text-gray-600 mt-1">Are you sure you want to disconnect your wallet?</p>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => setShowDisconnectModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                disabled={isLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDisconnect}
+                className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Disconnecting...' : 'Disconnect'}
+              </button>
+            </div>
           </div>
         </div>
       )}

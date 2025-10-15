@@ -136,6 +136,32 @@ class WalletModel {
     }
   }
 
+  async disconnectWallet() {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        return { success: false, error: 'Authentication required' };
+      }
+
+      const response = await fetch(`${API_URL}/disconnect`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? result : null,
+        error: response.ok ? null : result.error || result.message,
+      };
+    } catch (error) {
+      return { success: false, error: 'Network error' };
+    }
+  }
+
   // Helper methods for token management
   getToken() {
     return localStorage.getItem('authToken');

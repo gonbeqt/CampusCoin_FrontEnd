@@ -171,6 +171,21 @@ class WalletController {
     }
   }
 
+  async disconnectWallet() {
+    try {
+      const result = await this.model.disconnectWallet();
+      if (result.success) {
+        // Clear any cached data on successful disconnect
+        this.clearWalletData();
+        return { success: true, message: result.data?.message || 'Wallet disconnected successfully' };
+      }
+      return { success: false, error: result.error || 'Failed to disconnect wallet' };
+    } catch (error) {
+      console.error('Disconnect wallet error:', error);
+      return { success: false, error: 'An unexpected error occurred' };
+    }
+  }
+
   async refreshWalletData() {
     try {
       const walletResult = await this.getWallet();
