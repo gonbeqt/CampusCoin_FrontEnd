@@ -4,12 +4,12 @@ import { ArrowUpIcon, ArrowDownIcon, XIcon, CoinsIcon } from 'lucide-react'
 const RecentTransactionsCard = ({ transactions }) => {
   const getStatusClasses = (status) => {
     if (status === 'pending')
-      return { bg: 'bg-yellow-100', iconColor: 'text-yellow-600', sign: '-', amountColor: 'text-red-600' }
+      return { bg: 'bg-amber-100/80', iconColor: 'text-amber-600', sign: '-', amountColor: 'text-amber-700' }
     if (status === 'paid')
-      return { bg: 'bg-green-100', iconColor: 'text-green-600', sign: '-', amountColor: 'text-red-600' }
+      return { bg: 'bg-emerald-100/80', iconColor: 'text-emerald-600', sign: '-', amountColor: 'text-emerald-700' }
     if (status === 'cancelled')
-      return { bg: 'bg-red-100', iconColor: 'text-red-600', sign: '+', amountColor: 'text-green-600' }
-    return { bg: 'bg-gray-100', iconColor: 'text-gray-600', sign: '', amountColor: 'text-gray-600' }
+      return { bg: 'bg-rose-100/80', iconColor: 'text-rose-600', sign: '+', amountColor: 'text-rose-700' }
+    return { bg: 'bg-emerald-50', iconColor: 'text-emerald-500', sign: '', amountColor: 'text-emerald-600' }
   }
 
   const getStatusIcon = (status, textClass) => {
@@ -27,19 +27,19 @@ const RecentTransactionsCard = ({ transactions }) => {
         return (
           <div
             key={transaction._id}
-            className="flex items-center p-2 border-b border-gray-100"
+            className="flex items-center rounded-xl border border-emerald-100/60 bg-white/70 p-3 shadow-sm shadow-emerald-100/40 backdrop-blur-sm"
           >
             {/* Status Icon */}
-            <div className={`p-2 rounded-full ${classes.bg}`}>
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full ${classes.bg}`}>
               {getStatusIcon(transaction.status, classes.iconColor)}
             </div>
 
             {/* Product Name + Date */}
-            <div className="ml-3 flex-1">
-              <p className="text-sm font-medium text-gray-900">
+            <div className="ml-4 flex-1">
+              <p className="text-sm font-semibold text-emerald-900">
                 {transaction.productId?.name || 'Unknown product'}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs font-medium text-emerald-500/80">
                 {new Date(transaction.createdAt).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -50,11 +50,11 @@ const RecentTransactionsCard = ({ transactions }) => {
             </div>
 
             {/* Amount */}
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1">
               <span className={`text-sm font-semibold ${classes.amountColor}`}>
                 {classes.sign}{transaction.totalPrice}
               </span>
-              <CoinsIcon size={14} className="text-blue-600" />
+              <CoinsIcon size={14} className="text-emerald-600" />
             </div>
           </div>
         )

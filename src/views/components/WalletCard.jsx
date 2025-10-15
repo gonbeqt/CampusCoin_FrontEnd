@@ -31,13 +31,13 @@ const WalletCard = () => {
     const isPositive = value > 0;
     const Icon = isPositive ? TrendingUpIcon : TrendingDownIcon;
     const color = isPositive
-      ? "bg-green-100 text-green-800"
-      : "bg-red-100 text-red-700";
+      ? "bg-emerald-100/90 text-emerald-800"
+      : "bg-rose-100/90 text-rose-700";
     const sign = isPositive ? "+" : "";
 
     return (
       <span
-        className={`text-xs px-2.5 py-1 rounded-full flex items-center gap-1 ${color}`}
+        className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${color}`}
       >
         <Icon size={12} />
         <span className="font-medium">{`${sign}${value}`}</span>
@@ -47,9 +47,12 @@ const WalletCard = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-5">
-      <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-        <h2 className="text-lg font-semibold text-gray-700">Your Wallet</h2>
+    <div className="cc-card p-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-500/80">Balance overview</p>
+          <h2 className="text-xl font-semibold text-emerald-900">Your Wallet</h2>
+        </div>
 
         {/* badge row with good spacing */}
         <div className="flex flex-wrap gap-2">
@@ -59,14 +62,14 @@ const WalletCard = () => {
         </div>
       </div>
 
-      <div className="flex items-center">
-        <div className="p-3 bg-blue-100 rounded-full">
-          <CoinsIcon size={24} className="text-blue-600" />
+      <div className="flex items-center gap-4">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100">
+          <CoinsIcon size={28} className="text-emerald-600" />
         </div>
-        <div className="ml-4">
-          <p className="text-sm text-gray-500">Current Balance</p>
-          <p className="text-3xl font-bold text-gray-900">{balance}</p>
-          <p className="text-sm text-gray-500">CampusCoin</p>
+        <div>
+          <p className="text-sm font-medium uppercase tracking-wide text-emerald-500/80">Current Balance</p>
+          <p className="text-4xl font-semibold text-emerald-900">{balance}</p>
+          <p className="text-sm text-emerald-600">CampusCoin</p>
         </div>
       </div>
     </div>

@@ -145,28 +145,28 @@ const RewardMarketplace = ({ user }) => {
       return a.name.localeCompare(b.name)
     })
   return (
-    <div className="pt-16 md:ml-64">
-      <div className="flex justify-between items-center mb-6">
+    <div className="pt-20 md:ml-64 min-h-screen  px-4 pb-12 sm:px-6 lg:px-8">
+      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-3xl font-semibold text-gray-900">
             Reward Marketplace
           </h1>
-          <p className="text-gray-600">
-            Redeem your CampusCoin for exciting rewards
+          <p className="mt-1 text-sm text-gray-600">
+            Redeem your CampusCoin balance for simple, everyday perks.
           </p>
         </div>
-        <div className="bg-blue-100 px-4 py-2 rounded-lg flex items-center">
-          <CoinsIcon size={20} className="text-blue-600 mr-2" />
-          <span className="font-semibold text-blue-800">
+        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 shadow-sm">
+          <CoinsIcon size={18} className="text-emerald-600" />
+          <span className="text-sm font-semibold text-gray-900">
             {balance} CampusCoin
           </span>
         </div>
       </div>
         {/* category buttons */}
-        <div className="flex gap-2 mb-4 flex-wrap">
+        <div className="mb-5 flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedCategory('All')}
-            className={`px-3 py-1 rounded-full ${selectedCategory === 'All' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+            className={`rounded-full px-3 py-1 text-sm font-medium transition ${selectedCategory === 'All' ? 'bg-emerald-600 text-white shadow-sm' : 'border border-emerald-100 bg-white text-gray-700 hover:bg-emerald-50'}`}
           >
             All
           </button>
@@ -174,7 +174,7 @@ const RewardMarketplace = ({ user }) => {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-3 py-1 rounded-full ${selectedCategory === category ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+              className={`rounded-full px-3 py-1 text-sm font-medium transition ${selectedCategory === category ? 'bg-emerald-600 text-white shadow-sm' : 'border border-emerald-100 bg-white text-gray-700 hover:bg-emerald-50'}`}
             >
               {category}
             </button>
@@ -182,14 +182,14 @@ const RewardMarketplace = ({ user }) => {
         </div>
 
         {/* Search bar */}
-        <div className="relative flex-1 mb-6">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <div className="relative mb-6 flex-1">
+          <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
             <SearchIcon size={18} className="text-gray-400" />
           </div>
           <input
             type="text"
             placeholder="Search rewards..."
-            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="w-full rounded-md border border-emerald-100 bg-white py-2 pl-10 pr-4 text-sm text-gray-700 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -203,11 +203,11 @@ const RewardMarketplace = ({ user }) => {
           <p className="text-red-500">Error: {error}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 sm:px-6">
+        <div className="grid grid-cols-1 gap-6 sm:px-2 md:grid-cols-2 lg:grid-cols-3">
           {filteredProducts.map((product) => (
             <div
               key={product._id}
-              className="bg-white rounded-lg shadow overflow-hidden w-full"
+              className="flex w-full flex-col overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
               <div className="h-36 relative overflow-hidden group">
                 <img
@@ -218,55 +218,55 @@ const RewardMarketplace = ({ user }) => {
               </div>
               <div className="relative">
                 <div className="absolute -top-8 left-0 right-0 h-8 bg-gradient-to-b from-transparent to-white"></div>
-                <div className="p-3">
+                <div className="p-4">
                   <div className="flex justify-between items-start gap-2">
                     <h3 className="text-base font-semibold text-gray-900">
                       {product.name}
                     </h3>
-                    <div className="flex items-center gap-1 flex-wrap justify-end flex-shrink-0">
-                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                    <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-1">
+                      <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
                         {formatCategory(product.category)}
                       </span>
                       {product.stockQuantity <= 2 && product.stockQuantity > 0 && (
                         <>
-                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 animate-pulse">
+                          <span className="animate-pulse rounded-full bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700">
                             Low Stock
                           </span>
-                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-white text-red-800 shadow-sm">
+                          <span className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-rose-600 shadow-sm">
                             Stock: {product.stockQuantity}
                           </span>
                         </>
                       )}
                       {product.stockQuantity === 3 && (
                         <>
-                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                          <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
                             Medium Stock
                           </span>
-                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-white text-yellow-800 shadow-sm">
+                          <span className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-amber-600 shadow-sm">
                             Stock: {product.stockQuantity}
                           </span>
                         </>
                       )}
                       {product.stockQuantity >= 4 && (
                         <>
-                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                          <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
                             High Stock
                           </span>
-                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-white text-green-800 shadow-sm">
+                          <span className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-emerald-600 shadow-sm">
                             Stock: {product.stockQuantity}
                           </span>
                         </>
                       )}
                       {product.stockQuantity === 0 && (
-                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                        <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600">
                           Out of Stock
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between mt-2 mb-3">
-                    <p className="text-gray-600 text-sm line-clamp-2 flex-grow mr-4">{product.description}</p>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <div className="mt-2 mb-3 flex items-center justify-between">
+                    <p className="mr-4 line-clamp-2 flex-grow text-sm text-gray-600">{product.description}</p>
+                    <div className="flex flex-shrink-0 items-center gap-1.5">
                       <button
                         onClick={() => handleQuantityChange(product._id, -1)}
                         disabled={product.stockQuantity === 0}
@@ -305,18 +305,18 @@ const RewardMarketplace = ({ user }) => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center text-blue-600 font-medium">
-                      <CoinsIcon size={16} className="mr-1" />
+                    <div className="flex items-center font-semibold text-gray-900">
+                      <CoinsIcon size={16} className="mr-1 text-emerald-600" />
                       <span>{product.price * quantities[product._id]}</span>
                     </div>
                     <div className="relative w-32 h-8">
                       <div className="absolute inset-0">
                         <div className={`absolute inset-0 transform transition-all duration-300 ${!redeemStates[product._id] ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}>
                           <button
-                            className={`w-full h-full rounded-lg text-sm font-medium transform transition-all duration-200 hover:scale-105 active:scale-95 ${
+                            className={`h-full w-full rounded-lg text-sm font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
                               balance >= product.price * quantities[product._id] && product.stockQuantity > 0
-                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                : 'cursor-not-allowed bg-gray-100 text-gray-400'
                             }`}
                             disabled={balance < product.price * quantities[product._id] || product.stockQuantity === 0}
                             onClick={() => handleRedeem(product._id)}
@@ -326,7 +326,7 @@ const RewardMarketplace = ({ user }) => {
                         </div>
                         <div className={`absolute inset-0 transform transition-all duration-300 flex gap-1 ${redeemStates[product._id] ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
                           <button
-                            className="flex-1 h-full rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transform transition-all duration-200 hover:scale-105 active:scale-95"
+                            className="flex-1 h-full rounded-lg text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-95 bg-emerald-600 hover:bg-emerald-700"
                             onClick={() => handleConfirm(product._id)}
                             disabled={processingOrders[product._id]}
                           >
@@ -340,7 +340,7 @@ const RewardMarketplace = ({ user }) => {
                             ) : 'Confirm'}
                           </button>
                           <button
-                            className="flex-1 h-full rounded-lg text-sm font-medium bg-red-600 hover:bg-red-700 text-white transform transition-all duration-200 hover:scale-105 active:scale-95"
+                            className="flex-1 h-full rounded-lg text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-95 bg-gray-500 hover:bg-gray-600"
                             onClick={() => handleCancel(product._id)}
                           >
                             Cancel

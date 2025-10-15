@@ -18,88 +18,82 @@ const EventCard = ({ event, admin }) => {
     }
   };
 
-  // Status color logic
-  let statusColor = 'bg-blue-100 text-blue-800';
+  let statusColor = 'bg-emerald-100/90 text-emerald-800';
   let statusText = 'Upcoming';
   if (event.status === 'completed') {
-    statusColor = 'bg-green-100 text-green-800';
+    statusColor = 'bg-emerald-200/90 text-emerald-900';
     statusText = 'Completed';
   } else if (event.status === 'ongoing') {
-    statusColor = 'bg-yellow-100 text-yellow-800';
+    statusColor = 'bg-lime-100/90 text-lime-800';
     statusText = 'Ongoing';
   }
 
+  const finalStateClass = event.finalized
+    ? 'bg-emerald-200/90 text-emerald-900'
+    : 'bg-amber-200/90 text-amber-900';
+  const finalStateText = event.finalized ? 'Finalized' : 'Not Finalized';
+
   return (
     <div
-      className={`border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-${admin ? 'pointer' : 'default'} relative`}
+      className={`cc-card relative cursor-${admin ? 'pointer' : 'default'} overflow-hidden p-6`}
       onClick={admin ? handleCardClick : undefined}
     >
-      {/* Finalized/Not Finalized Banner: only show for admin */}
       {admin && (
-        <div className="absolute top-0 left-0 w-full flex justify-center z-10">
-          {event.finalized ? (
-            <div className="bg-green-400 text-green-900 font-bold text-xs px-3 py-1 rounded-b shadow-md">Finalized</div>
-          ) : (
-            <div className="bg-yellow-400 text-yellow-900 font-bold text-xs px-3 py-1 rounded-b shadow-md">Not Finalized</div>
-          )}
+        <div className="absolute inset-x-6 top-4 flex justify-end">
+          <span className={`cc-pill ${finalStateClass}`}>{finalStateText}</span>
         </div>
       )}
-      <div className="flex justify-between mt-4">
-        {/* Left column */}
-        <div>
-          <h3 className="font-bold text-lg text-gray-900">{event.title}</h3>
-          <div className="flex items-center text-gray-500 mt-2">
-            <CalendarIcon size={16} className="mr-1" />
-            <span className="text-sm">
+
+      <div className="flex flex-col gap-6 pt-2 md:flex-row md:items-start md:justify-between">
+        <div className="flex-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400/80">
+            {event.category}
+          </p>
+          <h3 className="mt-2 text-xl font-semibold text-emerald-900 md:text-2xl">
+            {event.title}
+          </h3>
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-emerald-700">
+            <span className="flex items-center gap-2">
+              <CalendarIcon size={18} />
               {eventDate.toLocaleDateString('en-US', {
                 weekday: 'short',
                 month: 'short',
                 day: 'numeric',
               })}
             </span>
-          </div>
-          <div className="flex items-center text-gray-500 mt-1">
-            <ClockIcon size={16} className="mr-1" />
-            <span className="text-sm">
+            <span className="flex items-center gap-2">
+              <ClockIcon size={18} />
               {eventDate.toLocaleTimeString('en-US', {
                 hour: '2-digit',
                 minute: '2-digit',
               })}
             </span>
-          </div>
-          <div className="flex items-center text-gray-500 mt-1">
-            <MapPinIcon size={16} className="mr-1" />
-            <span className="text-sm">{event.location}</span>
+            <span className="flex items-center gap-2">
+              <MapPinIcon size={18} />
+              {event.location}
+            </span>
           </div>
           {event.organizedBy && (
-            <span className="text-xs italic text-gray-500 mt-1 block">
-              Organized by: {event.organizedBy}
+            <span className="mt-3 inline-block text-xs font-medium uppercase tracking-wider text-emerald-400">
+              Organized by {event.organizedBy}
             </span>
           )}
         </div>
 
-        {/* Right column */}
-        <div className="flex flex-col items-end">
-          <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${statusColor} mb-2`}>
-            {statusText}
-          </span>
-          <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 mb-2">
-            {event.category}
-          </span>
-          {/* Reward moved here */}
-          <div className="flex items-center text-blue-600 mt-auto">
-            <CoinsIcon size={16} className="mr-1" />
+        <div className="flex flex-col items-end gap-3">
+          <span className={`cc-pill ${statusColor}`}>{statusText}</span>
+          <div className="flex items-center gap-2 rounded-full bg-emerald-600/10 px-4 py-2 text-sm font-semibold text-emerald-700">
+            <CoinsIcon size={18} />
             <span>{event.reward} CampusCoin reward</span>
           </div>
         </div>
       </div>
 
-      {/* Student view: show View details button, admin: no button */}
       {!admin && (
-        <div className="mt-4 flex justify-between items-center">
+        <div className="mt-6 flex items-center justify-between border-t border-emerald-100 pt-4">
           <Link
             to={`/student/event/${eventId}`}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            className="text-sm font-semibold text-emerald-700 transition hover:text-emerald-900"
           >
             View details
           </Link>

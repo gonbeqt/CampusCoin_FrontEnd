@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { Bell, BellRing, X, Check, Star, Trash2 } from 'lucide-react';
 import { useNotifications } from '../views/components/NotificationContext';
 import socketService from '../services/socketService';
@@ -155,7 +156,7 @@ const NotificationBell = () => {
     <>
       {/* Notification Bell Button */}
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => setIsOpen((prev) => !prev)}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
         disabled={isLoading}
       >
@@ -174,11 +175,15 @@ const NotificationBell = () => {
       </button>
 
       {/* Modal */}
-      {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div 
+      {isOpen && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setIsOpen(false)}
+          />
+          <div
             ref={modalRef}
-            className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col"
+            className="relative z-10 flex w-full max-w-md max-h-[85vh] flex-col rounded-xl bg-white shadow-2xl"
           >
             {/* Header */}
             <div className="px-6 py-4 border-b border-gray-100 flex-shrink-0">
@@ -308,7 +313,8 @@ const NotificationBell = () => {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

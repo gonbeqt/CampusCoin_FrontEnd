@@ -247,77 +247,89 @@ const EventDetails = () => {
   };
 
   if (loading) {
-    return <div className="pt-16 md:ml-64 flex justify-center items-center h-64">
-      <p className="text-gray-500">Loading event details...</p>
-    </div>
+    return (
+      <div className="pt-20 md:ml-64 min-h-screen bg-[#f6faf8] px-4 pb-12 sm:px-6 lg:px-8">
+        <div className="flex h-64 items-center justify-center">
+          <p className="text-gray-500">Loading event details...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="pt-16 md:ml-64 flex justify-center items-center h-64">
-      <p className="text-red-500">Error: {error}</p>
-    </div>
+    return (
+      <div className="pt-20 md:ml-64 min-h-screen bg-[#f6faf8] px-4 pb-12 sm:px-6 lg:px-8">
+        <div className="flex h-64 items-center justify-center">
+          <p className="text-red-500">Error: {error}</p>
+        </div>
+      </div>
+    );
   }
 
   if (!event) {
-    return <div className="pt-16 md:ml-64 flex justify-center items-center h-64">
-      <p className="text-gray-500">Event not found.</p>
-    </div>
+    return (
+      <div className="pt-20 md:ml-64 min-h-screen  px-4 pb-12 sm:px-6 lg:px-8">
+        <div className="flex h-64 items-center justify-center">
+          <p className="text-gray-500">Event not found.</p>
+        </div>
+      </div>
+    );
   }
 
   const eventDate = new Date(event.date)
   const status = getEventStatus(event)
 
   return (
-    <div className="pt-16 md:ml-64">
-      <div className="mb-4">
-        <Link to="/student/events" className="flex items-center text-blue-600 hover:text-blue-800">
+    <div className="pt-20 md:ml-64 min-h-screenpx-4 pb-12 sm:px-6 lg:px-8">
+      <div className="mb-6">
+        <Link to="/student/events" className="flex items-center text-emerald-600 transition hover:text-emerald-800">
           <ArrowLeftIcon size={16} className="mr-1" />
-          <span>Back to Events</span>
+          <span className="text-sm font-medium">Back to Events</span>
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="bg-blue-600 p-6 text-white">
-          <h1 className="text-2xl font-bold">{event.title}</h1>
-          <div className="flex flex-wrap items-center mt-2 gap-2">
-            <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-500 text-white">
+      <div className="overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-sm">
+        <div className="border-b border-emerald-100 bg-emerald-50 px-6 py-6">
+          <h1 className="text-2xl font-semibold text-gray-900">{event.title}</h1>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="inline-block rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-700 shadow-sm">
               {event.category}
             </span>
             {status === "Ongoing" && (
               <>
-                <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
                   Started
                 </span>
-                <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
                   {timer || "loading..."}
                 </span>
               </>
             )}
-            <span className="flex items-center text-sm">
-              <CoinsIcon size={14} className="mr-1" />
+            <span className="flex items-center text-sm font-medium text-gray-800">
+              <CoinsIcon size={14} className="mr-1 text-emerald-600" />
               {event.reward} CampusCoin reward
             </span>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="px-6 py-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Left side */}
             <div className="md:col-span-2">
-              <h2 className="text-xl font-semibold mb-4">About This Event</h2>
-              <p className="text-gray-700 mb-6">{event.description}</p>
+              <h2 className="mb-4 text-xl font-semibold text-gray-900">About This Event</h2>
+              <p className="mb-6 text-gray-600">{event.description}</p>
 
               {event.speakers?.length > 0 && (
                 <>
-                  <h2 className="text-xl font-semibold mb-4">Speakers</h2>
+                  <h2 className="mb-4 text-xl font-semibold text-gray-900">Speakers</h2>
                   <div className="space-y-3 mb-6">
                     {event.speakers.map((speaker, index) => (
                       <div key={index} className="flex items-start">
-                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-sm font-medium text-emerald-700">
                           {speaker.name.charAt(0)}
                         </div>
                         <div className="ml-3">
-                          <p className="font-medium">{speaker.name}</p>
+                          <p className="font-medium text-gray-900">{speaker.name}</p>
                           <p className="text-sm text-gray-600">{speaker.description}</p>
                         </div>
                       </div>
@@ -329,12 +341,12 @@ const EventDetails = () => {
 
             {/* Right side */}
             <div>
-              <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <h3 className="font-medium text-gray-900 mb-3">Event Details</h3>
+              <div className="mb-4 rounded-2xl border border-emerald-100 bg-gray-50 p-4">
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">Event Details</h3>
                 <div className="space-y-3">
                   <div className="flex items-start">
-                    <CalendarIcon size={18} className="text-gray-500 mr-2 mt-0.5" />
-                    <p className="text-gray-800">
+                    <CalendarIcon size={18} className="mr-2 mt-0.5 text-emerald-600" />
+                    <p className="text-sm font-medium text-gray-800">
                       {eventDate.toLocaleDateString('en-US', {
                         weekday: 'long',
                         month: 'long',
@@ -343,17 +355,17 @@ const EventDetails = () => {
                     </p>
                   </div>
                   <div className="flex items-start">
-                    <ClockIcon size={18} className="text-gray-500 mr-2 mt-0.5" />
-                    <p className="text-gray-800">{event.time?.start} - {event.time?.end}</p>
+                    <ClockIcon size={18} className="mr-2 mt-0.5 text-emerald-600" />
+                    <p className="text-sm font-medium text-gray-800">{event.time?.start} - {event.time?.end}</p>
                   </div>
                   <div className="flex items-start">
-                    <MapPinIcon size={18} className="text-gray-500 mr-2 mt-0.5" />
-                    <p className="text-gray-800">{event.location}</p>
+                    <MapPinIcon size={18} className="mr-2 mt-0.5 text-emerald-600" />
+                    <p className="text-sm font-medium text-gray-800">{event.location}</p>
                   </div>
                   {event.maxStudents && (
                     <div className="flex items-start">
-                      <UsersIcon size={18} className="text-gray-500 mr-2 mt-0.5" />
-                      <p className="text-gray-800">
+                      <UsersIcon size={18} className="mr-2 mt-0.5 text-emerald-600" />
+                      <p className="text-sm font-medium text-gray-800">
                         {event.registeredStudents?.length || 0} / {event.maxStudents} registered
                       </p>
                     </div>
@@ -362,17 +374,17 @@ const EventDetails = () => {
               </div>
 
               {event.organizedBy && (
-                <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                  <h3 className="font-medium text-gray-900 mb-3">Organized By</h3>
-                  <p className="text-gray-800">{event.organizedBy}</p>
+                <div className="mb-4 rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
+                  <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-700">Organized By</h3>
+                  <p className="text-sm text-gray-700">{event.organizedBy}</p>
                 </div>
               )}
 
               {isRegistered && (
-                <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-gray-900">Attendance QR</h3>
-                    <QrCode className="w-5 h-5 text-gray-500" />
+                <div className="mb-4 rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-700">Attendance QR</h3>
+                    <QrCode className="h-5 w-5 text-emerald-600" />
                   </div>
                   {canGenerateQr || qrData?.qrCode ? (
                     <>
@@ -387,26 +399,26 @@ const EventDetails = () => {
                           <img
                             src={qrData.qrCode}
                             alt="Attendance QR"
-                            className="w-48 h-48 bg-white p-2 rounded-lg shadow-inner border"
+                            className="h-48 w-48 rounded-xl border border-emerald-100 bg-white p-2 shadow-inner"
                           />
                           {qrExpiresIn && (
                             <p className="mt-2 text-xs text-gray-500">
                               {qrExpiresIn === 'Expired' ? 'QR code expired. Generate a new QR if needed.' : `Expires in: ${qrExpiresIn}`}
                             </p>
                           )}
-                          <div className="w-full mt-4 space-y-2">
+                          <div className="mt-4 w-full space-y-2">
                             <a
                               href={qrData.scanUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="block w-full text-center text-sm text-blue-600 hover:text-blue-700"
+                              className="block w-full text-center text-sm font-medium text-emerald-600 hover:text-emerald-700"
                             >
                               Open scan link
                             </a>
                             {isQrExpired && canGenerateQr && (
                               <button
                                 onClick={handleGenerateQr}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium"
+                                className="w-full rounded-lg bg-emerald-600 py-2 font-medium text-white transition hover:bg-emerald-700"
                                 disabled={qrLoading}
                               >
                                 {qrLoading ? 'Generating...' : 'Generate New QR'}
@@ -417,7 +429,7 @@ const EventDetails = () => {
                       ) : (
                         <button
                           onClick={handleGenerateQr}
-                          className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium"
+                          className="mt-4 w-full rounded-lg bg-emerald-600 py-2 font-medium text-white transition hover:bg-emerald-700"
                           disabled={qrLoading}
                         >
                           {qrLoading ? 'Generating QR...' : 'Generate Attendance QR'}
@@ -440,21 +452,21 @@ const EventDetails = () => {
 
               {/* Buttons based on status */}
               {status === "Completed" ? (
-                <div className="text-center p-2 border border-gray-200 rounded-lg bg-gray-50">
-                  <p className="text-gray-500">This event has ended</p>
+                <div className="rounded-lg border border-emerald-100 bg-gray-50 p-2 text-center">
+                  <p className="text-sm font-medium text-gray-600">This event has ended</p>
                 </div>
               ) : status === "Ongoing" ? (
-                <div className="w-full bg-yellow-500 text-white py-2 rounded-lg font-medium text-center">
-                  Event is Ongoing
+                <div className="w-full rounded-lg bg-amber-500 py-2 text-center text-sm font-semibold text-white">
+                  Event is ongoing
                 </div>
               ) : status === "Registered" ? (
-                <div className="w-full bg-green-600 text-white py-2 rounded-lg font-medium text-center">
+                <div className="w-full rounded-lg bg-emerald-100 py-2 text-center text-sm font-semibold text-emerald-700">
                   Registered
                 </div>
               ) : (
                 <button
                   onClick={handleJoinEvent}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium"
+                  className="w-full rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
                 >
                   Register for Event
                 </button>

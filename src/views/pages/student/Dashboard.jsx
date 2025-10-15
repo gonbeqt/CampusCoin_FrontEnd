@@ -93,54 +93,55 @@ const StudentDashboard = () => {
   const fullName = userProfile?.first_name || 'Student';
 
   return (
-    <div className="pt-16 md:ml-64">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
+    <div className="pt-20 md:ml-64 min-h-screen  px-4 pb-12 sm:px-6 lg:px-8">
+      <div className="mb-8 space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-500/70">Dashboard Overview</p>
+        <h1 className="text-3xl font-semibold text-gray-900">
           Welcome back, {fullName}!
         </h1>
-        <p className="text-gray-600">
+        <p className="text-sm text-gray-600">
           Here's what's happening with your CampusCoin account
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        <WalletCard balance={userProfile?.balance || 0} />
+      <div className="grid grid-cols-1 gap-6 pb-6 md:grid-cols-2 lg:grid-cols-3">
+        <WalletCard />
         {/* Stats Card */}
-        <div className="bg-white rounded-lg shadow p-5">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-700">Your Stats</h2>
+        <div className="cc-card rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Your Stats</h2>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="flex items-center text-blue-600 mb-2">
-                <CalendarIcon size={18} className="mr-2" />
-                <span className="font-medium">Events</span>
+            <div className="rounded-2xl border border-emerald-100 bg-gray-50 p-4">
+              <div className="mb-2 flex items-center gap-2 text-gray-700">
+                <CalendarIcon size={18} />
+                <span className="text-xs font-medium uppercase tracking-wide text-gray-600">Events</span>
               </div>
-              <p className="text-2xl font-bold">{attendanceCount}</p>
-              <p className="text-sm text-gray-500">Attended</p>
+              <p className="text-2xl font-semibold text-gray-900">{attendanceCount}</p>
+              <p className="text-xs font-medium text-gray-500">Attended</p>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="flex items-center text-green-600 mb-2">
-                <TrendingUpIcon size={18} className="mr-2" />
-                <span className="font-medium">Streak</span>
+            <div className="rounded-2xl border border-emerald-100 bg-white p-4">
+              <div className="mb-2 flex items-center gap-2 text-gray-700">
+                <TrendingUpIcon size={18} />
+                <span className="text-xs font-medium uppercase tracking-wide text-gray-600">Streak</span>
               </div>
-              <p className="text-2xl font-bold">5</p>
-              <p className="text-sm text-gray-500">Days</p>
+              <p className="text-2xl font-semibold text-gray-900">5</p>
+              <p className="text-xs font-medium text-gray-500">Days</p>
             </div>
           </div>
         </div>
 
         {/* Next Event Card */}
-        <div className="bg-white rounded-lg shadow p-5">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-700">Next Event</h2>
+        <div className="cc-card rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Next Event</h2>
           </div>
           {nextEvent ? (
             <div>
-              <h3 className="font-medium text-gray-800">{nextEvent.title}</h3>
-              <div className="flex items-center text-gray-500 mt-2">
-                <ClockIcon size={16} className="mr-1" />
-                <span className="text-sm">
+              <h3 className="text-lg font-semibold text-gray-900">{nextEvent.title}</h3>
+              <div className="mt-3 flex items-center gap-2 text-sm text-gray-700">
+                <ClockIcon size={16} />
+                <span>
                   {new Date(nextEvent.date).toLocaleString("en-US", {
                     weekday: "short",
                     month: "short",
@@ -150,29 +151,28 @@ const StudentDashboard = () => {
                   })}
                 </span>
               </div>
-              <div className="flex items-center text-gray-500 mt-1">
-                <MapPinIcon size={16} className="mr-1" />
-                <span className="text-sm">{nextEvent.location}</span>
+              <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                <MapPinIcon size={16} />
+                <span>{nextEvent.location}</span>
               </div>
-              <div className="mt-3 flex items-center text-blue-600">
-                <CoinsIcon size={16} className="mr-1" /> <p>
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+                <CoinsIcon size={16} />
                 <span>{nextEvent.reward} CampusCoin reward</span>
-                </p>
               </div>
             </div>
           ) : (
-            <p className="text-gray-500">No upcoming events</p>
+            <p className="text-sm text-gray-500">No upcoming events</p>
           )}
         </div>
       </div>
 
       {/* Upcoming Events & Recent Transactions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow p-5 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-700">Upcoming Events</h2>
-              <Link to="/student/events" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+          <div className="cc-card mb-6 rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Upcoming Events</h2>
+              <Link to="/student/events" className="text-sm font-medium text-emerald-600 transition hover:text-emerald-800">
                 View all
               </Link>
             </div>
@@ -182,16 +182,16 @@ const StudentDashboard = () => {
                   <EventCard key={event._id} event={event} />
                 ))
               ) : (
-                <p className="text-gray-500">No upcoming events</p>
+                <p className="text-sm text-gray-500">No upcoming events</p>
               )}
             </div>
           </div>
         </div>
         <div>
-          <div className="bg-white rounded-lg shadow p-5">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-700">Recent Transactions</h2>
-              <Link to="/student/transactions" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+          <div className="cc-card rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Recent Transactions</h2>
+              <Link to="/student/transactions" className="text-sm font-medium text-emerald-600 transition hover:text-emerald-800">
                 View all
               </Link>
             </div>

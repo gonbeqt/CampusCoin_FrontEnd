@@ -259,23 +259,31 @@ const Events = ({ user }) => {
     }
   };
 
-  if (loading) return <div className="pt-16 md:ml-64 flex justify-center items-center h-64"><p className="text-gray-500">Loading events...</p></div>
+  if (loading) {
+    return (
+      <div className="pt-20 md:ml-64 min-h-screen  px-4 pb-12 sm:px-6 lg:px-8">
+        <div className="flex h-64 items-center justify-center">
+          <p className="text-gray-500">Loading events...</p>
+        </div>
+      </div>
+    );
+  }
   const eventTypes = [...new Set((Array.isArray(allEvents) ? allEvents : []).map(event => event.category).filter(Boolean))];
 
   return (
-  <div className="pt-16 md:ml-64">
-    <div className="mb-6">
-      <h1 className="text-2xl font-bold text-gray-800">Events</h1>
-      <p className="text-gray-600">Discover events, join, and earn CampusCoins by attending</p>
+    <div className="pt-20 md:ml-64 min-h-screen  px-4 pb-12 sm:px-6 lg:px-8">
+    <div className="mb-8">
+      <h1 className="text-3xl font-semibold text-gray-900">Events</h1>
+      <p className="mt-1 text-sm text-gray-600">Discover upcoming activities, join in, and earn CampusCoins for participating.</p>
     </div>
 
     {/* Type filter buttons */}
-    <div className="flex gap-2 mb-4">
+    <div className="mb-5 flex flex-wrap gap-2">
       {eventTypes.length > 0 && (
         <>
           <button
             onClick={() => setCategoryFilter('All')}
-            className={`px-3 py-1 rounded-full ${categoryFilter === 'All' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+            className={`rounded-full px-3 py-1 text-sm font-medium transition ${categoryFilter === 'All' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-gray-700 border border-emerald-100 hover:bg-emerald-50'}`}
           >
             All
           </button>
@@ -283,7 +291,7 @@ const Events = ({ user }) => {
             <button
               key={type}
               onClick={() => setCategoryFilter(type)}
-              className={`px-3 py-1 rounded-full ${categoryFilter === type ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+              className={`rounded-full px-3 py-1 text-sm font-medium transition ${categoryFilter === type ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-gray-700 border border-emerald-100 hover:bg-emerald-50'}`}
             >
               {type}
             </button>
@@ -292,14 +300,14 @@ const Events = ({ user }) => {
       )}
     </div>
 
-      {showSuccessMessage && <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative">{showSuccessMessage}</div>}
+      {showSuccessMessage && <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 shadow-sm">{showSuccessMessage}</div>}
 
       {/* Status Tabs */}
-      <div className="flex gap-4 mb-4">
+      <div className="mb-6 flex flex-wrap gap-2">
         {statusCategories.map(status => (
           <button
             key={status}
-            className={`px-4 py-2 rounded-md font-medium ${statusFilter === status ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+            className={`rounded-md px-4 py-2 text-sm font-medium transition ${statusFilter === status ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-gray-700 border border-emerald-100 hover:bg-emerald-50'}`}
             onClick={() => setStatusFilter(status)}
           >
             {status}
@@ -308,7 +316,7 @@ const Events = ({ user }) => {
       </div>
 
       {/* Search bar (and filter only for Claim Reward) */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative w-full sm:w-64">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <SearchIcon size={18} className="text-gray-400" />
@@ -316,7 +324,7 @@ const Events = ({ user }) => {
           <input
             type="text"
             placeholder="Search events..."
-            className="pl-10 pr-4 py-1.5 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+            className="w-full rounded-md border border-emerald-100 bg-white py-1.5 pl-10 pr-4 text-sm text-gray-700 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -325,7 +333,7 @@ const Events = ({ user }) => {
           <>
             {/* Sort by A-Z/Z-A */}
             <select
-              className="w-full sm:w-40 px-2 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none"
+              className="w-full rounded-md border border-emerald-100 bg-white px-2 py-1.5 text-sm text-gray-700 shadow-sm focus:border-emerald-500 focus:outline-none sm:w-40"
               value={sortOrder}
               onChange={e => setSortOrder(e.target.value)}
             >
@@ -334,7 +342,7 @@ const Events = ({ user }) => {
             </select>
             {/* Filter by claim status */}
             <select
-              className="w-full sm:w-48 px-2 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none"
+              className="w-full rounded-md border border-emerald-100 bg-white px-2 py-1.5 text-sm text-gray-700 shadow-sm focus:border-emerald-500 focus:outline-none sm:w-48"
               value={claimStatus}
               onChange={e => setClaimStatus(e.target.value)}
             >
@@ -345,7 +353,7 @@ const Events = ({ user }) => {
             </select>
             {/* Filter by reward amount */}
             <select
-              className="w-full sm:w-48 px-2 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none"
+              className="w-full rounded-md border border-emerald-100 bg-white px-2 py-1.5 text-sm text-gray-700 shadow-sm focus:border-emerald-500 focus:outline-none sm:w-48"
               value={rewardOrder}
               onChange={e => setRewardOrder(e.target.value)}
             >
@@ -355,7 +363,7 @@ const Events = ({ user }) => {
             </select>
             {/* Filter by date (recent/oldest) */}
             <select
-              className="w-full sm:w-48 px-2 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none"
+              className="w-full rounded-md border border-emerald-100 bg-white px-2 py-1.5 text-sm text-gray-700 shadow-sm focus:border-emerald-500 focus:outline-none sm:w-48"
               value={dateOrder}
               onChange={e => setDateOrder(e.target.value)}
             >
@@ -373,7 +381,7 @@ const Events = ({ user }) => {
           {/* Only show the relevant section for the selected claimStatus */}
           {claimStatus === 'unclaimed' && (
             <>
-              <h2 className="text-lg font-bold mb-2">Unclaimed Rewards</h2>
+              <h2 className="mb-2 text-lg font-semibold text-gray-900">Unclaimed Rewards</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {filteredEvents.filter(event =>
                   arrayHasUser(event.attendedStudents) && !arrayHasUser(event.claimedStudents)
@@ -390,7 +398,7 @@ const Events = ({ user }) => {
           )}
           {claimStatus === 'claimed' && (
             <>
-              <h2 className="text-lg font-bold mb-2">Claimed Rewards</h2>
+              <h2 className="mb-2 text-lg font-semibold text-gray-900">Claimed Rewards</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {filteredEvents.filter(event =>
                   arrayHasUser(event.claimedStudents)

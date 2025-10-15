@@ -65,24 +65,22 @@ const TransactionHistory = ({ user }) => {
   };
 
   return (
-    <div className="pt-16 md:ml-64">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Transaction History</h1>
-          <p className="text-gray-600">View your CampusCoin transaction records</p>
-        </div>
+    <div className="pt-20 md:ml-64 min-h-screen px-4 pb-12 sm:px-6 lg:px-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-semibold text-gray-900">Transaction History</h1>
+        <p className="mt-1 text-sm text-gray-600">Review your CampusCoin orders and their current status.</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow mb-6">
+      <div className="mb-6 overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-sm">
         {/* Filter Buttons */}
-        <div className="p-4 border-b flex items-center">
-          <FilterIcon size={16} className="text-gray-500 mr-2" />
-          <span className="text-gray-700 font-medium">Filter:</span>
+        <div className="flex items-center border-b border-emerald-100 px-4 py-4">
+          <FilterIcon size={16} className="mr-2 text-emerald-600" />
+          <span className="text-sm font-semibold text-gray-700">Filter:</span>
           <div className="ml-3 space-x-2">
             {['all','pending','paid','cancelled'].map(f => (
               <button
                 key={f}
-                className={`px-3 py-1 rounded-full text-sm ${filter === f ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                className={`rounded-full px-3 py-1 text-sm font-medium transition ${filter === f ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-gray-700 border border-emerald-100 hover:bg-emerald-50'}`}
                 onClick={() => { setFilter(f); setCurrentPage(1); }}
               >
                 {f === 'all' ? 'All Orders' : `${f.charAt(0).toUpperCase() + f.slice(1)} Orders`}
@@ -93,38 +91,38 @@ const TransactionHistory = ({ user }) => {
 
         {/* Table */}
         <div className="overflow-y-hidden">
-          <table className="min-w-full divide-y divide-gray-200 table-fixed">
-            <thead className="bg-gray-50">
+          <table className="min-w-full table-fixed divide-y divide-emerald-50">
+            <thead className="bg-emerald-50/70">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">Product Name</th>
-                <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5 text-center">Quantity</th>
-                <th className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5 text-center">Total Price</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">Date</th>
+                <th className="w-1/5 px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Status</th>
+                <th className="w-1/5 px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Product</th>
+                <th className="w-1/5 px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-600">Quantity</th>
+                <th className="w-1/5 px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-600">Total Price</th>
+                <th className="w-1/5 px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Date</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-emerald-50 bg-white">
               {currentTransactions.map(transaction => {
                 const classes = getStatusClasses(transaction.status);
                 return (
                   <tr key={transaction._id}>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="whitespace-nowrap px-4 py-4">
                       <div className="flex items-center">
-                        <div className={`p-1 rounded-full mr-2 ${classes.bg}`}>
+                        <div className={`mr-2 rounded-full p-1 ${classes.bg}`}>
                           {getStatusIcon(transaction.status, classes.text)}
                         </div>
-                        <span className={`text-sm font-medium ${classes.text}`}>
+                        <span className={`text-sm font-semibold ${classes.text}`}>
                           {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-left text-gray-900">
+                    <td className="whitespace-nowrap px-6 py-4 text-left text-sm text-gray-900">
                       {transaction.productId?.name || '-'}
                     </td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-center text-black">
+                    <td className="whitespace-nowrap px-2 py-4 text-center text-sm font-semibold text-gray-900">
                       {transaction.quantity}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    <td className="whitespace-nowrap px-6 py-4 text-center text-sm">
                       <div className="flex items-center justify-center space-x-1">
                         <span
                           className={`font-semibold ${
@@ -141,10 +139,10 @@ const TransactionHistory = ({ user }) => {
                             ? `+${transaction.totalPrice}`
                             : transaction.totalPrice}
                         </span>
-                        <CoinsIcon size={16} className="text-blue-600" />
+                        <CoinsIcon size={16} className="text-emerald-600" />
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-left text-gray-500">
+                    <td className="whitespace-nowrap px-6 py-4 text-left text-sm text-gray-500">
                       {new Date(transaction.createdAt).toLocaleString('en-US', {
                         month: 'short',
                         day: 'numeric',
@@ -162,25 +160,25 @@ const TransactionHistory = ({ user }) => {
 
         {/* Pagination Controls */}
         {filteredTransactions.length > itemsPerPage && (
-          <div className="flex justify-end items-center space-x-2 p-4 border-t">
+          <div className="flex items-center justify-end space-x-2 border-t border-emerald-100 px-4 py-4">
             <button
               onClick={handlePrev}
               disabled={currentPage === 1}
-              className={`px-3 py-1 rounded text-black ${
+              className={`rounded px-3 py-1 text-sm font-medium text-gray-700 transition ${
                 currentPage === 1
-                  ? 'bg-gray-100 opacity-50 cursor-default'
-                  : 'bg-gray-100 hover:bg-blue-600 hover:text-white'
+                  ? 'cursor-default bg-gray-100 opacity-50'
+                  : 'bg-white hover:bg-emerald-100'
               }`}
             >
               Previous
             </button>
-            <span className="text-gray-700 text-sm">
+            <span className="text-sm text-gray-600">
               Page {currentPage} of {totalPages}
             </span>
             <button
               onClick={handleNext}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 bg-gray-100 rounded text-black hover:bg-blue-600 hover:text-white disabled:opacity-50"
+              className="rounded px-3 py-1 text-sm font-medium text-gray-700 transition disabled:opacity-50 ${currentPage === totalPages ? 'bg-gray-100 cursor-default' : 'bg-white hover:bg-emerald-100'}"
             >
               Next
             </button>
@@ -188,7 +186,7 @@ const TransactionHistory = ({ user }) => {
         )}
 
         {filteredTransactions.length === 0 && (
-          <div className="text-center py-10">
+          <div className="py-10 text-center">
             <p className="text-gray-500">No transactions found matching your filter.</p>
           </div>
         )}

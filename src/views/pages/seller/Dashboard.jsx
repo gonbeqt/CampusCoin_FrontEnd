@@ -63,7 +63,7 @@ const SellerDashboard = ({ user }) => {
   }
 
   return (
-    <div className="pt-16 md:ml-64">
+    <div className="pt-16 md:ml-64 ">
       <div className="flex flex-wrap items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Seller Dashboard</h1>
