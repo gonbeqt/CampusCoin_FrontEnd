@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import Skeleton from '../../components/Skeleton';
 import eventController from '../../../controllers/eventController';
 import EventCard from '../../components/EventCard';
 
@@ -100,7 +101,9 @@ const AttendanceVerification = () => {
         </div>
       </div>
       {loading ? (
-        <div className="text-center py-10 text-gray-500">Loading events...</div>
+        <div className="p-4">
+          <Skeleton variant="grid" rows={6} cols={3} />
+        </div>
       ) : events.length === 0 ? (
         <div className="text-center py-10 text-gray-500">No events found.</div>
       ) : (

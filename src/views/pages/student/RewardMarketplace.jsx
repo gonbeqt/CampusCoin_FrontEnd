@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import Skeleton from '../../components/Skeleton'
 import { CoinsIcon, SearchIcon, PlusCircle, MinusCircle } from 'lucide-react'
 import { useBalance } from "../../components/BalanceContext";
 import productController from '../../../controllers/productController';
@@ -211,8 +212,8 @@ const RewardMarketplace = ({ user }) => {
           />
         </div>
       {loading ? (
-        <div className="text-center py-10">
-          <p className="text-gray-500">Loading products...</p>
+        <div className="p-4">
+          <Skeleton variant="grid" rows={6} cols={3} />
         </div>
       ) : error ? (
         <div className="text-center py-10">

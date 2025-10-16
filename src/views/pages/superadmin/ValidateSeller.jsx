@@ -9,6 +9,7 @@ import {
   SearchIcon,
 } from 'lucide-react'
 import ValidationController from '../../../controllers/validationController'
+import Skeleton from '../../components/Skeleton'
 
 const ValidateSeller = () => {
   const [selectedseller, setSelectedseller] = useState(null)
@@ -234,8 +235,8 @@ const ValidateSeller = () => {
               <h2 className="text-lg font-semibold text-gray-700">Pending seller Validations</h2>
             </div>
             {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-700"></div>
+              <div className="p-4">
+                <Skeleton rows={6} />
               </div>
             ) : filteredsellers.length === 0 ? (
               <div className="p-5 text-center text-gray-500">No pending seller validations found</div>

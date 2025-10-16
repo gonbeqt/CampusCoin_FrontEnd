@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import Skeleton from '../../components/Skeleton'
 
 // Toast notification component (copied from EventManagement.jsx)
 function Toast({ message, type, show }) {
@@ -218,7 +219,9 @@ const UserManagement = () => {
       {/* Toast notification */}
       <Toast message={toast.message} type={toast.type} show={toast.show} />
       {loading ? (
-        <div className="text-center py-8 text-gray-500">Loading users...</div>
+        <div className="p-4">
+          <Skeleton rows={8} />
+        </div>
       ) : (
         <div className="mb-6">
           <div className="flex flex-col gap-2 mb-4">

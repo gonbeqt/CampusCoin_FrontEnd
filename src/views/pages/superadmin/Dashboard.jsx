@@ -8,7 +8,7 @@ import {
   AlertCircleIcon,
   CheckCircleIcon,
 } from 'lucide-react'
-
+import Skeleton from '../../components/Skeleton'
 import validationController from '../../../controllers/validationController'
 
 const SuperAdminDashboard = ({ user }) => {
@@ -69,9 +69,9 @@ const SuperAdminDashboard = ({ user }) => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-700"></div>
-        </div>
+       <div className="p-4">
+                       <Skeleton rows={6} />
+                     </div>
       ) : (
         <>
           {/* Stats */}

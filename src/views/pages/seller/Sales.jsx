@@ -25,6 +25,7 @@ import { motion } from 'framer-motion'
 
 import WalletController from '../../../controllers/walletController'
 import ProductController from '../../../controllers/productController'
+import Skeleton from '../../components/Skeleton'
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#6366F1', '#EF4444', '#8B5CF6']
 
@@ -150,10 +151,8 @@ const Sales = ({ user }) => {
       </div>
 
       {statsLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white p-6 rounded-lg shadow animate-pulse" />
-          ))}
+        <div className="p-4">
+          <Skeleton rows={4}  cols={4} />
         </div>
       ) : statsError ? (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
@@ -264,9 +263,11 @@ const Sales = ({ user }) => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+          <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-6 text-center text-gray-500">Loading...</div>
+            <div className="p-6">
+              <Skeleton rows={6} variant="list" />
+            </div>
           ) : error ? (
             <div className="p-6 text-center text-red-500">{error}</div>
           ) : (

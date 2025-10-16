@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import ProductCard from '../../../views/components/ProductCard'
 import ProductController from '../../../controllers/productController'
+import Skeleton from '../../components/Skeleton'
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([])
@@ -16,6 +17,7 @@ const ProductManagement = () => {
   const [totalProducts, setTotalProducts] = useState(0)
   const [hasNext, setHasNext] = useState(false)
   const [hasPrev, setHasPrev] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   // delete modal states
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -30,6 +32,7 @@ const ProductManagement = () => {
   // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
+      setIsLoading(true)
       const res = await ProductController.getProducts(token, page, limit)
       if (res.success) {
         setProducts(res.products)
@@ -40,6 +43,7 @@ const ProductManagement = () => {
       } else {
         console.error(res.error)
       }
+      setIsLoading(false)
     }
     fetchProducts()
   }, [token, page, limit])
@@ -157,7 +161,11 @@ const ProductManagement = () => {
       </div>
 
       {/* Products Grid */}
-      {filteredProducts.length > 0 ? (
+      {isLoading ? (
+         <div className="p-4">
+                  <Skeleton variant="grid" rows={6} cols={3} />
+                </div>
+      ) : filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
             <ProductCard

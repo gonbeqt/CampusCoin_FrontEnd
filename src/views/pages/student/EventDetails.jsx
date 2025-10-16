@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import Skeleton from '../../components/Skeleton'
 import { useParams, Link } from 'react-router-dom'
 import {
   CalendarIcon,
@@ -249,11 +250,11 @@ const EventDetails = () => {
   if (loading) {
     return (
       <div className="pt-20 md:ml-64 min-h-screen bg-[#f6faf8] px-4 pb-12 sm:px-6 lg:px-8">
-        <div className="flex h-64 items-center justify-center">
-          <p className="text-gray-500">Loading event details...</p>
+        <div className="p-4">
+          <Skeleton rows={3} />
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {

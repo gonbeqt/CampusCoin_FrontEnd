@@ -7,9 +7,11 @@ import {
   CoinsIcon
 } from 'lucide-react'
 import productController from '../../../controllers/productController';
+import Skeleton from '../../components/Skeleton';
 
 const TransactionHistory = ({ user }) => {
   const [transactionsData, setTransactionsData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -19,6 +21,7 @@ const TransactionHistory = ({ user }) => {
 
   useEffect(() => {
     const fetchOrders = async () => {
+      setIsLoading(true);
       const res = await productController.getUserOrders(currentPage, itemsPerPage);
       if (res.success) {
         const orders = (res.orders || []).map(o => ({
@@ -35,6 +38,7 @@ const TransactionHistory = ({ user }) => {
         if (typeof res.hasNext === 'boolean') setHasNext(res.hasNext)
         if (typeof res.hasPrev === 'boolean') setHasPrev(res.hasPrev)
       }
+      setIsLoading(false);
     };
     fetchOrders();
   }, [currentPage, itemsPerPage]);
@@ -106,58 +110,66 @@ const TransactionHistory = ({ user }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-50 bg-white">
-              {currentTransactions.map(transaction => {
-                const classes = getStatusClasses(transaction.status);
-                return (
-                  <tr key={transaction._id}>
-                    <td className="whitespace-nowrap px-4 py-4">
-                      <div className="flex items-center">
-                        <div className={`mr-2 rounded-full p-1 ${classes.bg}`}>
-                          {getStatusIcon(transaction.status, classes.text)}
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-6">
+                    <Skeleton rows={4} variant="list" />
+                  </td>
+                </tr>
+              ) : (
+                currentTransactions.map(transaction => {
+                  const classes = getStatusClasses(transaction.status);
+                  return (
+                    <tr key={transaction._id}>
+                      <td className="whitespace-nowrap px-4 py-4">
+                        <div className="flex items-center">
+                          <div className={`mr-2 rounded-full p-1 ${classes.bg}`}>
+                            {getStatusIcon(transaction.status, classes.text)}
+                          </div>
+                          <span className={`text-sm font-semibold ${classes.text}`}>
+                            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                          </span>
                         </div>
-                        <span className={`text-sm font-semibold ${classes.text}`}>
-                          {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-left text-sm text-gray-900">
-                      {transaction.productId?.name || '-'}
-                    </td>
-                    <td className="whitespace-nowrap px-2 py-4 text-center text-sm font-semibold text-gray-900">
-                      {transaction.quantity}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-center text-sm">
-                      <div className="flex items-center justify-center space-x-1">
-                        <span
-                          className={`font-semibold ${
-                            transaction.status === "paid" || transaction.status === "pending"
-                              ? "text-red-600"
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-left text-sm text-gray-900">
+                        {transaction.productId?.name || '-'}
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-4 text-center text-sm font-semibold text-gray-900">
+                        {transaction.quantity}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-center text-sm">
+                        <div className="flex items-center justify-center space-x-1">
+                          <span
+                            className={`font-semibold ${
+                              transaction.status === "paid" || transaction.status === "pending"
+                                ? "text-red-600"
+                                : transaction.status === "cancelled"
+                                ? "text-green-600"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            {transaction.status === "paid" || transaction.status === "pending"
+                              ? `-${transaction.totalPrice}`
                               : transaction.status === "cancelled"
-                              ? "text-green-600"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          {transaction.status === "paid" || transaction.status === "pending"
-                            ? `-${transaction.totalPrice}`
-                            : transaction.status === "cancelled"
-                            ? `+${transaction.totalPrice}`
-                            : transaction.totalPrice}
-                        </span>
-                        <CoinsIcon size={16} className="text-emerald-600" />
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-left text-sm text-gray-500">
-                      {new Date(transaction.createdAt).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </td>
-                  </tr>
-                )
-              })}
+                              ? `+${transaction.totalPrice}`
+                              : transaction.totalPrice}
+                          </span>
+                          <CoinsIcon size={16} className="text-emerald-600" />
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-left text-sm text-gray-500">
+                        {new Date(transaction.createdAt).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
             </tbody>
           </table>
         </div>
