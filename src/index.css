@@ -3,16 +3,10 @@
 @tailwind utilities;
 
 @layer base {
-	:root {
-		--cc-primary: #2f855a;
-		--cc-primary-strong: #1f6f49;
-		--cc-primary-soft: #ccf2d7;
-		--cc-surface: #ffffff;
-		--cc-surface-muted: rgba(255, 255, 255, 0.75);
-	}
+	
 
 	body {
-		background: radial-gradient(circle at top left, #e8fced 0%, #f7fff9 55%, #dff7e7 100%);
+		background: rgb(249, 249, 249);
 		min-height: 100vh;
 		font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 		color: #0f172a;

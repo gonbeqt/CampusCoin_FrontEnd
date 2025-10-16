@@ -174,7 +174,7 @@ const WalletConnect = ({
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[90]]">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Connect Wallet</h3>
@@ -243,7 +243,7 @@ const WalletConnect = ({
 
       {/* Disconnect Confirmation Modal */}
       {showDisconnectModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[90]">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6">
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Disconnect Wallet</h3>

@@ -35,7 +35,7 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
   if (suffix) displayName = `${displayName} ${suffix}`
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-emerald-100 bg-white/90 backdrop-blur-xl shadow-sm md:left-64">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-emerald-100 bg-white-90 backdrop-blur-xl shadow-sm md:left-64">
       <div className="mx-auto w-full max-w-7xl px-3 py-3 sm:px-6 md:px-8 md:py-4">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-4">
