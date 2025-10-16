@@ -24,12 +24,22 @@ class ProductController {
       product: result.product,
     };
   }
-  async getProducts(token) {
+  async getProducts(token, page = 1, limit = 9) {
     if (!token) return { success: false, error: 'Unauthorized' }
 
-    const res = await this.model.getProducts(token)
-    if (res.error) return { success: false, error: res.error }
-    return { success: true, products: res.products || [], total: res.totalProducts || 0 }
+    const res = await this.model.getProducts(token, page, limit)
+    if (!res?.success) return { success: false, error: res?.error || 'Failed to fetch products' }
+
+    return {
+      success: true,
+      products: res.products || [],
+      total: typeof res.totalProducts === 'number' ? res.totalProducts : (res.products?.length || 0),
+      page: res.page,
+      limit: res.limit,
+      totalPages: res.totalPages,
+      hasNext: res.hasNext,
+      hasPrev: res.hasPrev,
+    }
   }
 
   async editProduct(id, data, token) {
@@ -66,13 +76,22 @@ class ProductController {
     };
   }
 
-  async getAllOrders(token) {
+  async getAllOrders(token, page = 1, limit = 10) {
         if (!token) return { success: false, error: 'Unauthorized' };
 
-        const result = await this.model.getAllOrders(token);
+        const result = await this.model.getAllOrders(token, page, limit);
         if (!result.success) return { success: false, error: result.error };
 
-        return { success: true, orders: result.orders, total: result.totalOrders };
+        return {
+          success: true,
+          orders: result.orders,
+          total: result.totalOrders,
+          page: result.page,
+          limit: result.limit,
+          totalPages: result.totalPages,
+          hasNext: result.hasNext,
+          hasPrev: result.hasPrev,
+        };
       }
       async cancelOrder(orderId, token) {
       if (!orderId) return { success: false, error: 'Order ID required' };
@@ -89,11 +108,20 @@ class ProductController {
       };
     }
 
-  async getAllProducts() {
+  async getAllProducts(page = 1, limit = 9) {
     try {
-      const result = await this.model.getAllProducts();
+      const result = await this.model.getAllProducts(page, limit);
       if (result.success) {
-        return { success: true, products: result.data.products, totalProducts: result.data.totalProducts };
+        return {
+          success: true,
+          products: result.products,
+          totalProducts: result.totalProducts,
+          page: result.page,
+          limit: result.limit,
+          totalPages: result.totalPages,
+          hasNext: result.hasNext,
+          hasPrev: result.hasPrev,
+        };
       } else {
         return { success: false, error: result.error || 'Failed to fetch products' };
       }
@@ -145,13 +173,22 @@ class ProductController {
     }
   }
 
-    async getUserOrders() {
+    async getUserOrders(page = 1, limit = 10) {
     try {
-      const result = await this.model.getUserOrders();
+      const result = await this.model.getUserOrders(page, limit);
       if (!result.success) {
         return { success: false, error: result.error || 'Failed to fetch user orders' };
       }
-      return { success: true, orders: result.data.orders || [], totalOrders: result.data.totalOrders || 0 };
+      return {
+        success: true,
+        orders: result.orders || [],
+        totalOrders: result.totalOrders || 0,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages,
+        hasNext: result.hasNext,
+        hasPrev: result.hasPrev,
+      };
     } catch (error) {
       console.error('ProductController.getUserOrders error:', error);
       return { success: false, error: 'Unexpected error occurred' };

@@ -27,6 +27,10 @@ const OrderManagement = () => {
   const [orderToAction, setOrderToAction] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
   // ✅ Toast state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const showToast = (message, type = 'success') => {
@@ -41,9 +45,13 @@ const OrderManagement = () => {
     setError("");
     try {
       const token = localStorage.getItem('authToken');
-      const result = await ProductController.getAllOrders(token);
+      const result = await ProductController.getAllOrders(token, currentPage, rowsPerPage);
       if (result.success) {
         setOrders(result.orders);
+        setTotalOrders(result.total ?? 0);
+        if (typeof result.totalPages === 'number') setTotalPages(result.totalPages);
+        if (typeof result.hasNext === 'boolean') setHasNext(result.hasNext);
+        if (typeof result.hasPrev === 'boolean') setHasPrev(result.hasPrev);
       } else {
         setError(result.error);
         showToast(result.error, 'error');
@@ -58,7 +66,7 @@ const OrderManagement = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [currentPage, rowsPerPage]);
 
   // ✅ Handle paying a reward
   const handlePayClick = (order) => {
@@ -134,19 +142,15 @@ const OrderManagement = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // ✅ Pagination logic (must be after filteredOrders)
-  const indexOfLastOrder = currentPage * rowsPerPage;
-  const indexOfFirstOrder = indexOfLastOrder - rowsPerPage;
-  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
-
-  const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
+  // Server-side pagination: current page already returned by backend
+  const currentOrders = filteredOrders;
 
   const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
+    if (hasPrev && currentPage > 1) setCurrentPage((p) => p - 1);
   };
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    if (hasNext && currentPage < totalPages) setCurrentPage((p) => p + 1);
   };
 
   const getStatusColor = (status) => {
@@ -283,8 +287,8 @@ const OrderManagement = () => {
                 <div className="flex-1">
                   <button
                     onClick={handlePrevPage}
-                    disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-md text-sm font-medium ${currentPage === 1
+                    disabled={!hasPrev || currentPage === 1}
+                    className={`px-4 py-2 rounded-md text-sm font-medium ${!hasPrev || currentPage === 1
                         ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                         : 'bg-blue-600 text-white hover:bg-blue-700'
                       }`}
@@ -300,7 +304,7 @@ const OrderManagement = () => {
                 </div>
 
                 <div className="flex-1 text-right">
-                  <button onClick={handleNextPage} disabled={currentPage === totalPages} className={`px-4 py-2 rounded-md text-sm font-medium ${currentPage === totalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>Next</button>
+                  <button onClick={handleNextPage} disabled={!hasNext || currentPage === totalPages} className={`px-4 py-2 rounded-md text-sm font-medium ${!hasNext || currentPage === totalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>Next</button>
                 </div>
               </div>
             )}

@@ -13,12 +13,15 @@ const TransactionHistory = ({ user }) => {
   const [filter, setFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
-      const res = await productController.getUserOrders();
+      const res = await productController.getUserOrders(currentPage, itemsPerPage);
       if (res.success) {
-        const orders = res.orders.map(o => ({
+        const orders = (res.orders || []).map(o => ({
           _id: o._id,
           status: o.status, // 'pending', 'paid', 'cancelled'
           productId: o.productId,
@@ -28,10 +31,13 @@ const TransactionHistory = ({ user }) => {
           hash: '-',
         }));
         setTransactionsData(orders);
+        if (typeof res.totalPages === 'number') setTotalPages(res.totalPages)
+        if (typeof res.hasNext === 'boolean') setHasNext(res.hasNext)
+        if (typeof res.hasPrev === 'boolean') setHasPrev(res.hasPrev)
       }
     };
     fetchOrders();
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   // Filter transactions by status
   const safeTransactions = Array.isArray(transactionsData) ? transactionsData : [];
@@ -40,13 +46,11 @@ const TransactionHistory = ({ user }) => {
     return transaction.status === filter;
   });
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentTransactions = filteredTransactions.slice(startIndex, startIndex + itemsPerPage);
+  // Server-side pagination: list is already current page
+  const currentTransactions = filteredTransactions;
 
-  const handlePrev = () => setCurrentPage(prev => Math.max(prev - 1, 1));
-  const handleNext = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const handlePrev = () => setCurrentPage(prev => (hasPrev && prev > 1 ? prev - 1 : prev));
+  const handleNext = () => setCurrentPage(prev => (hasNext && prev < totalPages ? prev + 1 : prev));
 
   // Tailwind classes based on status
   const getStatusClasses = (status) => {
@@ -158,14 +162,14 @@ const TransactionHistory = ({ user }) => {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        {filteredTransactions.length > itemsPerPage && (
+        {/* Pagination Controls (server-side) */}
+        {(hasPrev || hasNext || totalPages > 1) && (
           <div className="flex items-center justify-end space-x-2 border-t border-emerald-100 px-4 py-4">
             <button
               onClick={handlePrev}
-              disabled={currentPage === 1}
+              disabled={!hasPrev || currentPage === 1}
               className={`rounded px-3 py-1 text-sm font-medium text-gray-700 transition ${
-                currentPage === 1
+                !hasPrev || currentPage === 1
                   ? 'cursor-default bg-gray-100 opacity-50'
                   : 'bg-white hover:bg-emerald-100'
               }`}
@@ -177,8 +181,12 @@ const TransactionHistory = ({ user }) => {
             </span>
             <button
               onClick={handleNext}
-              disabled={currentPage === totalPages}
-              className="rounded px-3 py-1 text-sm font-medium text-gray-700 transition disabled:opacity-50 ${currentPage === totalPages ? 'bg-gray-100 cursor-default' : 'bg-white hover:bg-emerald-100'}"
+              disabled={!hasNext || currentPage === totalPages}
+              className={`rounded px-3 py-1 text-sm font-medium text-gray-700 transition ${
+                !hasNext || currentPage === totalPages
+                  ? 'bg-gray-100 cursor-default opacity-50'
+                  : 'bg-white hover:bg-emerald-100'
+              }`}
             >
               Next
             </button>

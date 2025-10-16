@@ -33,15 +33,26 @@ const RewardMarketplace = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [processingOrders, setProcessingOrders] = useState({})
+  // Pagination state for all products (server-side pagination)
+  const [page, setPage] = useState(1)
+  const [limit] = useState(9)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalProducts, setTotalProducts] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrev, setHasPrev] = useState(false)
   const { balance, setBalance, refreshBalance } = useBalance();
 
   // Defensive fetchProducts
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const result = await productController.getAllProducts();
+      const result = await productController.getAllProducts(page, limit);
       if (result.success && Array.isArray(result.products)) {
         setProducts(result.products);
+        setTotalProducts(result.totalProducts ?? 0)
+        if (typeof result.totalPages === 'number') setTotalPages(result.totalPages)
+        if (typeof result.hasNext === 'boolean') setHasNext(result.hasNext)
+        if (typeof result.hasPrev === 'boolean') setHasPrev(result.hasPrev)
         // Initialize quantities and redeem states
         const initialQuantities = {}
         const initialRedeemStates = {}
@@ -66,7 +77,12 @@ const RewardMarketplace = ({ user }) => {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [page, limit]);
+
+  // Reset to first page when filters/search change (client-side filtering)
+  useEffect(() => {
+    setPage(1)
+  }, [searchTerm, selectedCategory])
   const handleQuantityChange = (productId, delta) => {
     setQuantities(prev => ({
       ...prev,
@@ -353,6 +369,42 @@ const RewardMarketplace = ({ user }) => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+      {/* Pagination footer */}
+      {!loading && !error && (
+        <div className="mt-8 flex items-center justify-between bg-white border border-emerald-100 rounded-lg px-4 py-3 shadow-sm">
+          <div className="text-sm text-gray-600">
+            Page <span className="font-medium">{page}</span>
+            {totalPages > 1 && (
+              <>
+                <span> of </span>
+                <span className="font-medium">{totalPages}</span>
+              </>
+            )}
+            {totalProducts > 0 && (
+              <>
+                <span className="ml-2 text-gray-400">·</span>
+                <span className="ml-2">Total: {totalProducts}</span>
+              </>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              className={`px-3 py-1.5 rounded-md text-sm border ${hasPrev && page > 1 ? 'bg-white text-gray-700 hover:bg-emerald-50 border-emerald-200' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}`}
+              onClick={() => hasPrev && page > 1 && setPage(p => p - 1)}
+              disabled={!hasPrev || page <= 1}
+            >
+              Prev
+            </button>
+            <button
+              className={`px-3 py-1.5 rounded-md text-sm border ${hasNext ? 'bg-white text-gray-700 hover:bg-emerald-50 border-emerald-200' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}`}
+              onClick={() => hasNext && setPage(p => p + 1)}
+              disabled={!hasNext}
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
       {!loading && !error && filteredProducts.length === 0 && (

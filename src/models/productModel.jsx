@@ -1,8 +1,7 @@
 // src/models/productModel.js
-
 class ProductModel {
   constructor() {
-    this.baseURL = 'http://localhost:5000/api/products'; // adjust if different
+    this.baseURL = 'http://localhost:5000/api/products';
   }
 
   async addProduct(formData, token) {
@@ -27,14 +26,83 @@ class ProductModel {
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
-   async getProducts(token) {
+   async getProducts(token, page = 1, limit = 9) {
     try {
-      const res = await fetch(`${this.baseURL}/product_list`, {
+      const url = new URL(`${this.baseURL}/product_list`)
+      if (page) url.searchParams.set('page', String(page))
+      if (limit) url.searchParams.set('limit', String(limit))
+
+      const response = await fetch(url.toString(), {
         headers: { Authorization: `Bearer ${token}` },
       })
-      return await res.json()
+
+  const data = await response.json()
+
+      if (!response.ok) {
+        return { success: false, error: data?.message || data?.error || 'Failed to fetch products' }
+      }
+
+      const pagination = data?.pagination || {}
+      const totalProducts =
+        typeof data?.totalProducts === 'number'
+          ? data.totalProducts
+          : Array.isArray(data?.products)
+          ? data.products.length
+          : 0
+
+      const resolvedPage =
+        typeof data?.page === 'number' ? data.page :
+        typeof pagination?.page === 'number' ? pagination.page : page
+
+      const backendLimit =
+        typeof data?.limit === 'number' ? data.limit :
+        typeof pagination?.limit === 'number' ? pagination.limit :
+        typeof data?.pageSize === 'number' ? data.pageSize :
+        typeof data?.perPage === 'number' ? data.perPage : undefined
+
+      const resolvedLimit = typeof backendLimit === 'number' ? backendLimit : limit
+
+      const totalPages =
+        typeof data?.totalPages === 'number' ? data.totalPages :
+        typeof pagination?.totalPages === 'number' ? pagination.totalPages :
+        Math.max(1, Math.ceil((totalProducts || 0) / (resolvedLimit || 1)))
+
+      // Infer hasNext/hasPrev if backend doesn't send them
+      let hasNext
+      if (typeof data?.hasNext === 'boolean') {
+        hasNext = data.hasNext
+      } else if (typeof pagination?.hasNext === 'boolean') {
+        hasNext = pagination.hasNext
+      } else if (typeof data?.totalPages === 'number' || typeof pagination?.totalPages === 'number') {
+        hasNext = resolvedPage < totalPages
+      } else if (Array.isArray(data?.products)) {
+        // If we received a full page, assume there may be another page; if page size unknown, allow next and correct on fetch
+        if (typeof resolvedLimit === 'number' && resolvedLimit > 0) {
+          hasNext = data.products.length >= resolvedLimit
+        } else {
+          hasNext = data.products.length > 0
+        }
+      } else {
+        hasNext = false
+      }
+
+      const hasPrev =
+        typeof data?.hasPrev === 'boolean' ? data.hasPrev :
+        typeof pagination?.hasPrev === 'boolean' ? pagination.hasPrev :
+        resolvedPage > 1
+
+      return {
+        success: true,
+        products: Array.isArray(data?.products) ? data.products : [],
+        totalProducts,
+        page: resolvedPage,
+        limit: resolvedLimit,
+        totalPages,
+        hasNext,
+        hasPrev,
+      }
     } catch (err) {
-      return { error: err.message }
+      return { success: false, error: err.message }
     }
   }
 
@@ -43,7 +111,7 @@ class ProductModel {
     const res = await fetch(`${this.baseURL}/${productId}`, {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${token}`, // ✅ must include Bearer
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify(data),
@@ -103,22 +171,44 @@ class ProductModel {
     }
   }
 
-  async getAllProducts() {
+  async getAllProducts(page = 1, limit = 9) {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${this.baseURL}/all_products`, {
+      const url = new URL(`${this.baseURL}/all_products`)
+      if (page) url.searchParams.set('page', String(page))
+      if (limit) url.searchParams.set('limit', String(limit))
+
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
       });
-      const result = await response.json();
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data?.message || data?.error || 'Failed to fetch products' }
+      }
+
+      const pagination = data?.pagination || {}
+      const resolvedPage = typeof pagination?.page === 'number' ? pagination.page : page
+      const resolvedLimit = typeof pagination?.limit === 'number' ? pagination.limit : limit
+      const totalProducts = typeof data?.totalProducts === 'number' ? data.totalProducts : (Array.isArray(data?.products) ? data.products.length : 0)
+      const totalPages = typeof pagination?.totalPages === 'number' ? pagination.totalPages : Math.max(1, Math.ceil((totalProducts || 0) / (resolvedLimit || 1)))
+      const hasNext = typeof pagination?.hasNext === 'boolean' ? pagination.hasNext : resolvedPage < totalPages
+      const hasPrev = typeof pagination?.hasPrev === 'boolean' ? pagination.hasPrev : resolvedPage > 1
+
       return {
-        success: response.ok,
-        data: response.ok ? result : null,
-        error: response.ok ? null : result.error || result.message,
-      };
+        success: true,
+        products: Array.isArray(data?.products) ? data.products : [],
+        totalProducts,
+        page: resolvedPage,
+        limit: resolvedLimit,
+        totalPages,
+        hasNext,
+        hasPrev,
+      }
     } catch (error) {
       return { success: false, error: 'Network error' };
     }
@@ -146,10 +236,14 @@ class ProductModel {
     }
   }
 
-   async getUserOrders() {
+   async getUserOrders(page = 1, limit = 10) {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`${this.baseURL}/my-orders`, {
+      const url = new URL(`${this.baseURL}/my-orders`)
+      if (page) url.searchParams.set('page', String(page))
+      if (limit) url.searchParams.set('limit', String(limit))
+
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -158,22 +252,43 @@ class ProductModel {
       });
 
       const data = await response.json();
+      if (!response.ok) {
+        return { success: false, error: data?.message || data?.error || 'Failed to fetch user orders' }
+      }
+
+      const pagination = data?.pagination || {}
+      const resolvedPage = typeof pagination?.page === 'number' ? pagination.page : page
+      const resolvedLimit = typeof pagination?.limit === 'number' ? pagination.limit : limit
+      const totalOrders = typeof data?.totalOrders === 'number' ? data.totalOrders : (Array.isArray(data?.orders) ? data.orders.length : 0)
+      const totalPages = typeof pagination?.totalPages === 'number' ? pagination.totalPages : Math.max(1, Math.ceil((totalOrders || 0) / (resolvedLimit || 1)))
+      const hasNext = typeof pagination?.hasNext === 'boolean' ? pagination.hasNext : resolvedPage < totalPages
+      const hasPrev = typeof pagination?.hasPrev === 'boolean' ? pagination.hasPrev : resolvedPage > 1
+
       return {
-        success: response.ok,
-        data: response.ok ? data : null,
-        error: response.ok ? null : data.error || data.message,
-      };
+        success: true,
+        orders: Array.isArray(data?.orders) ? data.orders : [],
+        totalOrders,
+        page: resolvedPage,
+        limit: resolvedLimit,
+        totalPages,
+        hasNext,
+        hasPrev,
+      }
     } catch (error) {
       console.error('ProductModel.getUserOrders error:', error);
       return { success: false, error: 'Network error' };
     }
    }
-  async getAllOrders(token) {
+  async getAllOrders(token, page = 1, limit = 10) {
     try {
-      const res = await fetch(`${this.baseURL}/all_orders`, {
+      const url = new URL(`${this.baseURL}/all_orders`)
+      if (page) url.searchParams.set('page', String(page))
+      if (limit) url.searchParams.set('limit', String(limit))
+
+      const res = await fetch(url.toString(), {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${token}`,  // ✅ add Bearer token
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -184,10 +299,23 @@ class ProductModel {
         return { success: false, error: data.message || 'Failed to fetch orders' };
       }
 
+      const pagination = data?.pagination || {}
+      const resolvedPage = typeof pagination?.page === 'number' ? pagination.page : page
+      const resolvedLimit = typeof pagination?.limit === 'number' ? pagination.limit : limit
+      const totalOrders = typeof data?.totalOrders === 'number' ? data.totalOrders : (Array.isArray(data?.orders) ? data.orders.length : 0)
+      const totalPages = typeof pagination?.totalPages === 'number' ? pagination.totalPages : Math.max(1, Math.ceil((totalOrders || 0) / (resolvedLimit || 1)))
+      const hasNext = typeof pagination?.hasNext === 'boolean' ? pagination.hasNext : resolvedPage < totalPages
+      const hasPrev = typeof pagination?.hasPrev === 'boolean' ? pagination.hasPrev : resolvedPage > 1
+
       return {
         success: true,
-        orders: data.orders || [],
-        totalOrders: data.totalOrders || 0,
+        orders: Array.isArray(data?.orders) ? data.orders : [],
+        totalOrders,
+        page: resolvedPage,
+        limit: resolvedLimit,
+        totalPages,
+        hasNext,
+        hasPrev,
       };
     } catch (err) {
       return { success: false, error: err.message };
