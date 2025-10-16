@@ -28,6 +28,13 @@ const Events = ({ user }) => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(null)
   const [loading, setLoading] = useState(true)
   const [timers, setTimers] = useState({});
+  // Pagination for events (server-side)
+  const [page, setPage] = useState(1)
+  const [limit] = useState(9)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalEvents, setTotalEvents] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrev, setHasPrev] = useState(false)
 
   const userData = authModel.getUserData();
   const userId = userData?._id || userData?.id;
@@ -45,19 +52,29 @@ const Events = ({ user }) => {
 
   const arrayHasUser = useCallback((arr) => Array.isArray(arr) && arr.some(matchesUser), [matchesUser]);
 
-  // Fetch events from backend
+  // Fetch events from backend (server-side pagination)
   useEffect(() => {
     const fetchEvents = async () => {
-      const res = await eventController.getAllEvents()
-      if (res.success && Array.isArray(res.events)) setAllEvents(res.events)
-      else {
-        setAllEvents([]);
+      const res = await eventController.getAllEvents(page, limit)
+      if (res.success && Array.isArray(res.events)) {
+        setAllEvents(res.events)
+        setTotalEvents(res.totalEvents ?? 0)
+        if (typeof res.totalPages === 'number') setTotalPages(res.totalPages)
+        if (typeof res.hasNext === 'boolean') setHasNext(res.hasNext)
+        if (typeof res.hasPrev === 'boolean') setHasPrev(res.hasPrev)
+      } else {
+        setAllEvents([])
         console.error('Error fetching events:', res.error || res.events)
       }
       setLoading(false)
     }
     fetchEvents()
-  }, [])
+  }, [page, limit])
+
+  // Reset to first page when user changes filters/search/sorts
+  useEffect(() => {
+    setPage(1)
+  }, [statusFilter, categoryFilter, searchTerm, sortOrder, claimStatus, rewardOrder, dateOrder])
 
   // Live timers for ongoing events (defensive: always use safeAllEvents)
   useEffect(() => {
@@ -501,6 +518,41 @@ const Events = ({ user }) => {
           )}
         </div>
       )}
+
+      {/* Pagination footer */}
+      <div className="mt-8 flex items-center justify-between bg-white border border-emerald-100 rounded-lg px-4 py-3 shadow-sm">
+        <div className="text-sm text-gray-600">
+          Page <span className="font-medium">{page}</span>
+          {totalPages > 1 && (
+            <>
+              <span> of </span>
+              <span className="font-medium">{totalPages}</span>
+            </>
+          )}
+          {totalEvents > 0 && (
+            <>
+              <span className="ml-2 text-gray-400">·</span>
+              <span className="ml-2">Total: {totalEvents}</span>
+            </>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <button
+            className={`px-3 py-1.5 rounded-md text-sm border ${hasPrev && page > 1 ? 'bg-white text-gray-700 hover:bg-emerald-50 border-emerald-200' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}`}
+            onClick={() => hasPrev && page > 1 && setPage((p) => p - 1)}
+            disabled={!hasPrev || page <= 1}
+          >
+            Prev
+          </button>
+          <button
+            className={`px-3 py-1.5 rounded-md text-sm border ${hasNext ? 'bg-white text-gray-700 hover:bg-emerald-50 border-emerald-200' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}`}
+            onClick={() => hasNext && setPage((p) => p + 1)}
+            disabled={!hasNext}
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

@@ -58,20 +58,42 @@ class EventModel {
 
 
 
-  // Get all events
-  async getAllEvents() {
+  // Get all events (paginated)
+  async getAllEvents(page = 1, limit = 9) {
     try {
-      const response = await fetch(`${this.baseURL}/all-events`, {
+      const url = new URL(`${this.baseURL}/all-events`)
+      if (page) url.searchParams.set('page', String(page))
+      if (limit) url.searchParams.set('limit', String(limit))
+
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
       const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data?.message || data?.error || 'Failed to fetch events' }
+      }
+
+      const pagination = data?.pagination || {}
+      const events = Array.isArray(data?.events) ? data.events : []
+      const totalEvents = typeof data?.totalEvents === 'number' ? data.totalEvents : events.length
+      const resolvedPage = typeof pagination?.page === 'number' ? pagination.page : page
+      const resolvedLimit = typeof pagination?.limit === 'number' ? pagination.limit : limit
+      const totalPages = typeof pagination?.totalPages === 'number' ? pagination.totalPages : Math.max(1, Math.ceil((totalEvents || 0) / (resolvedLimit || 1)))
+      const hasNext = typeof pagination?.hasNext === 'boolean' ? pagination.hasNext : resolvedPage < totalPages
+      const hasPrev = typeof pagination?.hasPrev === 'boolean' ? pagination.hasPrev : resolvedPage > 1
+
       return {
-        success: response.ok,
-        // backend returns { events: [...] }
-        data: response.ok ? data : null,
-        error: response.ok ? null : data.error || data.message,
-      };
+        success: true,
+        events,
+        totalEvents,
+        page: resolvedPage,
+        limit: resolvedLimit,
+        totalPages,
+        hasNext,
+        hasPrev,
+      }
     } catch (error) {
       console.error('EventModel.getAllEvents error:', error);
       return { success: false, error: 'Network error. Please try again.' };

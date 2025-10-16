@@ -11,26 +11,35 @@ const AttendanceVerification = () => {
   const [finalizedFilter, setFinalizedFilter] = useState('all'); // all | finalized | not_finalized
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('desc'); // 'desc' (new to old) | 'asc' (old to new)
+  // Server-side pagination
+  const [page, setPage] = useState(1);
+  const [limit] = useState(9);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalEvents, setTotalEvents] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const res = await eventController.getAllEvents();
+      const res = await eventController.getAllEvents(page, limit);
       if (res.success) {
-        // Support both array and { events: [...] }
-        if (Array.isArray(res.events)) {
-          setEvents(res.events);
-        } else if (res.events && Array.isArray(res.events.events)) {
-          setEvents(res.events.events);
-        } else {
-          setEvents([]);
-        }
+        setEvents(Array.isArray(res.events) ? res.events : []);
+        setTotalEvents(res.totalEvents ?? 0);
+        if (typeof res.totalPages === 'number') setTotalPages(res.totalPages);
+        if (typeof res.hasNext === 'boolean') setHasNext(res.hasNext);
+        if (typeof res.hasPrev === 'boolean') setHasPrev(res.hasPrev);
       } else {
         setEvents([]);
       }
       setLoading(false);
     };
     fetchEvents();
-  }, []);
+  }, [page, limit]);
+
+  // Reset to first page when filters/search change
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, finalizedFilter, categoryFilter, sortOrder]);
 
   const categories = Array.from(new Set((events || []).map(e => e.category).filter(Boolean)));
 
@@ -135,7 +144,42 @@ const AttendanceVerification = () => {
             ))}
         </div>
       )}
-    </div>
+        {/* Pagination footer */}
+        <div className="mt-8 flex items-center justify-between bg-white border border-emerald-100 rounded-lg px-4 py-3 shadow-sm">
+          <div className="text-sm text-gray-600">
+            Page <span className="font-medium">{page}</span>
+            {totalPages > 1 && (
+              <>
+                <span> of </span>
+                <span className="font-medium">{totalPages}</span>
+              </>
+            )}
+            {totalEvents > 0 && (
+              <>
+                <span className="ml-2 text-gray-400">·</span>
+                <span className="ml-2">Total: {totalEvents}</span>
+              </>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              className={`px-3 py-1.5 rounded-md text-sm border ${hasPrev && page > 1 ? 'bg-white text-gray-700 hover:bg-emerald-50 border-emerald-200' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}`}
+              onClick={() => hasPrev && page > 1 && setPage((p) => p - 1)}
+              disabled={!hasPrev || page <= 1}
+            >
+              Prev
+            </button>
+            <button
+              className={`px-3 py-1.5 rounded-md text-sm border ${hasNext ? 'bg-white text-gray-700 hover:bg-emerald-50 border-emerald-200' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}`}
+              onClick={() => hasNext && setPage((p) => p + 1)}
+              disabled={!hasNext}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+     
+    </div>  
   );
 };
 

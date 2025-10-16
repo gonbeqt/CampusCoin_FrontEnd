@@ -44,16 +44,21 @@ async generateAttendanceQr(eventId, studentId) {
       return { success: false, error: 'Unexpected error occurred' };
     }
   }
-  async getAllEvents() {
+  async getAllEvents(page = 1, limit = 9) {
     try {
-      const result = await this.model.getAllEvents();
+      const result = await this.model.getAllEvents(page, limit);
       if (!result.success) {
         return { success: false, error: result.error || 'Failed to fetch events' };
       }
-      // Backend returns { events: [...] }, unwrap to an array for consumers
       return {
         success: true,
-        events: (result.data && Array.isArray(result.data.events)) ? result.data.events : [],
+        events: result.events || [],
+        totalEvents: result.totalEvents,
+        page: result.page,
+        limit: result.limit,
+        totalPages: result.totalPages,
+        hasNext: result.hasNext,
+        hasPrev: result.hasPrev,
       };
     } catch (error) {
       console.error('EventController.getAllEvents error:', error);
