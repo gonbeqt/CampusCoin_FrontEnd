@@ -61,9 +61,15 @@ class EventModel {
   // Get all events (paginated)
   async getAllEvents(page = 1, limit = 9) {
     try {
-      const url = new URL(`${this.baseURL}/all-events`)
-      if (page) url.searchParams.set('page', String(page))
-      if (limit) url.searchParams.set('limit', String(limit))
+      const url = new URL(`${this.baseURL}/all-events`);
+      if (page) url.searchParams.set('page', String(page));
+      if (limit) url.searchParams.set('limit', String(limit));
+      // Add support for filters/search/sort
+      if (this.search) url.searchParams.set('search', this.search);
+      if (this.statusFilter && this.statusFilter !== 'all') url.searchParams.set('status', this.statusFilter);
+      if (this.finalizedFilter && this.finalizedFilter !== 'all') url.searchParams.set('finalized', this.finalizedFilter);
+      if (this.categoryFilter && this.categoryFilter !== 'all') url.searchParams.set('category', this.categoryFilter);
+      if (this.sortOrder) url.searchParams.set('sort', this.sortOrder);
 
       const response = await fetch(url.toString(), {
         method: 'GET',

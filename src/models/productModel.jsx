@@ -281,9 +281,12 @@ class ProductModel {
    }
   async getAllOrders(token, page = 1, limit = 10) {
     try {
-      const url = new URL(`${this.baseURL}/all_orders`)
-      if (page) url.searchParams.set('page', String(page))
-      if (limit) url.searchParams.set('limit', String(limit))
+      const url = new URL(`${this.baseURL}/all_orders`);
+      if (page) url.searchParams.set('page', String(page));
+      if (limit) url.searchParams.set('limit', String(limit));
+      // Add search and status params if present (for global filtering)
+      if (this.searchTerm && this.searchTerm.trim()) url.searchParams.set('search', this.searchTerm.trim());
+      if (this.statusFilter && this.statusFilter !== 'all') url.searchParams.set('status', this.statusFilter);
 
       const res = await fetch(url.toString(), {
         method: 'GET',
@@ -299,13 +302,13 @@ class ProductModel {
         return { success: false, error: data.message || 'Failed to fetch orders' };
       }
 
-      const pagination = data?.pagination || {}
-      const resolvedPage = typeof pagination?.page === 'number' ? pagination.page : page
-      const resolvedLimit = typeof pagination?.limit === 'number' ? pagination.limit : limit
-      const totalOrders = typeof data?.totalOrders === 'number' ? data.totalOrders : (Array.isArray(data?.orders) ? data.orders.length : 0)
-      const totalPages = typeof pagination?.totalPages === 'number' ? pagination.totalPages : Math.max(1, Math.ceil((totalOrders || 0) / (resolvedLimit || 1)))
-      const hasNext = typeof pagination?.hasNext === 'boolean' ? pagination.hasNext : resolvedPage < totalPages
-      const hasPrev = typeof pagination?.hasPrev === 'boolean' ? pagination.hasPrev : resolvedPage > 1
+      const pagination = data?.pagination || {};
+      const resolvedPage = typeof pagination?.page === 'number' ? pagination.page : page;
+      const resolvedLimit = typeof pagination?.limit === 'number' ? pagination.limit : limit;
+      const totalOrders = typeof data?.totalOrders === 'number' ? data.totalOrders : (Array.isArray(data?.orders) ? data.orders.length : 0);
+      const totalPages = typeof pagination?.totalPages === 'number' ? pagination.totalPages : Math.max(1, Math.ceil((totalOrders || 0) / (resolvedLimit || 1)));
+      const hasNext = typeof pagination?.hasNext === 'boolean' ? pagination.hasNext : resolvedPage < totalPages;
+      const hasPrev = typeof pagination?.hasPrev === 'boolean' ? pagination.hasPrev : resolvedPage > 1;
 
       return {
         success: true,

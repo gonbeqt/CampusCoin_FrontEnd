@@ -1,4 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+// Toast notification component (copied from RewardManagement)
+function Toast({ message, type, show }) {
+  return (
+    <div
+      className={`fixed top-6 right-6 z-[9999] transition-transform duration-300 ${show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'} ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} text-white px-6 py-3 rounded shadow-lg min-w-[200px] text-center pointer-events-none`}
+      style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.15)' }}
+    >
+      {message}
+    </div>
+  );
+}
 // Helper to fetch student details by array of IDs
 async function fetchStudentDetails(studentIds) {
   if (!studentIds || studentIds.length === 0) return [];
@@ -34,6 +45,12 @@ const EventAttendanceDetails = () => {
   // Finalize modal state
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
   const [finalizeInput, setFinalizeInput] = useState('');
+  // Toast state
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast((t) => ({ ...t, show: false })), 2500);
+  };
 
   const loadEventData = useCallback(async (showLoader = true) => {
     if (showLoader) setLoading(true);
@@ -106,15 +123,21 @@ const EventAttendanceDetails = () => {
   // Submit all attendance changes
   const handleSubmitAttendance = async () => {
     setUpdating(true);
-    const promises = Object.entries(attendance)
-      .filter(([_, status]) => status === 'present' || status === 'absent')
-      .map(([studentId, status]) =>
-        eventController.markStudentAttendance(eventId, studentId, status === 'present' ? 'attended' : 'absent')
-      );
-    await Promise.all(promises);
-    await loadEventData(false);
-    setAttendance({});
-    setUpdating(false);
+    try {
+      const promises = Object.entries(attendance)
+        .filter(([_, status]) => status === 'present' || status === 'absent')
+        .map(([studentId, status]) =>
+          eventController.markStudentAttendance(eventId, studentId, status === 'present' ? 'attended' : 'absent')
+        );
+      await Promise.all(promises);
+      await loadEventData(false);
+      setAttendance({});
+      showToast('Attendance submitted successfully!', 'success');
+    } catch (err) {
+      showToast('Failed to submit attendance', 'error');
+    } finally {
+      setUpdating(false);
+    }
   };
 
   // Compute whether all registered students have been marked as present or absent
@@ -135,6 +158,7 @@ const EventAttendanceDetails = () => {
 
   return (
     <div className="pt-16 md:ml-64 relative min-h-screen bg-[#f6faf8]">
+      <Toast message={toast.message} type={toast.type} show={toast.show} />
       {/* Finalized badge */}
       {event?.finalized && (
         <div className="absolute top-8 right-12 flex items-center bg-yellow-200 bg-opacity-70 border-2 border-yellow-400 text-yellow-900 px-10 py-6 rounded-2xl shadow-2xl text-4xl font-extrabold z-40" style={{backdropFilter: 'blur(2px)'}}>
@@ -320,8 +344,9 @@ const EventAttendanceDetails = () => {
                             if (updated.success) setEvent(updated.event);
                             setShowFinalizeModal(false);
                             setFinalizeInput('');
+                            showToast('Event finalized and rewards distributed!', 'success');
                           } else {
-                            alert(res.error || 'Failed to finalize event');
+                            showToast(res.error || 'Failed to finalize event', 'error');
                           }
                           setUpdating(false);
                         }}
