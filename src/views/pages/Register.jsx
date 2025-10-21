@@ -306,17 +306,19 @@ const Register = () => {
   const requirements = getDocumentRequirements()
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray=-50 py-12 px-4 sm:px-6 lg:px-8 border-emerald-900 ">
       <div className="max-w-2xl w-full space-y-8">
-        {/* Header */}
+        {/* Header ">*/}
         <div>
           <div className="flex justify-center">
-            <CoinsIcon className="h-16 w-16 text-blue-600" />
+            <span className="flex h-20 w-20 items-center justify-center rounded-[2.5rem] bg-gradient-to-r from-emerald-500 to-amber-400 text-amber-50 shadow-xl shadow-emerald-200/60 ">
+              <CoinsIcon className="h-10 w-10" />
+            </span>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-emerald-900">
             {showVerification ? 'Verify Your Email' : 'Create an Account'}
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-amber-400">
             {showVerification
               ? 'Enter the verification code sent to your email'
               : 'Join CampusCoin - University Attendance & Events Reward System'
@@ -405,7 +407,7 @@ const Register = () => {
           // ================= Registration Form =================
           <form className="mt-8 space-y-6" onSubmit={handleRegister}>
             {/* Personal Information */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white shadow rounded-lg p-6 border border-emerald-300">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -555,7 +557,7 @@ const Register = () => {
             </div>
 
             {/* Account Type */}
-            <div className="bg-white shadow rounded-lg p-6">
+              <div className="bg-white shadow rounded-lg p-6 border border-emerald-300">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Account Type</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {['student', 'seller', 'admin'].map((role) => (
@@ -564,7 +566,7 @@ const Register = () => {
                       type="button"
                       className={`w-full p-4 border-2 rounded-lg text-left transition-all ${
                         formData.role === role
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-amber-400 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                       onClick={() => setFormData(prev => ({ ...prev, role }))}
@@ -590,7 +592,7 @@ const Register = () => {
             </div>
 
             {/* Role-specific Information */}
-            <div className="bg-white shadow rounded-lg p-6">
+              <div className="bg-white shadow rounded-lg p-6 border border-emerald-300">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 {formData.role === 'student' && 'Academic Information'}
                 {formData.role === 'seller' && 'Business Information'}
@@ -750,9 +752,9 @@ const Register = () => {
               )}
             </div>
 
-            {/* Document Upload */}
+            {/* Document Upload <div className="bg-white shadow rounded-lg p-6 border <div className="bg-white shadow rounded-lg p-6 border border-emerald-300">*/}
             {requirements && (
-              <div className="bg-white shadow rounded-lg p-6">
+              <div className="bg-white shadow rounded-lg p-6 border border-emerald-300">
                 <h3 className="text-lg font-medium text-gray-900 mb-2">{requirements.title}</h3>
                 <div className="mb-4 p-3 bg-blue-50 rounded-md">
                   <div className="flex">

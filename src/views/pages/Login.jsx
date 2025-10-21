@@ -164,14 +164,14 @@ const Login = () => {
         {/* Header */}
         <div>
           <div className="flex justify-center">
-            <span className="flex h-20 w-20 items-center justify-center rounded-[2.5rem] bg-emerald-100 text-emerald-600 shadow-lg shadow-emerald-200/70">
+            <span className="flex h-20 w-20 items-center justify-center rounded-[2.5rem] bg-gradient-to-r from-emerald-500 to-amber-400 text-white shadow-lg shadow-emerald-200/60">
               <CoinsIcon className="h-10 w-10" />
             </span>
           </div>
           <h2 className="mt-6 text-center text-4xl font-semibold text-emerald-900">
             CampusCoin
           </h2>
-          <p className="mt-3 text-center text-sm font-medium uppercase tracking-[0.4em] text-emerald-500">
+          <p className="mt-3 text-center text-sm font-medium uppercase tracking-[0.4em] text-amber-400">
             Attend · Engage · Earn
           </p>
           <p className="mt-3 text-center text-sm text-emerald-700/80">
@@ -342,7 +342,7 @@ const Login = () => {
                 <div className="w-full border-t border-emerald-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="rounded-full bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-emerald-500">New to CampusCoin?</span>
+                <span className="rounded-full bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-amber-400">New to CampusCoin?</span>
               </div>
             </div>
             <div className="mt-6">
