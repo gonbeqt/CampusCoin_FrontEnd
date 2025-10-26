@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { 
-  CoinsIcon, 
   MailIcon, 
   Upload, 
   FileText, 
@@ -11,13 +10,18 @@ import {
   Eye,
   EyeOff,
   Info,
-  Loader2
+  Loader2,
+  AlertTriangle,
 } from 'lucide-react'
 import AuthController from '../../controllers/authController'
+
+import WebLogo from '../../assets/images/Web logo.png'
 
 const Register = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  
+  const passwordRef = useRef(null) 
 
   const [formData, setFormData] = useState({
     first_name: '',
@@ -29,7 +33,7 @@ const Register = () => {
     confirmPassword: '',
     role: 'student',
     course: '',
-  student_id: ['', '', '', '', '', '', '', '', '', '', '', ''], // 12 digits for XX-XXXX-XXXXXX
+    student_id: ['', '', '', '', '', '', '', '', '', '', '', ''], // 12 digits for XX-XXXX-XXXXXX
     // Admin fields
     credentialType: '',
     // Seller fields
@@ -234,7 +238,7 @@ const Register = () => {
       const result = await AuthController.register(formDataToSend)
       
       if (result.success) {
-        setMessage({ type: 'success', text: result.message || 'Registration successful!' })
+        setMessage({ type: 'success', text: result.message || 'Registration successful! Please verify your email.' })
         setShowVerification(true)
       } else {
         setMessage({ type: 'error', text: result.error || 'Registration failed.' })
@@ -262,7 +266,7 @@ const Register = () => {
       }
 
       if (result.success) {
-        setMessage({ type: 'success', text: result.message || 'Email verified successfully!' })
+        setMessage({ type: 'success', text: result.message || 'Email verified successfully! Redirecting to login...' })
         setTimeout(() => {
           navigate('/login')
         }, 2000)
@@ -326,39 +330,95 @@ const Register = () => {
 
   const requirements = getDocumentRequirements()
 
+  const getMessageDisplay = (type) => {
+    switch (type) {
+      case 'error':
+        return {
+          icon: <AlertTriangle className="h-5 w-5 text-rose-500" />,
+          bgColor: 'bg-rose-50',
+          borderColor: 'border-rose-200',
+          textColor: 'text-rose-800',
+          title: 'Registration Error'
+        }
+      case 'success':
+        return {
+          icon: <CheckCircle className="h-5 w-5 text-emerald-500" />,
+          bgColor: 'bg-emerald-50',
+          borderColor: 'border-emerald-200',
+          textColor: 'text-emerald-800',
+          title: 'Success'
+        }
+      default:
+        return {}
+    }
+  }
+
+  // Adjusted button disabled logic to be purely functional, not cosmetic
+  const isRegisterButtonDisabled = viewState.isLoading || (formData.role === 'student' && (!formData.course || formData.student_id.join('').length !== 12 || !documents.studentId)) ||
+  (formData.role === 'seller' && (!formData.businessName || !formData.businessType || !formData.businessAddress || !documents.birCertificate || !documents.businessPermit)) ||
+  (formData.role === 'admin' && (!formData.credentialType || !documents.teachingCredential)) ||
+  !formData.first_name || !formData.last_name || !formData.email || !formData.password || !formData.confirmPassword || (formData.password !== formData.confirmPassword);
+  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray=-50 py-12 px-4 sm:px-6 lg:px-8 border-emerald-900 ">
-      <div className="max-w-2xl w-full space-y-8">
-        {/* Header ">*/}
+    <div className="relative bg-gray-50 flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 -z-10 opacity-70" aria-hidden>
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(134,239,172,0.25),_transparent_45%),radial-gradient(circle_at_bottom,_rgba(52,211,153,0.25),_transparent_50%)]" />
+      </div>
+      <div className="w-full max-w-2xl space-y-10">
+        
+        {/* Header (aligned with Login's custom logo and title style) */}
         <div>
           <div className="flex justify-center">
-            <span className="flex h-20 w-20 items-center justify-center rounded-[2.5rem] bg-gradient-to-r from-emerald-500 to-amber-400 text-amber-50 shadow-xl shadow-emerald-200/60 ">
-              <CoinsIcon className="h-10 w-10" />
-            </span>
+            <img
+              src={WebLogo}
+              alt="CampusCoin Logo"
+              className="h-20 w-20 rounded-[2.5rem] shadow-lg shadow-emerald-200/60 object-cover"
+            />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-emerald-900">
-            {showVerification ? 'Verify Your Email' : 'Create an Account'}
+          <h2 className="mt-6 text-center text-4xl font-semibold text-[#59B44D]">
+            CampusCoin
           </h2>
-          <p className="mt-2 text-center text-sm text-amber-400">
+          <p className="mt-3 text-center text-sm font-medium uppercase tracking-[0.4em] text-[#203214]">
+            {showVerification ? 'Verify Your Email' : 'Create Your Account'}
+          </p>
+          <p className="mt-3 text-center text-sm text-[#72A754]">
             {showVerification
               ? 'Enter the verification code sent to your email'
-              : 'Join CampusCoin - University Attendance & Events Reward System'
+              : 'University Attendance & Events Reward System'
             }
           </p>
         </div>
 
+        {/* Message Display */}
+        {message && (
+          <div className={`cc-card rounded-md p-4 ${getMessageDisplay(message.type).bgColor} ${getMessageDisplay(message.type).borderColor} border`}>
+            <div className="flex">
+              <div className="flex-shrink-0">
+                {getMessageDisplay(message.type).icon}
+              </div>
+              <div className="ml-3">
+                <h3 className={`text-sm font-medium ${getMessageDisplay(message.type).textColor}`}>
+                  {getMessageDisplay(message.type).title}
+                </h3>
+                <div className={`mt-2 text-sm ${getMessageDisplay(message.type).textColor}`}>
+                  <p>{message.text}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showVerification ? (
-          // ================= Verification Form =================
-          <div className="mt-8 space-y-6">
-            <div className="bg-green-50 border border-green-200 rounded-md p-4">
+          // ================= Verification Form (Theme Aligned) =================
+          <div className="cc-card space-y-6 p-8">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-md p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <MailIcon className="h-5 w-5 text-green-400" />
+                  <MailIcon className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-green-800">Check your email!</h3>
-                  <div className="mt-2 text-sm text-green-700">
+                  <h3 className="text-sm font-medium text-emerald-800">Check your email!</h3>
+                  <div className="mt-2 text-sm text-emerald-700">
                     <p>We've sent a 6-digit verification code to <strong>{formData.email}</strong></p>
                     <p className="mt-2">After verification, your account will be pending admin approval.</p>
                   </div>
@@ -368,7 +428,7 @@ const Register = () => {
 
             <form onSubmit={handleVerification} className="space-y-4">
               <div>
-                <label htmlFor="verification-code" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="verification-code" className="mb-1 block text-sm font-semibold text-emerald-800">
                   Verification Code
                 </label>
                 <input
@@ -377,10 +437,11 @@ const Register = () => {
                   type="text"
                   maxLength="6"
                   required
-                  className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-center text-lg tracking-widest"
+                  className="block w-full rounded-xl border border-emerald-200 bg-white/90 px-4 py-3 text-sm text-emerald-900 shadow-sm placeholder:text-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 text-center tracking-widest"
                   placeholder="000000"
                   value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                  disabled={isVerifying}
                 />
               </div>
 
@@ -388,20 +449,11 @@ const Register = () => {
                 <button
                   type="submit"
                   disabled={isVerifying || verificationCode.length !== 6}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  className="group relative flex w-full justify-center rounded-xl border border-transparent bg-emerald-600 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-white shadow-lg shadow-emerald-300/50 transition hover:bg-emerald-700 hover:shadow-emerald-300/70 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isVerifying ? (
                     <span className="flex items-center">
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"fill="currentColor"d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
+                      <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
                       Verifying...
                     </span>
                   ) : (
@@ -411,13 +463,13 @@ const Register = () => {
               </div>
 
               <div className="text-center">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-emerald-800">
                   Didn't receive the code?{' '}
                   <button
                     type="button"
                     onClick={handleResendCode}
                     disabled={isResending}
-                    className="font-medium text-blue-600 hover:text-blue-500 disabled:opacity-50"
+                    className="font-semibold text-emerald-600 hover:text-emerald-700 disabled:opacity-50"
                   >
                     {isResending ? 'Resending...' : 'Resend'}
                   </button>
@@ -426,15 +478,15 @@ const Register = () => {
             </form>
           </div>
         ) : (
-          // ================= Registration Form =================
-          <form className="mt-8 space-y-6" onSubmit={handleRegister}>
+          // ================= Registration Form (Theme Aligned) =================
+          <form className="cc-card mt-8 space-y-6 p-8" onSubmit={handleRegister}>
             {/* Personal Information */}
-            <div className="bg-white shadow rounded-lg p-6 border border-emerald-300">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-emerald-900 border-b border-emerald-100 pb-2">Personal Information</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="first_name" className="mb-1 block text-sm font-semibold text-emerald-800">
                       First Name *
                     </label>
                     <input
@@ -442,14 +494,14 @@ const Register = () => {
                       name="first_name"
                       type="text"
                       required
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="block w-full rounded-xl border border-emerald-200 bg-white/90 px-4 py-3 text-sm text-emerald-900 shadow-sm placeholder:text-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                       value={formData.first_name}
                       onChange={handleInputChange}
                       disabled={viewState.isLoading}
                     />
                   </div>
                   <div>
-                    <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="last_name" className="mb-1 block text-sm font-semibold text-emerald-800">
                       Last Name *
                     </label>
                     <input
@@ -457,250 +509,328 @@ const Register = () => {
                       name="last_name"
                       type="text"
                       required
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="block w-full rounded-xl border border-emerald-200 bg-white/90 px-4 py-3 text-sm text-emerald-900 shadow-sm placeholder:text-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                       value={formData.last_name}
                       onChange={handleInputChange}
                       disabled={viewState.isLoading}
                     />
                   </div>
                 </div>
-
+                
+                {/* Middle Name and Suffix */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="middle_name" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="middle_name" className="mb-1 block text-sm font-semibold text-emerald-800">
                       Middle Name
                     </label>
                     <input
                       id="middle_name"
                       name="middle_name"
                       type="text"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="block w-full rounded-xl border border-emerald-200 bg-white/90 px-4 py-3 text-sm text-emerald-900 shadow-sm placeholder:text-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                       value={formData.middle_name}
                       onChange={handleInputChange}
                       disabled={viewState.isLoading}
                     />
                   </div>
                   <div>
-                    <label htmlFor="suffix" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="suffix" className="mb-1 block text-sm font-semibold text-emerald-800">
                       Suffix
                     </label>
                     <input
                       id="suffix"
                       name="suffix"
                       type="text"
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      placeholder="Jr., Sr., III"
+                      className="block w-full rounded-xl border border-emerald-200 bg-white/90 px-4 py-3 text-sm text-emerald-900 shadow-sm placeholder:text-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                       value={formData.suffix}
                       onChange={handleInputChange}
                       disabled={viewState.isLoading}
                     />
                   </div>
                 </div>
+              </div>
+            </div>
 
+            {/* Account Credentials */}
+            <div className="space-y-4 pt-4 border-t border-dashed border-emerald-200">
+              <h3 className="text-lg font-semibold text-emerald-900 border-b border-emerald-100 pb-2">Account Credentials</h3>
+              <div className="space-y-4">
+                {/* Email */}
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="email" className="mb-1 block text-sm font-semibold text-emerald-800">
                     Email address *
                   </label>
                   <input
                     id="email"
                     name="email"
                     type="email"
+                    autoComplete="email"
                     required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full rounded-xl border border-emerald-200 bg-white/90 px-4 py-3 text-sm text-emerald-900 shadow-sm placeholder:text-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                    placeholder="Enter university email"
                     value={formData.email}
                     onChange={handleInputChange}
                     disabled={viewState.isLoading}
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                      Password *
-                    </label>
-                    <div className="relative mt-1">
-                      <input
-                        id="password"
-                        name="password"
-                        type={viewState.showPassword ? "text" : "password"}
-                        required
-                        className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        placeholder="Enter password"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        onKeyDown={handlePasswordKeyDown}
-                        disabled={viewState.isLoading}
-                      />
-                      <button
-                        type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                        onClick={() => togglePasswordVisibility('showPassword')}
-                        disabled={viewState.isLoading}
-                      >
-                        {viewState.showPassword ? (
-                          <EyeOff className="h-4 w-4 text-gray-400" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-gray-400" />
-                        )}
-                      </button>
-                    </div>
+                {/* Password */}
+                <div>
+                  <label htmlFor="password" className="mb-1 block text-sm font-semibold text-emerald-800">
+                    Password *
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      name="password"
+                      type={viewState.showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      required
+                      className="block w-full rounded-xl border border-emerald-200 bg-white/90 px-4 py-3 pr-10 text-sm text-emerald-900 shadow-sm placeholder:text-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                      placeholder="At least 6 characters"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      onKeyDown={handlePasswordKeyDown}
+                      ref={passwordRef}
+                      disabled={viewState.isLoading}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-300 transition hover:text-emerald-500"
+                      onClick={() => togglePasswordVisibility('showPassword')}
+                      disabled={viewState.isLoading}
+                    >
+                      {viewState.showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
                   </div>
-                  <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                      Confirm Password *
-                    </label>
-                    <div className="relative mt-1">
-                      <input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type={viewState.showConfirmPassword ? "text" : "password"}
-                        required
-                        className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        placeholder="Confirm password"
-                        value={formData.confirmPassword}
-                        onChange={handleInputChange}
-                        onKeyDown={handlePasswordKeyDown}
-                        disabled={viewState.isLoading}
-                      />
-                      <button
-                        type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                        onClick={() => togglePasswordVisibility('showConfirmPassword')}
-                        disabled={viewState.isLoading}
-                      >
-                        {viewState.showConfirmPassword ? (
-                          <EyeOff className="h-4 w-4 text-gray-400" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-gray-400" />
-                        )}
-                      </button>
-                    </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label htmlFor="confirmPassword" className="mb-1 block text-sm font-semibold text-emerald-800">
+                    Confirm Password *
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={viewState.showConfirmPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      required
+                      className="block w-full rounded-xl border border-emerald-200 bg-white/90 px-4 py-3 pr-10 text-sm text-emerald-900 shadow-sm placeholder:text-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                      placeholder="Re-enter password"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      onKeyDown={handlePasswordKeyDown}
+                      disabled={viewState.isLoading}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-emerald-300 transition hover:text-emerald-500"
+                      onClick={() => togglePasswordVisibility('showConfirmPassword')}
+                      disabled={viewState.isLoading}
+                    >
+                      {viewState.showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
                   </div>
+                  {formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                    <p className="mt-2 text-xs text-rose-500 flex items-center">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      Passwords do not match.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Account Type */}
-              <div className="bg-white shadow rounded-lg p-6 border border-emerald-300">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Account Type</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {['student', 'seller', 'admin'].map((role) => (
-                  <div key={role} className="relative">
-                    <button
-                      type="button"
-                      className={`w-full p-4 border-2 rounded-lg text-left transition-all ${
-                        formData.role === role
-                          ? 'border-amber-400 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => setFormData(prev => ({ ...prev, role }))}
-                      disabled={viewState.isLoading}
-                    >
-                      <div className="text-sm font-medium text-gray-900 capitalize mb-1">
-                        {role}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {role === 'student' && 'Access events and earn rewards'}
-                        {role === 'seller' && 'Sell products to students'}
-                        {role === 'admin' && 'Manage events and system'}
-                      </div>
-                    </button>
-                    {formData.role === role && (
-                      <div className="absolute -top-2 -right-2">
-                        <CheckCircle className="h-5 w-5 text-blue-500 bg-white rounded-full" />
-                      </div>
-                    )}
-                  </div>
-                ))}
+            {/* Role Selection */}
+            <div className="space-y-4 pt-4 border-t border-dashed border-emerald-200">
+              <h3 className="text-lg font-semibold text-emerald-900 border-b border-emerald-100 pb-2">I am registering as:</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {/* Student Role */}
+                <label 
+                  className={`group relative flex cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all ${
+                    formData.role === 'student' ? 'border-emerald-500 ring-2 ring-emerald-500 bg-emerald-50/70' : 'border-emerald-200 bg-white/90 hover:border-emerald-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value="student"
+                    checked={formData.role === 'student'}
+                    onChange={handleInputChange}
+                    disabled={viewState.isLoading}
+                    className="sr-only"
+                  />
+                  <span className="flex flex-1">
+                    <span className="flex flex-col">
+                      <span className="block text-sm font-medium text-emerald-900">Student</span>
+                      <span className="mt-1 flex items-center text-xs text-emerald-600">Earn coins for attendance &amp; events</span>
+                    </span>
+                  </span>
+                  <CheckCircle className={`h-5 w-5 ${formData.role === 'student' ? 'text-emerald-600' : 'text-emerald-200'}`} />
+                </label>
+                
+                {/* Seller Role */}
+                <label 
+                  className={`group relative flex cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all ${
+                    formData.role === 'seller' ? 'border-emerald-500 ring-2 ring-emerald-500 bg-emerald-50/70' : 'border-emerald-200 bg-white/90 hover:border-emerald-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value="seller"
+                    checked={formData.role === 'seller'}
+                    onChange={handleInputChange}
+                    disabled={viewState.isLoading}
+                    className="sr-only"
+                  />
+                  <span className="flex flex-1">
+                    <span className="flex flex-col">
+                      <span className="block text-sm font-medium text-emerald-900">Seller</span>
+                      <span className="mt-1 flex items-center text-xs text-emerald-600">Exchange coins for goods &amp; services</span>
+                    </span>
+                  </span>
+                  <CheckCircle className={`h-5 w-5 ${formData.role === 'seller' ? 'text-emerald-600' : 'text-emerald-200'}`} />
+                </label>
+                
+                {/* Admin Role */}
+                <label 
+                  className={`group relative flex cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all ${
+                    formData.role === 'admin' ? 'border-emerald-500 ring-2 ring-emerald-500 bg-emerald-50/70' : 'border-emerald-200 bg-white/90 hover:border-emerald-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value="admin"
+                    checked={formData.role === 'admin'}
+                    onChange={handleInputChange}
+                    disabled={viewState.isLoading}
+                    className="sr-only"
+                  />
+                  <span className="flex flex-1">
+                    <span className="flex flex-col">
+                      <span className="block text-sm font-medium text-emerald-900">Admin</span>
+                      <span className="mt-1 flex items-center text-xs text-emerald-600">Manage attendance &amp; events</span>
+                    </span>
+                  </span>
+                  <CheckCircle className={`h-5 w-5 ${formData.role === 'admin' ? 'text-emerald-600' : 'text-emerald-200'}`} />
+                </label>
               </div>
             </div>
 
-            {/* Role-specific Information */}
-              <div className="bg-white shadow rounded-lg p-6 border border-emerald-300">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {formData.role === 'student' && 'Academic Information'}
-                {formData.role === 'seller' && 'Business Information'}
-                {formData.role === 'admin' && 'Teaching Credentials'}
-              </h3>
-
-              {formData.role === 'student' && (
-                <div>
+            {/* Role-Specific Fields */}
+            {formData.role === 'student' && (
+              <div className="space-y-4 pt-4 border-t border-dashed border-emerald-200">
+                <h3 className="text-lg font-semibold text-emerald-900 border-b border-emerald-100 pb-2">Student Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Course Dropdown (Assuming a static list for this example) */}
                   <div>
-                    <label htmlFor="course" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="course" className="mb-1 block text-sm font-semibold text-emerald-800">
                       Course *
                     </label>
                     <select
                       id="course"
                       name="course"
+                      required
                       value={formData.course}
                       onChange={handleInputChange}
-                      required
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       disabled={viewState.isLoading}
+                      className="block w-full rounded-xl border border-emerald-200 bg-white/90 px-4 py-3 text-sm text-emerald-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                     >
-                      <option value="">Select a course</option>
-                      <option value="BSIT">BSIT - Bachelor of Science in Information Technology</option>
-                      <option value="CAHS">CAHS - College of Allied Health Sciences</option>
-                      <option value="CMA">CMA - College of Management and Accountancy</option>
-                      <option value="CRIM">CRIM - Criminology</option>
-                      <option value="CEA">CEA - College of Engineering and Architecture</option>
+                      <option value="" disabled>Select your course</option>
+                      <option value="BSCS">BS Computer Science</option>
+                      <option value="BSIT">BS Information Technology</option>
+                      <option value="BSBA">BS Business Administration</option>
+                      <option value="BSED">BS Education</option>
+                      <option value="BSA">BS Accountancy</option>
                     </select>
                   </div>
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Student ID Number *
+                  
+                  {/* Student ID */}
+                  <div>
+                    <label htmlFor="student_id" className="mb-1 block text-sm font-semibold text-emerald-800">
+                      Student ID (Format: XX-XXXX-XXXXXX) *
                     </label>
-                    <div className="flex items-center mt-1 gap-2">
-                      <div className="flex gap-1">
-                        {formData.student_id.map((digit, idx) => (
-                          <React.Fragment key={idx}>
-                            <input
-                              autoComplete="off"
-                              type="text"
-                              inputMode="numeric"
-                              pattern="[0-9]"
-                              maxLength={1}
-                              required
-                              className="w-10 h-10 text-center border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-mono"
-                              value={digit}
-                              onChange={e => {
-                                const val = e.target.value.replace(/[^0-9]/g, '')
-                                setFormData(prev => {
-                                  const arr = [...prev.student_id]
-                                  arr[idx] = val
-                                  return { ...prev, student_id: arr }
-                                })
-                                // Auto-focus next box if filled
-                                if (val && idx < 11) {
-                                  const next = document.getElementById(`student-id-digit-${idx+1}`)
-                                  if (next) next.focus()
-                                }
-                              }}
-                              onKeyDown={e => {
-                                if (e.key === 'Backspace' && !formData.student_id[idx] && idx > 0) {
-                                  const prev = document.getElementById(`student-id-digit-${idx-1}`)
-                                  if (prev) prev.focus()
-                                }
-                              }}
-                              id={`student-id-digit-${idx}`}
-                              disabled={viewState.isLoading}
-                            />
-                            {(idx === 1 || idx === 5) && (
-                              <span className="mx-1 text-lg font-bold text-gray-400 select-none">-</span>
-                            )}
-                          </React.Fragment>
-                        ))}
-                      </div>
+                    <div className="flex space-x-1">
+                      {/* XX */}
+                      <input
+                        type="text"
+                        maxLength="2"
+                        pattern="\d*"
+                        inputMode="numeric"
+                        className="w-1/6 text-center rounded-xl border border-emerald-200 bg-white/90 px-2 py-3 text-sm text-emerald-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        value={formData.student_id[0] + formData.student_id[1]}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
+                          const newId = [...formData.student_id];
+                          for (let i = 0; i < 2; i++) newId[i] = value[i] || '';
+                          setFormData(prev => ({ ...prev, student_id: newId }));
+                        }}
+                        disabled={viewState.isLoading}
+                      />
+                      <span className="flex items-center text-emerald-800">-</span>
+                      {/* XXXX */}
+                      <input
+                        type="text"
+                        maxLength="4"
+                        pattern="\d*"
+                        inputMode="numeric"
+                        className="w-2/6 text-center rounded-xl border border-emerald-200 bg-white/90 px-2 py-3 text-sm text-emerald-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        value={formData.student_id.slice(2, 6).join('')}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                          const newId = [...formData.student_id];
+                          for (let i = 0; i < 4; i++) newId[i + 2] = value[i] || '';
+                          setFormData(prev => ({ ...prev, student_id: newId }));
+                        }}
+                        disabled={viewState.isLoading}
+                      />
+                      <span className="flex items-center text-emerald-800">-</span>
+                      {/* XXXXXX */}
+                      <input
+                        type="text"
+                        maxLength="6"
+                        pattern="\d*"
+                        inputMode="numeric"
+                        className="w-3/6 text-center rounded-xl border border-emerald-200 bg-white/90 px-2 py-3 text-sm text-emerald-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        value={formData.student_id.slice(6, 12).join('')}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+                          const newId = [...formData.student_id];
+                          for (let i = 0; i < 6; i++) newId[i + 6] = value[i] || '';
+                          setFormData(prev => ({ ...prev, student_id: newId }));
+                        }}
+                        disabled={viewState.isLoading}
+                      />
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">Enter your student number (format: XX-XXXX-XXXXXX).</p>
+                    {formData.student_id.join('').length > 0 && formData.student_id.join('').length !== 12 && (
+                       <p className="mt-2 text-xs text-rose-500 flex items-center">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Student ID must be 12 digits.
+                      </p>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {formData.role === 'seller' && (
+            {formData.role === 'seller' && (
+              <div className="space-y-4 pt-4 border-t border-dashed border-emerald-200">
+                <h3 className="text-lg font-semibold text-emerald-900 border-b border-emerald-100 pb-2">Seller/Business Details</h3>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="businessName" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="businessName" className="mb-1 block text-sm font-semibold text-emerald-800">
                       Business Name *
                     </label>
                     <input
@@ -708,186 +838,160 @@ const Register = () => {
                       name="businessName"
                       type="text"
                       required
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="block w-full rounded-xl border border-emerald-200 bg-white/90 px-4 py-3 text-sm text-emerald-900 shadow-sm placeholder:text-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                       value={formData.businessName}
                       onChange={handleInputChange}
                       disabled={viewState.isLoading}
                     />
                   </div>
-                  <div>
-                    <label htmlFor="businessType" className="block text-sm font-medium text-gray-700">
-                      Business Type *
-                    </label>
-                    <select
-                      id="businessType"
-                      name="businessType"
-                      value={formData.businessType}
-                      onChange={handleInputChange}
-                      required
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      disabled={viewState.isLoading}
-                    >
-                      <option value="">Select business type</option>
-                      <option value="Food & Beverage">Food & Beverage</option>
-                      <option value="Clothing & Apparel">Clothing & Apparel</option>
-                      <option value="Books & Stationery">Books & Stationery</option>
-                      <option value="Electronics">Electronics</option>
-                      <option value="Services">Services</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="businessAddress" className="block text-sm font-medium text-gray-700">
-                      Business Address *
-                    </label>
-                    <textarea
-                      id="businessAddress"
-                      name="businessAddress"
-                      rows="3"
-                      required
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      value={formData.businessAddress}
-                      onChange={handleInputChange}
-                      disabled={viewState.isLoading}
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="businessType" className="mb-1 block text-sm font-semibold text-emerald-800">
+                        Business Type *
+                      </label>
+                      <select
+                        id="businessType"
+                        name="businessType"
+                        required
+                        value={formData.businessType}
+                        onChange={handleInputChange}
+                        disabled={viewState.isLoading}
+                        className="block w-full rounded-xl border border-emerald-200 bg-white/90 px-4 py-3 text-sm text-emerald-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                      >
+                        <option value="" disabled>Select type</option>
+                        <option value="Food/Beverage">Food/Beverage</option>
+                        <option value="Merchandise">Merchandise</option>
+                        <option value="Service">Service</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="businessAddress" className="mb-1 block text-sm font-semibold text-emerald-800">
+                        Business Address *
+                      </label>
+                      <input
+                        id="businessAddress"
+                        name="businessAddress"
+                        type="text"
+                        required
+                        className="block w-full rounded-xl border border-emerald-200 bg-white/90 px-4 py-3 text-sm text-emerald-900 shadow-sm placeholder:text-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        value={formData.businessAddress}
+                        onChange={handleInputChange}
+                        disabled={viewState.isLoading}
+                      />
+                    </div>
                   </div>
                 </div>
-              )}
-
-              {formData.role === 'admin' && (
+              </div>
+            )}
+            
+            {formData.role === 'admin' && (
+              <div className="space-y-4 pt-4 border-t border-dashed border-emerald-200">
+                <h3 className="text-lg font-semibold text-emerald-900 border-b border-emerald-100 pb-2">Admin Details</h3>
                 <div>
-                  <label htmlFor="credentialType" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="credentialType" className="mb-1 block text-sm font-semibold text-emerald-800">
                     Teaching Credential Type *
                   </label>
                   <select
                     id="credentialType"
                     name="credentialType"
+                    required
                     value={formData.credentialType}
                     onChange={handleInputChange}
-                    required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     disabled={viewState.isLoading}
+                    className="block w-full rounded-xl border border-emerald-200 bg-white/90 px-4 py-3 text-sm text-emerald-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                   >
-                    <option value="">Select credential type</option>
-                    <option value="TCP">TCP - Teacher Certificate Program</option>
-                    <option value="LPT">LPT - Licensed Professional Teacher</option>
+                    <option value="" disabled>Select credential type</option>
+                    <option value="LPT">Licensed Professional Teacher (LPT)</option>
+                    <option value="TCP">Teacher Certificate Program (TCP)</option>
+                    <option value="PRC_ID">PRC ID Holder</option>
                   </select>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* Document Upload*/}
+            {/* Document Uploads */}
             {requirements && (
-              <div className="bg-white shadow rounded-lg p-6 border border-emerald-300">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">{requirements.title}</h3>
-                <div className="mb-4 p-3 bg-blue-50 rounded-md">
-                  <div className="flex">
-                    <Info className="h-5 w-5 text-blue-400 mt-0.5" />
-                    <div className="ml-3 text-sm text-blue-700">
-                      <p className="font-medium">Upload Requirements:</p>
-                      <ul className="mt-1 list-disc list-inside space-y-1">
-                        <li>Accepted formats: JPEG, PNG, PDF</li>
-                        <li>Maximum file size: 10MB</li>
-                        <li>Ensure documents are clear and readable</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+              <div className="space-y-4 pt-4 border-t border-dashed border-emerald-200">
+                <h3 className="text-lg font-semibold text-emerald-900 border-b border-emerald-100 pb-2">{requirements.title}</h3>
+                <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg p-3 flex items-start">
+                  <Info className="h-4 w-4 mr-2 mt-0.5 text-emerald-500 flex-shrink-0" />
+                  Please upload clear, valid copies of the required documents. Accepted formats: JPG, PNG, PDF (Max 10MB).
+                </p>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {requirements.items.map((item, index) => {
-                    const documentKey = formData.role === 'student' ? 'studentId' 
-                      : formData.role === 'seller' ? (index === 0 ? 'birCertificate' : 'businessPermit')
-                      : 'teachingCredential'
-                    
+                    const documentKey = 
+                      item.label === 'Student ID' ? 'studentId' :
+                      item.label === 'BIR Certificate' ? 'birCertificate' :
+                      item.label === 'Business Permit' ? 'businessPermit' :
+                      item.label === 'Teaching Credential' ? 'teachingCredential' : null;
+
+                    const file = documents[documentKey];
+                    const isUploaded = !!file;
+
                     return (
-                      <div key={documentKey}>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div key={index} className="flex flex-col">
+                        <label className="mb-1 block text-sm font-semibold text-emerald-800">
                           {item.label} {item.required && '*'}
                         </label>
-                        <p className="text-xs text-gray-500 mb-3">{item.description}</p>
-                        
-                        <div className="flex items-center space-x-4">
-                          <label className={`flex items-center px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 ${
-                            documents[documentKey] ? 'bg-green-50 border-green-300' : ''
-                          }`}>
-                            <Upload className="h-4 w-4 mr-2 text-gray-500" />
-                            <span className="text-sm">
-                              {documents[documentKey] ? 'Change File' : 'Choose File'}
-                            </span>
+                        <div className="flex items-center space-x-3">
+                          <label 
+                            htmlFor={`file-upload-${documentKey}`}
+                            className="cursor-pointer rounded-xl border border-emerald-300 bg-white/90 px-4 py-3 text-sm font-medium text-emerald-600 shadow-sm transition hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-200 flex-grow flex items-center justify-center h-14"
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            <span>{isUploaded ? 'Change File' : 'Upload File'}</span>
                             <input
+                              id={`file-upload-${documentKey}`}
+                              name={documentKey}
                               type="file"
-                              className="hidden"
-                              accept=".jpg,.jpeg,.png,.pdf"
+                              accept=".jpg, .jpeg, .png, .pdf"
+                              className="sr-only"
                               onChange={(e) => handleFileUpload(e, documentKey)}
                               disabled={viewState.isLoading}
                             />
                           </label>
-                          
-                          {documents[documentKey] && (
-                            <div className="flex items-center text-sm text-green-600">
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              <span>{documents[documentKey].name}</span>
-                            </div>
-                          )}
+                          <div className={`text-sm h-14 flex items-center px-4 rounded-xl border ${isUploaded ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
+                            {isUploaded ? (
+                              <span className="flex items-center">
+                                {file.type.includes('image') ? <Image className="h-4 w-4 mr-2" /> : <FileText className="h-4 w-4 mr-2" />}
+                                {file.name}
+                                <CheckCircle className="h-4 w-4 ml-3 text-emerald-500" />
+                              </span>
+                            ) : (
+                              <span className="text-sm text-emerald-500 italic">No file selected</span>
+                            )}
+                          </div>
                         </div>
+                        <p className="mt-1 text-xs text-emerald-600/80 ml-1">{item.description}</p>
                       </div>
                     )
                   })}
                 </div>
               </div>
             )}
-
-            {/* Important Notice */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-              <div className="flex">
-                <AlertCircle className="h-5 w-5 text-yellow-400" />
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-yellow-800">
-                    Account Approval Process
-                  </h3>
-                  <div className="mt-2 text-sm text-yellow-700">
-                    <p>After registration and email verification:</p>
-                    <ul className="mt-1 list-disc list-inside space-y-1">
-                      <li>Your documents will be reviewed by administrators</li>
-                      <li>You'll receive an email notification about approval status</li>
-                      <li>Approved accounts can access all CampusCoin features</li>
-                      <li>Processing time: 1-3 business days</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-              
-            {/* Status message (shows above the registration form) */}
-            {!showVerification && message && (
-              <div className={`rounded-md p-4 mb-4 border ${message.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
-                <p className="text-sm font-medium">{message.text}</p>
-              </div>
-            )}
+            
             {/* Submit Button */}
-            <div>
+            <div className='pt-6 border-t border-dashed border-emerald-200'>
               <button
                 type="submit"
-                disabled={viewState.isLoading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                disabled={isRegisterButtonDisabled}
+                className="group relative flex w-full justify-center rounded-xl border border-transparent bg-emerald-600 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-white shadow-lg shadow-emerald-300/50 transition hover:bg-emerald-700 hover:shadow-emerald-300/70 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {viewState.isLoading ? (
                   <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Creating account...
+                    <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
+                    Creating Account...
                   </span>
                 ) : (
                   'Create Account'
                 )}
               </button>
             </div>
-
-            {/* Login Link */}
-            <div className="text-center">
+            
+            {/* Login Link*/}
+            <div className="text-center mt-6">
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
                 <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
