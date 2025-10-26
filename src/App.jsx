@@ -35,7 +35,7 @@ import ValidateStudent from './views/pages/superadmin/ValidateStudent'
 import ValidateSeller from './views/pages/superadmin/ValidateSeller'
 import { AuthProvider } from "./views/components/AuthContext";
 import AllUser from './views/pages/superadmin/AllUser'
-import ResetPassword from './views/pages/ResetPassword';
+import ResetForgotPassword from './views/pages/ResetForgotPassword'
 export default function App() {
   return (
     <BalanceProvider>
@@ -47,8 +47,7 @@ export default function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/resubmit-documents" element={<ResubmitDocuments />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-import ResetPassword from './views/pages/ResetPassword';
+              <Route path="/reset-forgot-password" element={<ResetForgotPassword />} />
               <Route path="/" element={<Navigate to="/login" replace />} />
                 {/* Super Admin Routes */}
               <Route path="/superadmin" element={<SuperAdminLayout />}>
