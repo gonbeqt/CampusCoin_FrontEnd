@@ -256,6 +256,12 @@ const EventManagement = () => {
 
   // Open edit modal with event data
   const handleEditClick = (event) => {
+    // Prevent editing completed events
+    if (event.status === 'completed') {
+      showToast('Cannot edit a completed event', 'error');
+      return;
+    }
+
     setForm({
       title: event.title || "",
       date: event.date ? event.date.slice(0, 10) : "",
@@ -459,10 +465,12 @@ const EventManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
-                        className="text-blue-600 hover:text-blue-900 mr-3 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        style={{ minWidth: 36, minHeight: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                         onClick={() => handleEditClick(event)}
-                        title="Edit Event"
+                        disabled={event.status === 'completed'}
+                        aria-disabled={event.status === 'completed'}
+                        className={`${event.status === 'completed' ? 'text-gray-400 opacity-50 cursor-not-allowed' : 'text-blue-600 hover:text-blue-900'} mr-3 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300`}
+                        style={{ minWidth: 36, minHeight: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                        title={event.status === 'completed' ? 'Cannot edit completed event' : 'Edit Event'}
                       >
                         <PencilIcon size={18} />
                       </button>

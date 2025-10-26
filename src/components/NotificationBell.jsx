@@ -68,7 +68,7 @@ const NotificationBell = () => {
   }, [isOpen]);
 
   // Filter notifications based on selected filter
-  const filteredNotifications = notifications.filter(notification => {
+  const filteredNotifications = (notifications || []).filter(notification => {
     switch (filter) {
       case 'unread':
         return !notification.read;

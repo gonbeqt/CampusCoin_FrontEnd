@@ -97,10 +97,22 @@ const NotificationCenter = () => {
 
       const result = await getFilteredNotifications(filters);
       
-      if (page === 1) {
-        setDisplayedNotifications(result.notifications || []);
+      // Handle different response structures - check for notifications array in various places
+      let notificationsArray = [];
+      if (result.notifications && Array.isArray(result.notifications)) {
+        notificationsArray = result.notifications;
+      } else if (result.data && Array.isArray(result.data)) {
+        notificationsArray = result.data;
+      } else if (Array.isArray(result)) {
+        notificationsArray = result;
       } else {
-        setDisplayedNotifications(prev => [...prev, ...(result.notifications || [])]);
+        notificationsArray = [];
+      }
+      
+      if (page === 1) {
+        setDisplayedNotifications(notificationsArray);
+      } else {
+        setDisplayedNotifications(prev => [...prev, ...notificationsArray]);
       }
       
       setHasMore(result.hasMore || false);
@@ -112,7 +124,20 @@ const NotificationCenter = () => {
   const performSearch = async (query) => {
     try {
       const result = await searchNotifications(query);
-      setDisplayedNotifications(result.notifications || []);
+      
+      // Handle different response structures - check for notifications array in various places
+      let notificationsArray = [];
+      if (result.notifications && Array.isArray(result.notifications)) {
+        notificationsArray = result.notifications;
+      } else if (result.data && Array.isArray(result.data)) {
+        notificationsArray = result.data;
+      } else if (Array.isArray(result)) {
+        notificationsArray = result;
+      } else {
+        notificationsArray = [];
+      }
+      
+      setDisplayedNotifications(notificationsArray);
       setHasMore(false);
     } catch (error) {
       console.error('Error searching notifications:', error);
