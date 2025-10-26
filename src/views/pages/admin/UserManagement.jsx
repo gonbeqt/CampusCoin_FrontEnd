@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import Skeleton from '../../components/Skeleton'
 
 // Toast notification component (copied from EventManagement.jsx)
 function Toast({ message, type, show }) {
@@ -19,8 +20,14 @@ const UserManagement = () => {
   const [courseFilter, setCourseFilter] = useState("");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  // Search bar state for students table only
+  // Search bar state for students table only (consistent with EventManagement)
+  const [searchInput, setSearchInput] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
+
+  // Handle search (on button click or Enter)
+  const handleSearch = () => {
+    setStudentSearch(searchInput);
+  };
   // Fetch users from backend
   const fetchUsers = async () => {
     setLoading(true);
@@ -218,11 +225,13 @@ const UserManagement = () => {
       {/* Toast notification */}
       <Toast message={toast.message} type={toast.type} show={toast.show} />
       {loading ? (
-        <div className="text-center py-8 text-gray-500">Loading users...</div>
+        <div className="p-4">
+          <Skeleton rows={8} />
+        </div>
       ) : (
         <div className="mb-6">
           <div className="flex flex-col gap-2 mb-4">
-            <div>
+            <div style={{ marginLeft: '-8vw' }}>
               <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
               <p className="text-gray-600">Manage students and track their attendance.</p>
             </div>
@@ -231,10 +240,11 @@ const UserManagement = () => {
               </div>
           </div>
           {/* Students Table */}
-          <div className="bg-white rounded-lg shadow overflow-hidden mb-10 border-t-4 border-blue-200">
+            <div className="bg-white rounded-lg shadow overflow-hidden mb-10 border-t-4 border-blue-200" style={{ width: '1400px', marginLeft: '-8vw' }}>
             <h2 className="text-lg font-bold px-6 pt-6 pb-2 text-blue-700">Students</h2>
             <div className="px-6 pb-2">
-              <div className="relative w-full max-w-xs mb-2">
+              <div className="relative w-full max-w-xs mb-2 flex items-center">
+                {/* Search icon inside input */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -250,10 +260,23 @@ const UserManagement = () => {
                 <input
                   type="text"
                   placeholder="Search students..."
-                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  value={studentSearch}
-                  onChange={e => setStudentSearch(e.target.value)}
+                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
+                  value={searchInput}
+                  onChange={e => setSearchInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
+                  style={{ minWidth: 0 }}
                 />
+                <button
+                  className="ml-2 px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:outline-none"
+                  onClick={handleSearch}
+                  style={{ minWidth: 40 }}
+                  aria-label="Search"
+                >
+                  {/* Magnifying glass icon */}
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" width={16} height={16}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
+                  </svg>
+                </button>
               </div>
             </div>
             <div className="overflow-x-auto">
@@ -465,11 +488,11 @@ const UserManagement = () => {
                     onChange={e => setCurrentStudent({ ...currentStudent, course: e.target.value })}
                   >
                     <option value="">Select a course</option>
-                    <option value="BSIT - Bachelor of Science in Information Technology">BSIT - Bachelor of Science in Information Technology</option>
-                    <option value="CAHS - College of Allied Health Sciences">CAHS - College of Allied Health Sciences</option>
-                    <option value="CMA - College of Management and Accountancy">CMA - College of Management and Accountancy</option>
-                    <option value="CRIM - Criminology">CRIM - Criminology</option>
-                    <option value="CEA - College of Engineering and Architecture">CEA - College of Engineering and Architecture</option>
+                    <option value="BSIT">BSIT - Bachelor of Science in Information Technology</option>
+                    <option value="CAHS">CAHS - College of Allied Health Sciences</option>
+                    <option value="CMA">CMA - College of Management and Accountancy</option>
+                    <option value="CRIM">CRIM - Criminology</option>
+                    <option value="CEA">CEA - College of Engineering and Architecture</option>
                   </select>
                   <label htmlFor="reset_password" className="block text-sm font-medium text-gray-700 mt-4">Reset Password</label>
                   <input

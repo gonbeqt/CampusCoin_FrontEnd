@@ -7,18 +7,24 @@ import {
   CoinsIcon
 } from 'lucide-react'
 import productController from '../../../controllers/productController';
+import Skeleton from '../../components/Skeleton';
 
 const TransactionHistory = ({ user }) => {
   const [transactionsData, setTransactionsData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
-      const res = await productController.getUserOrders();
+      setIsLoading(true);
+      const res = await productController.getUserOrders(currentPage, itemsPerPage);
       if (res.success) {
-        const orders = res.orders.map(o => ({
+        const orders = (res.orders || []).map(o => ({
           _id: o._id,
           status: o.status, // 'pending', 'paid', 'cancelled'
           productId: o.productId,
@@ -28,10 +34,14 @@ const TransactionHistory = ({ user }) => {
           hash: '-',
         }));
         setTransactionsData(orders);
+        if (typeof res.totalPages === 'number') setTotalPages(res.totalPages)
+        if (typeof res.hasNext === 'boolean') setHasNext(res.hasNext)
+        if (typeof res.hasPrev === 'boolean') setHasPrev(res.hasPrev)
       }
+      setIsLoading(false);
     };
     fetchOrders();
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   // Filter transactions by status
   const safeTransactions = Array.isArray(transactionsData) ? transactionsData : [];
@@ -40,13 +50,11 @@ const TransactionHistory = ({ user }) => {
     return transaction.status === filter;
   });
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentTransactions = filteredTransactions.slice(startIndex, startIndex + itemsPerPage);
+  // Server-side pagination: list is already current page
+  const currentTransactions = filteredTransactions;
 
-  const handlePrev = () => setCurrentPage(prev => Math.max(prev - 1, 1));
-  const handleNext = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const handlePrev = () => setCurrentPage(prev => (hasPrev && prev > 1 ? prev - 1 : prev));
+  const handleNext = () => setCurrentPage(prev => (hasNext && prev < totalPages ? prev + 1 : prev));
 
   // Tailwind classes based on status
   const getStatusClasses = (status) => {
@@ -102,70 +110,78 @@ const TransactionHistory = ({ user }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-50 bg-white">
-              {currentTransactions.map(transaction => {
-                const classes = getStatusClasses(transaction.status);
-                return (
-                  <tr key={transaction._id}>
-                    <td className="whitespace-nowrap px-4 py-4">
-                      <div className="flex items-center">
-                        <div className={`mr-2 rounded-full p-1 ${classes.bg}`}>
-                          {getStatusIcon(transaction.status, classes.text)}
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-6">
+                    <Skeleton rows={4} variant="list" />
+                  </td>
+                </tr>
+              ) : (
+                currentTransactions.map(transaction => {
+                  const classes = getStatusClasses(transaction.status);
+                  return (
+                    <tr key={transaction._id}>
+                      <td className="whitespace-nowrap px-4 py-4">
+                        <div className="flex items-center">
+                          <div className={`mr-2 rounded-full p-1 ${classes.bg}`}>
+                            {getStatusIcon(transaction.status, classes.text)}
+                          </div>
+                          <span className={`text-sm font-semibold ${classes.text}`}>
+                            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                          </span>
                         </div>
-                        <span className={`text-sm font-semibold ${classes.text}`}>
-                          {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-left text-sm text-gray-900">
-                      {transaction.productId?.name || '-'}
-                    </td>
-                    <td className="whitespace-nowrap px-2 py-4 text-center text-sm font-semibold text-gray-900">
-                      {transaction.quantity}
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-center text-sm">
-                      <div className="flex items-center justify-center space-x-1">
-                        <span
-                          className={`font-semibold ${
-                            transaction.status === "paid" || transaction.status === "pending"
-                              ? "text-red-600"
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-left text-sm text-gray-900">
+                        {transaction.productId?.name || '-'}
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-4 text-center text-sm font-semibold text-gray-900">
+                        {transaction.quantity}
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-center text-sm">
+                        <div className="flex items-center justify-center space-x-1">
+                          <span
+                            className={`font-semibold ${
+                              transaction.status === "paid" || transaction.status === "pending"
+                                ? "text-red-600"
+                                : transaction.status === "cancelled"
+                                ? "text-green-600"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            {transaction.status === "paid" || transaction.status === "pending"
+                              ? `-${transaction.totalPrice}`
                               : transaction.status === "cancelled"
-                              ? "text-green-600"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          {transaction.status === "paid" || transaction.status === "pending"
-                            ? `-${transaction.totalPrice}`
-                            : transaction.status === "cancelled"
-                            ? `+${transaction.totalPrice}`
-                            : transaction.totalPrice}
-                        </span>
-                        <CoinsIcon size={16} className="text-emerald-600" />
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-left text-sm text-gray-500">
-                      {new Date(transaction.createdAt).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </td>
-                  </tr>
-                )
-              })}
+                              ? `+${transaction.totalPrice}`
+                              : transaction.totalPrice}
+                          </span>
+                          <CoinsIcon size={16} className="text-emerald-600" />
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-left text-sm text-gray-500">
+                        {new Date(transaction.createdAt).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        {filteredTransactions.length > itemsPerPage && (
+        {/* Pagination Controls (server-side) */}
+        {(hasPrev || hasNext || totalPages > 1) && (
           <div className="flex items-center justify-end space-x-2 border-t border-emerald-100 px-4 py-4">
             <button
               onClick={handlePrev}
-              disabled={currentPage === 1}
+              disabled={!hasPrev || currentPage === 1}
               className={`rounded px-3 py-1 text-sm font-medium text-gray-700 transition ${
-                currentPage === 1
+                !hasPrev || currentPage === 1
                   ? 'cursor-default bg-gray-100 opacity-50'
                   : 'bg-white hover:bg-emerald-100'
               }`}
@@ -177,8 +193,12 @@ const TransactionHistory = ({ user }) => {
             </span>
             <button
               onClick={handleNext}
-              disabled={currentPage === totalPages}
-              className="rounded px-3 py-1 text-sm font-medium text-gray-700 transition disabled:opacity-50 ${currentPage === totalPages ? 'bg-gray-100 cursor-default' : 'bg-white hover:bg-emerald-100'}"
+              disabled={!hasNext || currentPage === totalPages}
+              className={`rounded px-3 py-1 text-sm font-medium text-gray-700 transition ${
+                !hasNext || currentPage === totalPages
+                  ? 'bg-gray-100 cursor-default opacity-50'
+                  : 'bg-white hover:bg-emerald-100'
+              }`}
             >
               Next
             </button>

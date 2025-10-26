@@ -11,6 +11,7 @@ function Toast({ message, type, show }) {
 }
 
 import React, { useState, useEffect } from 'react';
+import Skeleton from '../../components/Skeleton';
 import {
   PlusIcon,
   SearchIcon,
@@ -21,9 +22,19 @@ import {
 } from 'lucide-react';
 
 const EventManagement = () => {
+  // Filtering and sorting state (must be at the top)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // 'all', 'upcoming', 'completed'
+  const [sortOrder, setSortOrder] = useState("newest"); // 'newest', 'oldest'
+
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalEvents, setTotalEvents] = useState(0);
   // Event creation/edit form state
   const [form, setForm] = useState({
     title: "",
@@ -49,12 +60,12 @@ const EventManagement = () => {
   // State for delete confirmation input
   const [deleteEventConfirmInput, setDeleteEventConfirmInput] = useState("");
 
-    // Toast notification state
-    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-    const showToast = (message, type = 'success') => {
-      setToast({ show: true, message, type });
-      setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
-    };
+  // Toast notification state
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
+  };
 
   // Show custom delete confirmation modal
   const handleDeleteEvent = (event) => {
@@ -87,30 +98,46 @@ const EventManagement = () => {
   const fetchEvents = async () => {
     setLoading(true);
     setError("");
+    const start = Date.now();
     try {
-      const res = await fetch("http://localhost:5000/api/events/all-events", { method: "GET" });
+      const params = new URLSearchParams();
+      params.append("page", page);
+      if (statusFilter !== "all") params.append("status", statusFilter);
+      if (searchTerm) params.append("search", searchTerm);
+      params.append("sort", sortOrder);
+      const res = await fetch(`http://localhost:5000/api/events/all-events?${params.toString()}`, { method: "GET" });
       const data = await res.json();
-      // Support both array and { events: [...] }
-      if (Array.isArray(data)) {
-        setEvents(data);
-      } else if (data && Array.isArray(data.events)) {
+      if (data && Array.isArray(data.events)) {
         setEvents(data.events);
+        setTotalPages(data.pagination?.totalPages || 1);
+        setTotalEvents(data.totalEvents || data.events.length);
       } else {
         setEvents([]);
+        setTotalPages(1);
+        setTotalEvents(0);
       }
     } catch (err) {
       setError("Failed to fetch events");
     } finally {
-      setLoading(false);
+      const elapsed = Date.now() - start;
+      const minDelay = 400;
+      if (elapsed < minDelay) {
+        setTimeout(() => setLoading(false), minDelay - elapsed);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     fetchEvents();
-  }, []);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all"); // 'all', 'upcoming', 'completed'
-  const [sortOrder, setSortOrder] = useState("newest"); // 'newest', 'oldest'
+    // eslint-disable-next-line
+  }, [page, statusFilter, searchTerm, sortOrder]);
+
+  // Reset to page 1 when filters/search/sort change
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, searchTerm, sortOrder]);
   const [showModal, setShowModal] = useState(false);
   // Filter and sort events
   const filteredEvents = events
@@ -229,6 +256,12 @@ const EventManagement = () => {
 
   // Open edit modal with event data
   const handleEditClick = (event) => {
+    // Prevent editing completed events
+    if (event.status === 'completed') {
+      showToast('Cannot edit a completed event', 'error');
+      return;
+    }
+
     setForm({
       title: event.title || "",
       date: event.date ? event.date.slice(0, 10) : "",
@@ -247,6 +280,9 @@ const EventManagement = () => {
     setEditId(event._id || event.id);
     setShowModal(true);
   };
+  const handleSearch = () => {
+    setSearchTerm(searchInput);
+  };
   return (
     <div className="pt-16 md:ml-64 min-h-screen ">
       {/* Toast notification */}
@@ -262,14 +298,16 @@ const EventManagement = () => {
         </button>
       </div>
       {loading ? (
-        <div>Loading events...</div>
+        <div className="p-4">
+          <Skeleton rows={6} variant="list" />
+        </div>
       ) : error ? (
         <div>{error}</div>
       ) : (
         <div className="bg-white rounded-lg shadow mb-6">
           <div className="p-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="relative w-full md:w-64">
+              <div className="relative w-full md:w-64 flex items-center">
                 <SearchIcon
                   size={18}
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -278,9 +316,18 @@ const EventManagement = () => {
                   type="text"
                   placeholder="Search events..."
                   className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={searchInput}
+                  onChange={e => setSearchInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
                 />
+                <button
+                  className="ml-2 px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:outline-none"
+                  onClick={handleSearch}
+                  style={{ minWidth: 40 }}
+                  aria-label="Search"
+                >
+                  <SearchIcon size={16} />
+                </button>
               </div>
               <div className="flex items-center flex-wrap gap-4">
                 <div className="flex items-center">
@@ -316,57 +363,35 @@ const EventManagement = () => {
             </div>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="w-full divide-y divide-gray-200" style={{ tableLayout: 'fixed' }}>
+              <colgroup>
+                <col style={{ width: '28%' }} />
+                <col style={{ width: '28%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '10%' }} />
+              </colgroup>
               <thead className="bg-gray-50">
                 <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Event
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Date & Location
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Reward
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Status
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Registered
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Actions
-                  </th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Event</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Date & Location</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Reward</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Registered</th>
+                  <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredEvents.map((event) => (
-                  <tr key={event._id || event.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  <tr key={event._id || event.id} className="event-row" style={{ height: 'auto' }}>
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
                           <CalendarIcon size={20} className="text-blue-600" />
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-gray-900 truncate overflow-hidden max-w-[220px]" title={event.title}>
                             {event.title}
                           </div>
                           <div className="text-sm text-gray-500">
@@ -375,32 +400,27 @@ const EventManagement = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {new Date(event.date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 truncate overflow-hidden max-w-[180px]" title={new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}>
+                        {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-500 truncate overflow-hidden max-w-[180px]" title={event.location}>
                         {event.location}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-sm text-blue-600 font-medium">
                         {event.reward} CampusCoin
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${event.status === 'upcoming' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}
                       >
                         {event.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex items-center justify-center">
                         {(() => {
                           const reg = Array.isArray(event.registeredStudents) ? event.registeredStudents.length : (typeof event.registered === 'number' ? event.registered : 0);
@@ -443,12 +463,14 @@ const EventManagement = () => {
                         })()}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
-                        className="text-blue-600 hover:text-blue-900 mr-3 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300"
-                        style={{ minWidth: 36, minHeight: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                         onClick={() => handleEditClick(event)}
-                        title="Edit Event"
+                        disabled={event.status === 'completed'}
+                        aria-disabled={event.status === 'completed'}
+                        className={`${event.status === 'completed' ? 'text-gray-400 opacity-50 cursor-not-allowed' : 'text-blue-600 hover:text-blue-900'} mr-3 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300`}
+                        style={{ minWidth: 36, minHeight: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                        title={event.status === 'completed' ? 'Cannot edit completed event' : 'Edit Event'}
                       >
                         <PencilIcon size={18} />
                       </button>
@@ -473,6 +495,28 @@ const EventManagement = () => {
               </p>
             </div>
           )}
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50 rounded-b-lg">
+            <div className="text-sm text-gray-700">
+              Page {page} of {totalPages} &nbsp;•&nbsp; Total: {totalEvents}
+            </div>
+            <div className="flex gap-2">
+              <button
+                className="px-4 py-2 rounded border text-gray-500 bg-gray-100 disabled:opacity-50"
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+              >
+                Prev
+              </button>
+              <button
+                className="px-4 py-2 rounded border text-gray-700 bg-emerald-100 hover:bg-emerald-200 disabled:opacity-50"
+                disabled={page === totalPages || totalPages === 0}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -805,3 +849,10 @@ const EventManagement = () => {
   );
 }
 export default EventManagement
+
+/* Add to CSS or style block if needed:
+.event-row td {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+*/

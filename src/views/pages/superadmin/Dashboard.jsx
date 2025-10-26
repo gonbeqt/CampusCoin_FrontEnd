@@ -8,8 +8,9 @@ import {
   AlertCircleIcon,
   CheckCircleIcon,
 } from 'lucide-react'
-
+import Skeleton from '../../components/Skeleton'
 import validationController from '../../../controllers/validationController'
+import eventController from '../../../controllers/eventController'
 
 const SuperAdminDashboard = ({ user }) => {
   const [isLoading, setIsLoading] = React.useState(false)
@@ -69,9 +70,9 @@ const SuperAdminDashboard = ({ user }) => {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-700"></div>
-        </div>
+       <div className="p-4">
+                       <Skeleton rows={6} />
+                     </div>
       ) : (
         <>
           {/* Stats */}
@@ -123,6 +124,35 @@ const SuperAdminDashboard = ({ user }) => {
             </div>
           </div>
 
+          {/* Export Events action */}
+          <div className="mb-4">
+            <button
+              onClick={async () => {
+                try {
+                  setIsLoading(true);
+                  const res = await eventController.exportEventsExcel();
+                  if (!res.success) throw new Error(res.error || 'Export failed');
+                  const url = window.URL.createObjectURL(res.blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = res.filename || 'events_export.xlsx';
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  window.URL.revokeObjectURL(url);
+                } catch (err) {
+                  console.error('Export error', err);
+                  alert('Failed to export events: ' + (err.message || err));
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700"
+            >
+              Export Events (Excel)
+            </button>
+          </div>
+
           {/* Recent Activity + Summary */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Table */}
@@ -157,9 +187,9 @@ const SuperAdminDashboard = ({ user }) => {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {dashboardData.recentValidations.map((user) => (
-                        <tr key={user.id}>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                      {dashboardData.recentValidations.map((user, idx) => (
+                        <tr key={user._id ?? user.id ?? `user-${idx}`}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900">
                               {user.first_name || user.name}

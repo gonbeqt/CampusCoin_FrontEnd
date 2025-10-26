@@ -5,11 +5,19 @@ import {
 } from 'lucide-react'
 import ProductCard from '../../../views/components/ProductCard'
 import ProductController from '../../../controllers/productController'
+import Skeleton from '../../components/Skeleton'
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
+  const [page, setPage] = useState(1)
+  const [limit] = useState(9)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalProducts, setTotalProducts] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrev, setHasPrev] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   // delete modal states
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -24,15 +32,21 @@ const ProductManagement = () => {
   // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
-      const res = await ProductController.getProducts(token)
+      setIsLoading(true)
+      const res = await ProductController.getProducts(token, page, limit)
       if (res.success) {
         setProducts(res.products)
+        setTotalProducts(res.total ?? res.totalProducts ?? res.products.length ?? 0)
+        if (typeof res.totalPages === 'number') setTotalPages(res.totalPages)
+        if (typeof res.hasNext === 'boolean') setHasNext(res.hasNext)
+        if (typeof res.hasPrev === 'boolean') setHasPrev(res.hasPrev)
       } else {
         console.error(res.error)
       }
+      setIsLoading(false)
     }
     fetchProducts()
-  }, [token])
+  }, [token, page, limit])
 
   const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))]
 
@@ -43,6 +57,11 @@ const ProductManagement = () => {
     const matchesCategory = categoryFilter === 'All' || product.category === categoryFilter
     return matchesSearch && matchesCategory
   })
+
+  // Reset to first page on search/filter change
+  useEffect(() => {
+    setPage(1)
+  }, [searchTerm, categoryFilter])
 
   // --- DELETE HANDLERS ---
   const handleDeleteClick = (_id) => {
@@ -142,7 +161,11 @@ const ProductManagement = () => {
       </div>
 
       {/* Products Grid */}
-      {filteredProducts.length > 0 ? (
+      {isLoading ? (
+         <div className="p-4">
+                  <Skeleton variant="grid" rows={6} cols={3} />
+                </div>
+      ) : filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
             <ProductCard
@@ -166,6 +189,41 @@ const ProductManagement = () => {
 
         </div>
       )}
+
+      {/* Pagination (always visible) */}
+      <div className="mt-8 flex items-center justify-between bg-white border border-emerald-100 rounded-lg px-4 py-3 shadow-sm">
+        <div className="text-sm text-gray-600">
+          Page <span className="font-medium">{page}</span>
+          {totalPages > 1 && (
+            <>
+              <span> of </span>
+              <span className="font-medium">{totalPages}</span>
+            </>
+          )}
+          {totalProducts > 0 && (
+            <>
+              <span className="ml-2 text-gray-400">·</span>
+              <span className="ml-2">Total: {totalProducts}</span>
+            </>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <button
+            className={`px-3 py-1.5 rounded-md text-sm border ${hasPrev && page > 1 ? 'bg-white text-gray-700 hover:bg-emerald-50 border-emerald-200' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}`}
+            onClick={() => hasPrev && page > 1 && setPage((p) => p - 1)}
+            disabled={!hasPrev || page <= 1}
+          >
+            Prev
+          </button>
+          <button
+            className={`px-3 py-1.5 rounded-md text-sm border ${hasNext ? 'bg-white text-gray-700 hover:bg-emerald-50 border-emerald-200' : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'}`}
+            onClick={() => hasNext && setPage((p) => p + 1)}
+            disabled={!hasNext}
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
       {/* Delete Modal */}
       {deleteModalOpen && (

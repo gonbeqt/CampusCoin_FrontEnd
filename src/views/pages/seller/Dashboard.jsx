@@ -12,12 +12,14 @@ import WalletConnect from '../../../views/components/WalletConnect'
 import productController from '../../../controllers/productController'
 import authController from '../../../controllers/authController'
 import walletController from '../../../controllers/walletController'
+import Skeleton from '../../components/Skeleton'
 const SellerDashboard = ({ user }) => {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [walletBalance, setWalletBalance] = useState(0)
   const [stats, setStats] = useState({ totalProducts: 0, totalSales: 0, totalRevenue: 0 })
   const [sellerProfile, setSellerProfile] = useState(user)
   const [recentTransactions, setRecentTransactions] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const loadStats = async () => {
@@ -52,9 +54,13 @@ const SellerDashboard = ({ user }) => {
       }
     }
 
-    loadStats()
-    loadProfile()
-    loadTransactions()
+    const init = async () => {
+      setIsLoading(true)
+      await Promise.all([loadStats(), loadProfile(), loadTransactions()])
+      setIsLoading(false)
+    }
+
+    init()
   }, [])
 
   const handleWalletConnect = (balance) => {
@@ -84,7 +90,13 @@ const SellerDashboard = ({ user }) => {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-gray-500">Total Products</p>
-              <p className="text-2xl font-bold mt-1">{stats.totalProducts}</p>
+              {isLoading ? (
+                <div className="mt-1">
+                  <Skeleton rows={1} className="w-24" />
+                </div>
+              ) : (
+                <p className="text-2xl font-bold mt-1">{stats.totalProducts}</p>
+              )}
             </div>
             <div className="p-2 rounded-lg bg-emerald-50">
               <PackageIcon size={24} className="text-emerald-600" />
@@ -101,9 +113,15 @@ const SellerDashboard = ({ user }) => {
           <div className="flex justify-between items-start">
             <div>
               <p className="text-gray-500">Total Sales</p>
-              <p className="text-2xl font-bold mt-1 flex items-center">
-                <CoinsIcon className="w-5 h-5 mr-1 text-amber-500" /> {stats.totalSales}  ETH
-              </p>
+              {isLoading ? (
+                <div className="mt-1">
+                  <Skeleton rows={1} className="w-28" />
+                </div>
+              ) : (
+                <p className="text-2xl font-bold mt-1 flex items-center">
+                  <CoinsIcon className="w-5 h-5 mr-1 text-amber-500" /> {stats.totalSales}  ETH
+                </p>
+              )}
             </div>
             <div className="p-2 rounded-lg bg-emerald-50">
               <CoinsIcon size={24} className="text-emerald-600" />
@@ -136,7 +154,13 @@ const SellerDashboard = ({ user }) => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {recentTransactions.length > 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-6">
+                        <Skeleton rows={4} variant="list" />
+                      </td>
+                    </tr>
+                  ) : recentTransactions.length > 0 ? (
                     recentTransactions.map((tx) => (
                       <tr key={tx.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -148,12 +172,11 @@ const SellerDashboard = ({ user }) => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                            {tx.amount}
                         </td>
-                       
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
                         No recent transactions
                       </td>
                     </tr>

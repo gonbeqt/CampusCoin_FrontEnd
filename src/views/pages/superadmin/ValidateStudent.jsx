@@ -9,6 +9,7 @@ import {
   SearchIcon,
 } from 'lucide-react'
 import ValidationController from '../../../controllers/validationController'
+import Skeleton from '../../components/Skeleton'
 
 const ValidateStudent = () => {
   const [selectedstudent, setSelectedstudent] = useState(null)
@@ -224,8 +225,8 @@ const ValidateStudent = () => {
               <h2 className="text-lg font-semibold text-gray-700">Pending student Validations</h2>
             </div>
             {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-700"></div>
+              <div className="p-4">
+                <Skeleton rows={6} />
               </div>
             ) : filteredstudents.length === 0 ? (
               <div className="p-5 text-center text-gray-500">No pending student validations found</div>

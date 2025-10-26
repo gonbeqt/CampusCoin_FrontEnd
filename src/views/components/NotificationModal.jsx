@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import NotificationQuickAccess from './NotificationQuickAccess';
 import NotificationCenter from './NotificationCenter';
-import { useNotifications } from '../views/components/NotificationContext';
+import { useNotifications } from './NotificationContext';
 
 const NotificationModal = () => {
   const { isNotificationsOpen, closeNotificationsPanel } = useNotifications();

@@ -9,20 +9,33 @@ class AuthModel {
       
       // Check if userData is FormData (contains files) or regular object
       if (userData instanceof FormData) {
+        // When sending FormData, do not set Content-Type (browser will add boundary).
+        // Still request JSON responses explicitly.
         response = await fetch(`${API_URL}/register`, {
           method: 'POST',
+          headers: { 'Accept': 'application/json' },
           body: userData,
         });
       } else {
         // For regular JSON data (backwards compatibility)
         response = await fetch(`${API_URL}/register`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify(userData),
         });
       }
-      
+
       const result = await response.json();
+
+      // Helpful debug logging for bad requests
+      if (!response.ok) {
+        console.error('[AuthModel] Registration failed', {
+          status: response.status,
+          statusText: response.statusText,
+          body: result,
+        });
+      }
+
       return {
         success: response.ok,
         message: result.message,

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import Skeleton from '../../components/Skeleton';
 import { SearchIcon, FilterIcon, CheckCircleIcon, XCircleIcon } from 'lucide-react';
 import ProductController from '../../../controllers/productController';
 import WalletController from '../../../controllers/walletController';
 
-// ✅ Toast notification component
+// Toast notification component
 function Toast({ message, type, show }) {
   return (
     <div
@@ -17,16 +18,25 @@ function Toast({ message, type, show }) {
 }
 
 const OrderManagement = () => {
+  // Search bar logic for consistency
+  function handleSearch() {
+    setSearchTerm(searchInput);
+  }
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(''); // used for backend search
+  const [searchInput, setSearchInput] = useState(''); // input field value
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'pending', 'paid', 'cancelled'
   const [showPayModal, setShowPayModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [orderToAction, setOrderToAction] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
   // ✅ Toast state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const showToast = (message, type = 'success') => {
@@ -39,11 +49,19 @@ const OrderManagement = () => {
   const fetchOrders = async () => {
     setLoading(true);
     setError("");
+    const start = Date.now();
     try {
       const token = localStorage.getItem('authToken');
-      const result = await ProductController.getAllOrders(token);
+      // Set search and status on the model for global filtering
+      ProductController.model.searchTerm = searchTerm;
+      ProductController.model.statusFilter = statusFilter;
+      const result = await ProductController.getAllOrders(token, currentPage, rowsPerPage);
       if (result.success) {
         setOrders(result.orders);
+        setTotalOrders(result.total ?? 0);
+        if (typeof result.totalPages === 'number') setTotalPages(result.totalPages);
+        if (typeof result.hasNext === 'boolean') setHasNext(result.hasNext);
+        if (typeof result.hasPrev === 'boolean') setHasPrev(result.hasPrev);
       } else {
         setError(result.error);
         showToast(result.error, 'error');
@@ -52,13 +70,25 @@ const OrderManagement = () => {
       setError("Failed to fetch orders");
       showToast("Failed to fetch orders", 'error');
     } finally {
-      setLoading(false);
+      const elapsed = Date.now() - start;
+      const minDelay = 400;
+      if (elapsed < minDelay) {
+        setTimeout(() => setLoading(false), minDelay - elapsed);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, rowsPerPage, searchTerm, statusFilter]);
+
+  // Reset to first page when search/filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
 
   // ✅ Handle paying a reward
   const handlePayClick = (order) => {
@@ -123,30 +153,15 @@ const OrderManagement = () => {
     }
   };
 
-  // Filter orders
-  // Filter orders
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.buyerFullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.rewardTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order._id?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  // ✅ Pagination logic (must be after filteredOrders)
-  const indexOfLastOrder = currentPage * rowsPerPage;
-  const indexOfFirstOrder = indexOfLastOrder - rowsPerPage;
-  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
-
-  const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
+  // Server-side pagination and filtering: orders already filtered by backend
+  const currentOrders = orders;
 
   const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
+    if (hasPrev && currentPage > 1) setCurrentPage((p) => p - 1);
   };
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    if (hasNext && currentPage < totalPages) setCurrentPage((p) => p + 1);
   };
 
   const getStatusColor = (status) => {
@@ -176,16 +191,25 @@ const OrderManagement = () => {
         {/* Filters */}
         <div className="p-4 border-b">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="relative w-full md:w-64">
-              <SearchIcon size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            {/* Search bar */}
+            <div className="flex w-full md:w-1/2 items-center gap-2 mb-2">
               <input
                 type="text"
-                placeholder="Search orders..."
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                placeholder="Search orders... (name, id, reward)"
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
               />
+              <button
+                className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 focus:outline-none"
+                onClick={handleSearch}
+                aria-label="Search"
+              >
+                <SearchIcon size={16} />
+              </button>
             </div>
+            {/* Status filter */}
             <div className="flex items-center">
               <FilterIcon size={16} className="text-gray-500 mr-2" />
               <span className="text-gray-700 font-medium">Status:</span>
@@ -211,80 +235,88 @@ const OrderManagement = () => {
               </div>
             </div>
           </div>
+
+
+
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                {['Order ID', 'Student Name', 'Cost', 'Date', 'Status', 'Actions'].map((col) => (
-                  <th
-                    key={col}
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {currentOrders.map((order) => (
-                <tr key={order._id || order.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {order._id || order.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {order.buyerFullName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
-                    {order.price_eth}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}
-                    >
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    {order.status === 'pending' && (
-                      <>
-                        <button
-                          className="text-green-600 hover:text-green-900 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-300"
-                          onClick={() => handlePayClick(order)}
-                          title="Mark as Paid"
-                        >
-                          <CheckCircleIcon size={18} />
-                        </button>
-                        <button
-                          className="text-red-600 hover:text-red-900 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-300"
-                          onClick={() => handleCancelClick(order)}
-                          title="Cancel Order"
-                        >
-                          <XCircleIcon size={18} />
-                        </button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            
 
-          </table>
-          {/* Pagination Controls */}
-            {filteredOrders.length > 0 && (
+        {/* Table or Skeleton */}
+
+        {loading ? (
+          <div className="p-4"><Skeleton rows={6} variant="list" /></div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {['Order ID', 'Student Name', 'Cost', 'Date', 'Status', 'Actions'].map((col) => (
+                      <th
+                        key={col}
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentOrders.map((order) => (
+                    <tr key={order._id || order.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {order._id || order.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {order.buyerFullName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
+                        {order.price_eth}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}
+                        >
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        {order.status === 'pending' && (
+                          <>
+                            <button
+                              className="text-green-600 hover:text-green-900 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-300"
+                              onClick={() => handlePayClick(order)}
+                              title="Mark as Paid"
+                            >
+                              <CheckCircleIcon size={18} />
+                            </button>
+                            <button
+                              className="text-red-600 hover:text-red-900 p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-300"
+                              onClick={() => handleCancelClick(order)}
+                              title="Cancel Order"
+                            >
+                              <XCircleIcon size={18} />
+                            </button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination Controls */}
+            {orders.length > 0 && (
               <div className="flex justify-between items-center w-full p-4 border-t bg-gray-50">
                 <div className="flex-1">
                   <button
                     onClick={handlePrevPage}
-                    disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-md text-sm font-medium ${currentPage === 1
+                    disabled={!hasPrev || currentPage === 1}
+                    className={`px-4 py-2 rounded-md text-sm font-medium ${!hasPrev || currentPage === 1
                         ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                         : 'bg-blue-600 text-white hover:bg-blue-700'
                       }`}
@@ -300,85 +332,85 @@ const OrderManagement = () => {
                 </div>
 
                 <div className="flex-1 text-right">
-                  <button onClick={handleNextPage} disabled={currentPage === totalPages} className={`px-4 py-2 rounded-md text-sm font-medium ${currentPage === totalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>Next</button>
+                  <button onClick={handleNextPage} disabled={!hasNext || currentPage === totalPages} className={`px-4 py-2 rounded-md text-sm font-medium ${!hasNext || currentPage === totalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>Next</button>
                 </div>
               </div>
             )}
-        </div>
+            {orders.length === 0 && !loading && (
+              <div className="text-center py-10">
+                <p className="text-gray-500">No orders found matching your criteria.</p>
+              </div>
+            )}
+          </>
+        )}
 
-        {filteredOrders.length === 0 && !loading && (
-          <div className="text-center py-10">
-            <p className="text-gray-500">No orders found matching your criteria.</p>
+        {/* ✅ Pay Confirmation Modal */}
+        {showPayModal && orderToAction && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg w-[90vw] max-w-md">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold text-gray-900 text-center">Confirm Payment</h3>
+              </div>
+              <div className="p-6">
+                <p className="mb-4 text-gray-700 text-center">
+                  Mark order <strong>{orderToAction._id || orderToAction.id}</strong> as paid?
+                </p>
+                <div className="flex justify-center gap-2">
+                  <button
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    onClick={() => {
+                      setShowPayModal(false);
+                      setOrderToAction(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700"
+                    onClick={confirmPayOrder}
+                  >
+                    Confirm Payment
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ Cancel Confirmation Modal */}
+        {showCancelModal && orderToAction && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg w-[90vw] max-w-md">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold text-gray-900 text-center">Cancel Order</h3>
+              </div>
+              <div className="p-6">
+                <p className="mb-4 text-gray-700 text-center">
+                  Are you sure you want to cancel order{' '}
+                  <strong>{orderToAction._id || orderToAction.id}</strong>?
+                </p>
+                <div className="flex justify-center gap-2">
+                  <button
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    onClick={() => {
+                      setShowCancelModal(false);
+                      setOrderToAction(null);
+                    }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
+                    onClick={confirmCancelOrder}
+                  >
+                    Confirm Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      {/* ✅ Pay Confirmation Modal */}
-      {showPayModal && orderToAction && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-[90vw] max-w-md">
-            <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900 text-center">Confirm Payment</h3>
-            </div>
-            <div className="p-6">
-              <p className="mb-4 text-gray-700 text-center">
-                Mark order <strong>{orderToAction._id || orderToAction.id}</strong> as paid?
-              </p>
-              <div className="flex justify-center gap-2">
-                <button
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  onClick={() => {
-                    setShowPayModal(false);
-                    setOrderToAction(null);
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700"
-                  onClick={confirmPayOrder}
-                >
-                  Confirm Payment
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ✅ Cancel Confirmation Modal */}
-      {showCancelModal && orderToAction && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-[90vw] max-w-md">
-            <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900 text-center">Cancel Order</h3>
-            </div>
-            <div className="p-6">
-              <p className="mb-4 text-gray-700 text-center">
-                Are you sure you want to cancel order{' '}
-                <strong>{orderToAction._id || orderToAction.id}</strong>?
-              </p>
-              <div className="flex justify-center gap-2">
-                <button
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  onClick={() => {
-                    setShowCancelModal(false);
-                    setOrderToAction(null);
-                  }}
-                >
-                  Back
-                </button>
-                <button
-                  className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
-                  onClick={confirmCancelOrder}
-                >
-                  Confirm Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

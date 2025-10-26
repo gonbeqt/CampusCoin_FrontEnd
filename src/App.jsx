@@ -26,8 +26,8 @@ import Sales from './views/pages/seller/Sales'
 import UserManagement from './views/pages/admin/UserManagement'
 import { BalanceProvider } from "./views/components/BalanceContext";
 import { NotificationProvider } from "./views/components/NotificationContext";
-import NotificationCenter from "./components/NotificationCenter";
-import NotificationPreferences from "./components/NotificationPreferences";
+import NotificationCenter from "./views/components/NotificationCenter";
+import NotificationPreferences from "./views/components/NotificationPreferences";
 import SuperAdminLayout from './views/components/SuperAdminLayout'
 import SuperAdminDashboard from './views/pages/superadmin/Dashboard'
 import ValidateAdmin from './views/pages/superadmin/ValidateAdmin'

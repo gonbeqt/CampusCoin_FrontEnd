@@ -11,7 +11,7 @@ import {
     PlayCircleIcon,
 } from 'lucide-react'
 import ValidationController from '../../../controllers/validationController'
-
+import Skeleton from '../../components/Skeleton'
 const AllUser = () => {
     const [selectedAdmin, setSelectedAdmin] = useState(null)
     const [viewingDocument, setViewingDocument] = useState(null)
@@ -153,9 +153,9 @@ const AllUser = () => {
                             <h2 className="text-lg font-semibold text-gray-700">All Users</h2>
                         </div>
                         {isLoading ? (
-                            <div className="flex justify-center items-center h-64">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-700"></div>
-                            </div>
+                            <div className="p-4">
+                                            <Skeleton rows={6} />
+                                          </div>
                         ) : filteredAdmins.length === 0 ? (
                             <div className="p-5 text-center text-gray-500">No users found</div>
                         ) : (

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Settings, Eye, ChevronRight } from 'lucide-react';
-import { useNotifications } from '../views/components/NotificationContext';
+import { useNotifications } from './NotificationContext';
 
 const NotificationQuickAccess = ({ className = "" }) => {
   const navigate = useNavigate();

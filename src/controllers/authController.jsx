@@ -132,20 +132,14 @@ class AuthController {
 
   async logout() {
     try {
-      // Call backend logout
       const result = await this.model.logout();
       result.success = true; 
-      // Clear local data regardless of backend response
       this.model.clearAuthData();
-      this.model.clearBalanceStats(); // Clear balance stats on logout
-      
-      
-      
+      this.model.clearBalanceStats();
       return { success: true, message: 'Logged out successfully' };
     } catch (error) {
-      // Still clear local data on error
       this.model.clearAuthData();
-      
+
       return { success: true, message: 'Logged out (with errors)' };
     }
   }
