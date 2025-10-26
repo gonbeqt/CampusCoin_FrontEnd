@@ -238,12 +238,6 @@ const SellerDashboard = ({ user }) => {
                   Active
                 </p>
               </div>
-              <Link
-                to="/seller/profile"
-                className="inline-flex items-center px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-medium"
-              >
-                View Profile
-              </Link>
             </div>
           </div>
         </div>

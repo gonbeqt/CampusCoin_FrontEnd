@@ -74,7 +74,6 @@ class WalletAutoService {
   // Clean up wallet data on logout
   async cleanupWalletData() {
     try {
-      console.log('Cleaning up wallet data...');
       
       // Clear cached wallet data
       WalletController.clearWalletData();
@@ -82,7 +81,6 @@ class WalletAutoService {
       // Reset reconnection state
       this.reconnectAttempts = 0;
       
-      console.log('Wallet data cleanup completed');
       return { success: true };
       
     } catch (error) {
@@ -124,7 +122,6 @@ class WalletAutoService {
   // Enable/disable auto-reconnect
   setAutoReconnectEnabled(enabled) {
     this.autoReconnectEnabled = enabled;
-    console.log(`Wallet auto-reconnect ${enabled ? 'enabled' : 'disabled'}`);
   }
 
   // Get auto-reconnect status
@@ -140,13 +137,11 @@ class WalletAutoService {
   // Set max reconnection attempts
   setMaxReconnectAttempts(attempts) {
     this.maxReconnectAttempts = Math.max(1, attempts);
-    console.log(`Max wallet reconnection attempts set to ${this.maxReconnectAttempts}`);
   }
 
   // Set reconnection delay
   setReconnectDelay(delay) {
     this.reconnectDelay = Math.max(500, delay);
-    console.log(`Wallet reconnection delay set to ${this.reconnectDelay}ms`);
   }
 
   // Utility function for delays
@@ -156,7 +151,6 @@ class WalletAutoService {
 
   // Force reconnect (manual trigger)
   async forceReconnect() {
-    console.log('Force wallet reconnection triggered');
     this.reconnectAttempts = 0;
     return await this.autoReconnectWallet();
   }
@@ -165,7 +159,6 @@ class WalletAutoService {
   reset() {
     this.reconnectAttempts = 0;
     this.autoReconnectEnabled = true;
-    console.log('Wallet auto service reset');
   }
 }
 

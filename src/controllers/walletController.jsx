@@ -208,7 +208,6 @@ class WalletController {
   // Auto-reconnect specific methods
   async autoReconnectWallet() {
     try {
-      console.log('Starting wallet auto-reconnection...');
       
       // First try to get existing wallet from server
       const walletResult = await this.getWallet();
@@ -217,7 +216,6 @@ class WalletController {
         // Get fresh balance
         const balanceResult = await this.getBalance();
         
-        console.log('Wallet auto-reconnected successfully');
         return {
           success: true,
           wallet: walletResult.wallet,
@@ -225,7 +223,6 @@ class WalletController {
           message: 'Wallet reconnected successfully'
         };
       } else {
-        console.log('No wallet found for auto-reconnection');
         return {
           success: false,
           error: 'No wallet found for this user',
@@ -329,7 +326,6 @@ class WalletController {
   }
 
   clearWalletData() {
-    console.log('Clearing wallet data from controller...');
     this.model.removeWalletData();
     this.model.removeTransactionHistory();
   }

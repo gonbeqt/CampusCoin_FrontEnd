@@ -50,7 +50,6 @@ const AdminDashboard = ({ user }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showChartMenu]);
   useEffect(() => {
-    // Fetch analytics
     fetch(`${API_BASE}/admin-dashboard/analytics`)
       .then(res => res.json())
       .then(data => {
@@ -59,7 +58,7 @@ const AdminDashboard = ({ user }) => {
           totalEvents: data.totalEvents,
           totalStudents: data.totalStudents,
           totalCoinsIssued: data.totalCampusCoin,
-          activeEvents: data.activeEvents, // Use backend value
+          activeEvents: data.activeEvents,
           verifiedStudents: data.verifiedStudents // New value
         }));
         if (data.attendanceSummary) setAttendanceSummary(data.attendanceSummary);
@@ -70,21 +69,16 @@ const AdminDashboard = ({ user }) => {
           setEventAttendanceTimeline(sortedTimeline);
         }
       });
-    // Fetch all events for recentEvents table (upcoming/ongoing only)
     fetch(`${API_BASE}/events/all-events`)
       .then(res => res.json())
       .then(data => {
-        // Debug: log what is returned from backend
-        // console.log('Fetched events from backend:', data);
+     
         if (data.events) {
-          // Filter for upcoming events
           const upcoming = data.events.filter(ev => ev.status === 'upcoming');
-          // Sort by soonest start date/time (nearest future event first)
           const sortedUpcoming = upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
           if (sortedUpcoming.length > 0) {
             setRecentEvents(sortedUpcoming.slice(0, 10));
           } else {
-            // Fallback: show 10 most recent events (any status), soonest first
             const sortedAll = [...data.events].sort((a, b) => new Date(a.date) - new Date(b.date));
             setRecentEvents(sortedAll.slice(0, 10));
           }

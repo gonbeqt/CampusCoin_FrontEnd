@@ -34,11 +34,7 @@ const SellerSidebar = ({ user, showMobileMenu, onNavigate }) => {
       path: '/seller/sales',
       icon: <BarChart2Icon size={20} />,
     },
-    {
-      name: 'Settings',
-      path: '/seller/settings',
-      icon: <SettingsIcon size={20} />,
-    },
+   
   ]
 
   const sidebarClasses = `fixed top-0 left-0 z-[60] h-screen transition-transform ${

@@ -395,13 +395,14 @@ const UserManagement = () => {
         </div>
       )}
       {showEditModal && currentStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-            <div className="flex justify-between items-center mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div role="dialog" aria-modal="true" className="bg-white rounded-lg shadow-lg w-full max-w-3xl p-6 md:p-8 mx-auto overflow-y-auto max-h-[90vh]">
+            <div className="flex items-start justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Edit User</h3>
               <button
                 onClick={() => setShowEditModal(false)}
                 className="text-gray-400 hover:text-gray-500"
+                aria-label="Close dialog"
               >
                 <XIcon size={20} />
               </button>
@@ -413,7 +414,7 @@ const UserManagement = () => {
               }}
             >
               <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label htmlFor="edit_first_name" className="block text-sm font-medium text-gray-700">First Name</label>
                     <input
@@ -421,7 +422,7 @@ const UserManagement = () => {
                       name="edit_first_name"
                       type="text"
                       required
-                      className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       value={currentStudent.first_name || ''}
                       onChange={e => setCurrentStudent({ ...currentStudent, first_name: e.target.value })}
                     />
@@ -432,7 +433,7 @@ const UserManagement = () => {
                       id="edit_middle_name"
                       name="edit_middle_name"
                       type="text"
-                      className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       value={currentStudent.middle_name || ''}
                       onChange={e => setCurrentStudent({ ...currentStudent, middle_name: e.target.value })}
                     />
@@ -444,20 +445,20 @@ const UserManagement = () => {
                       name="edit_last_name"
                       type="text"
                       required
-                      className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       value={currentStudent.last_name || ''}
                       onChange={e => setCurrentStudent({ ...currentStudent, last_name: e.target.value })}
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="edit_suffix" className="block text-sm font-medium text-gray-700">Suffix (Optional)</label>
                     <input
                       id="edit_suffix"
                       name="edit_suffix"
                       type="text"
-                      className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       placeholder="Jr., Sr., III"
                       value={currentStudent.suffix || ''}
                       onChange={e => setCurrentStudent({ ...currentStudent, suffix: e.target.value })}
@@ -470,7 +471,7 @@ const UserManagement = () => {
                       name="edit_email"
                       type="email"
                       required
-                      className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm placeholder-gray-400 bg-gray-100 text-gray-400 cursor-not-allowed focus:outline-none sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm placeholder-gray-400 bg-gray-100 text-gray-400 cursor-not-allowed focus:outline-none sm:text-sm"
                       value={currentStudent.email || ''}
                       readOnly
                       disabled
@@ -499,7 +500,7 @@ const UserManagement = () => {
                     id="reset_password"
                     name="reset_password"
                     type="text"
-                    className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="Type RESET to reset password to 1234"
                     value={currentStudent.resetPasswordInput || ''}
                     onChange={e => setCurrentStudent({ ...currentStudent, resetPasswordInput: e.target.value })}
@@ -507,11 +508,11 @@ const UserManagement = () => {
                   <p className="text-xs text-gray-500 mt-1">To reset password type <span className="font-mono font-semibold">RESET</span>. The default password is <span className="font-mono font-semibold">1234</span></p>
                 </div>
               </div>
-              <div className="flex justify-end space-x-3 mt-6">
+              <div className="flex flex-col sm:flex-row sm:justify-end sm:space-x-3 mt-6">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="mb-2 sm:mb-0 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
                 </button>

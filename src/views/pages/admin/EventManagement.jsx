@@ -54,26 +54,21 @@ const EventManagement = () => {
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [editId, setEditId] = useState(null); // null = create, id = edit
-  // Delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
-  // State for delete confirmation input
   const [deleteEventConfirmInput, setDeleteEventConfirmInput] = useState("");
 
-  // Toast notification state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
   };
 
-  // Show custom delete confirmation modal
   const handleDeleteEvent = (event) => {
     setEventToDelete(event);
     setShowDeleteModal(true);
   };
 
-  // Confirm delete
   const confirmDeleteEvent = async () => {
     if (!eventToDelete) return;
     try {
@@ -849,10 +844,3 @@ const EventManagement = () => {
   );
 }
 export default EventManagement
-
-/* Add to CSS or style block if needed:
-.event-row td {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-}
-*/

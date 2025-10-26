@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { CoinsIcon, AlertTriangle, Clock, XCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
 import AuthController from '../../controllers/authController'
@@ -23,6 +23,19 @@ const Login = () => {
   const navigate = useNavigate()
   const passwordRef = useRef(null)
 
+  // Restore remembered email (if any) on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('rememberedEmail')
+      if (saved) {
+        setFormData(prev => ({ ...prev, email: saved }))
+        setViewState(prev => ({ ...prev, rememberMe: true }))
+      }
+    } catch (err) {
+      // ignore localStorage errors
+    }
+  }, [])
+
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -38,14 +51,36 @@ const Login = () => {
       setViewState(prev => ({ ...prev, error: '' }))
       setAccountStatusInfo(null)
     }
+    // If user has enabled remember me, keep localStorage updated for email
+    if (name === 'email') {
+      try {
+        if (viewState.rememberMe && newValue) {
+          localStorage.setItem('rememberedEmail', newValue)
+        } else if (!viewState.rememberMe) {
+          localStorage.removeItem('rememberedEmail')
+        }
+      } catch (err) {
+        // ignore storage errors
+      }
+    }
   }
 
   // Handle checkbox change
   const handleRememberMeChange = (e) => {
+    const checked = e.target.checked
     setViewState(prev => ({
       ...prev,
-      rememberMe: e.target.checked
+      rememberMe: checked
     }))
+    try {
+      if (checked && formData.email) {
+        localStorage.setItem('rememberedEmail', formData.email)
+      } else {
+        localStorage.removeItem('rememberedEmail')
+      }
+    } catch (err) {
+      // ignore storage errors
+    }
   }
 
   // Toggle password visibility
@@ -76,11 +111,20 @@ const Login = () => {
 
     try {
       const result = await AuthController.login(formData)
-      console.log('[handleSubmit] login result:', result)
 
       if (result.success) {
         login(result.user)
         setViewState(prev => ({ ...prev, isLoading: false, error: '' }))
+        // Persist remembered email on successful login (if enabled)
+        try {
+          if (viewState.rememberMe && formData.email) {
+            localStorage.setItem('rememberedEmail', formData.email)
+          } else {
+            localStorage.removeItem('rememberedEmail')
+          }
+        } catch (err) {
+          // ignore
+        }
         const role = result.user?.role
         const route = AuthController.getRouteForRole(role)
         navigate(route)
