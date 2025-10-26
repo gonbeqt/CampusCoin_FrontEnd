@@ -135,6 +135,19 @@ async generateAttendanceQr(eventId, studentId) {
       return { success: false, error: "Unexpected error occurred" };
     }
   }
+
+  async exportEventsExcel() {
+    try {
+      const result = await this.model.exportEventsExcel();
+      if (!result.success) {
+        return { success: false, error: result.error || 'Failed to export events' };
+      }
+      return { success: true, blob: result.blob, filename: result.filename };
+    } catch (error) {
+      console.error('EventController.exportEventsExcel error:', error);
+      return { success: false, error: 'Unexpected error occurred' };
+    }
+  }
 }
 
 const eventController = new EventController();

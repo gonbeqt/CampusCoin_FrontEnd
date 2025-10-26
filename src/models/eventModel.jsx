@@ -221,6 +221,36 @@ class EventModel {
     }
   }
 
+  async exportEventsExcel() {
+    try {
+      const authModel = new AuthModel();
+      const token = authModel.getToken();
+      const headers = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(`http://localhost:5000/api/admin-dashboard/events/export`, {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || 'Failed to export events');
+      }
+
+      const blob = await response.blob();
+      const disposition = response.headers.get('Content-Disposition') || '';
+      let filename = 'events_export.xlsx';
+      const match = /filename="?([^";]+)"?/.exec(disposition);
+      if (match && match[1]) filename = match[1];
+
+      return { success: true, blob, filename };
+    } catch (error) {
+      console.error('EventModel.exportEventsExcel error:', error);
+      return { success: false, error: error.message || 'Network error. Please try again.' };
+    }
+  }
+
 }
 
 export default EventModel;
