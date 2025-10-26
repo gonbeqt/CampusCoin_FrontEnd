@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { CoinsIcon, AlertTriangle, Clock, XCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
+import { AlertTriangle, Clock, XCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
 import AuthController from '../../controllers/authController'
-
 import { useAuth } from '../components/AuthContext'
+
+// ✅ Import your custom logo
+import WebLogo from '../../assets/images/Web logo.png'
 
 const Login = () => {
   const { login } = useAuth()
@@ -26,21 +28,17 @@ const Login = () => {
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    // Prevent spaces in password fields
     const newValue = name === 'password' ? value.replace(/\s+/g, '') : value
     setFormData(prev => ({
       ...prev,
       [name]: newValue
     }))
-
-    // Clear error when user starts typing
     if (viewState.error) {
       setViewState(prev => ({ ...prev, error: '' }))
       setAccountStatusInfo(null)
     }
   }
 
-  // Handle checkbox change
   const handleRememberMeChange = (e) => {
     setViewState(prev => ({
       ...prev,
@@ -48,7 +46,6 @@ const Login = () => {
     }))
   }
 
-  // Toggle password visibility
   const togglePasswordVisibility = () => {
     setViewState(prev => ({
       ...prev,
@@ -56,15 +53,12 @@ const Login = () => {
     }))
   }
 
-  // Prevent space characters in password input
   const handlePasswordKeyDown = (e) => {
     if (e.key === ' ' || e.code === 'Space' || e.keyCode === 32) {
-      // Prevent inserting space
       e.preventDefault()
     }
   }
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (e && e.nativeEvent && typeof e.nativeEvent.stopImmediatePropagation === 'function') {
@@ -85,7 +79,6 @@ const Login = () => {
         const route = AuthController.getRouteForRole(role)
         navigate(route)
       } else {
-        // Handle different types of errors
         const errorData = result.data || {}
 
         if (errorData.accountStatus) {
@@ -117,7 +110,6 @@ const Login = () => {
     }
   }
 
-  // Get status icon and color based on account status
   const getStatusDisplay = (status) => {
     switch (status) {
       case 'pending':
@@ -163,7 +155,6 @@ const Login = () => {
     }
   }
 
-  // Check if form is valid
   const isFormValid = formData.email && formData.password
 
   return (
@@ -175,17 +166,20 @@ const Login = () => {
         {/* Header */}
         <div>
           <div className="flex justify-center">
-            <span className="flex h-20 w-20 items-center justify-center rounded-[2.5rem] bg-gradient-to-r from-emerald-500 to-amber-400 text-white shadow-lg shadow-emerald-200/60">
-              <CoinsIcon className="h-10 w-10" />
-            </span>
+            {/* ✅ Custom logo image instead of icon */}
+            <img
+              src={WebLogo}
+              alt="CampusCoin Logo"
+              className="h-20 w-20 rounded-[2.5rem] shadow-lg shadow-emerald-200/60 object-cover"
+            />
           </div>
-          <h2 className="mt-6 text-center text-4xl font-semibold text-emerald-900">
+          <h2 className="mt-6 text-center text-4xl font-semibold text-[#59B44D]">
             CampusCoin
           </h2>
-          <p className="mt-3 text-center text-sm font-medium uppercase tracking-[0.4em] text-amber-400">
+          <p className="mt-3 text-center text-sm font-medium uppercase tracking-[0.4em] text-[#203214]">
             Attend · Engage · Earn
           </p>
-          <p className="mt-3 text-center text-sm text-emerald-700/80">
+          <p className="mt-3 text-center text-sm text-[#72A754]">
             University Attendance & Events Reward System
           </p>
         </div>
@@ -232,7 +226,6 @@ const Login = () => {
                       </span>
                     </p>
                   )}
-
                 </div>
               </div>
             </div>
@@ -320,7 +313,7 @@ const Login = () => {
             <div className="text-sm">
               <Link
                 to="/forgot-password"
-                className="font-semibold text-emerald-600 transition hover:text-emerald-700"
+                className="font-semibold text-[#203214] transition hover:text-emerald-700"
               >
                 Forgot password?
               </Link>
@@ -355,7 +348,7 @@ const Login = () => {
                 <div className="w-full border-t border-emerald-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="rounded-full bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-amber-400">New to CampusCoin?</span>
+                <span className="rounded-full bg-white/90 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-[#72A754]">New to CampusCoin?</span>
               </div>
             </div>
             <div className="mt-6">

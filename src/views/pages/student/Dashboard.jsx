@@ -93,7 +93,7 @@ const StudentDashboard = () => {
   const fullName = userProfile?.first_name || 'Student';
 
   return (
-    <div className="pt-20 md:ml-64 min-h-screen  px-4 pb-12 sm:px-6 lg:px-8">
+    <div className="pt-20 md:ml-64 min-h-screen pl-0 pr-0 pb-12">
       <div className="mb-8 space-y-1">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-500/70">Dashboard Overview</p>
         <h1 className="text-3xl font-semibold text-gray-900">
