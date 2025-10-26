@@ -278,7 +278,7 @@ const Events = ({ user }) => {
 
   if (loading) {
     return (
-      <div className="pt-20 md:ml-64 min-h-screen  px-4 pb-12 sm:px-6 lg:px-8">
+      <div className="pt-20 md:ml-64 min-h-screen pl-0 pr-0 pb-12 text-left">
         <div className="flex h-64 items-center justify-center">
           <p className="text-gray-500">Loading events...</p>
         </div>
@@ -288,7 +288,7 @@ const Events = ({ user }) => {
   const eventTypes = [...new Set((Array.isArray(allEvents) ? allEvents : []).map(event => event.category).filter(Boolean))];
 
   return (
-    <div className="pt-20 md:ml-64 min-h-screen  px-4 pb-12 sm:px-6 lg:px-8">
+    <div className="pt-20 md:ml-64 min-h-screen pl-0 pr-0 pb-12 text-left">
     <div className="mb-8">
       <h1 className="text-3xl font-semibold text-gray-900">Events</h1>
       <p className="mt-1 text-sm text-gray-600">Discover upcoming activities, join in, and earn CampusCoins for participating.</p>
@@ -661,27 +661,27 @@ const EventCard = ({ event, userId, timers, handleClaimReward, handleJoinEvent, 
           <div className="flex items-center text-gray-500"><MapPinIcon size={16} className="mr-1" />{event.location}</div>
         </div>
         <div className="mt-4 flex items-center text-blue-600"><CoinsIcon size={16} className="mr-1" />{event.reward} CampusCoin reward</div>
-        <div className="mt-5 flex justify-between items-center relative">
+        <div className="mt-5 flex justify-between items-center">
           <Link to={`/student/event/${event._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">View details</Link>
           {/* Claim Now button for Claim Reward tab (enabled for present, disabled for absent) */}
           {statusFilter === 'Claim Reward' && (
             arrayHasUser(event.claimedStudents) ? (
               <button
-                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
+                className="px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
                 disabled
               >
                 Claimed
               </button>
             ) : arrayHasUser(event.attendedStudents) ? (
               <button
-                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded shadow hover:bg-green-700 transition-colors"
+                className="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded shadow hover:bg-green-700 transition-colors"
                 onClick={() => handleClaimReward(event._id)}
               >
                 Claim Now
               </button>
             ) : (
               <button
-                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-red-400 text-white text-sm font-bold rounded shadow opacity-60 cursor-not-allowed"
+                className="px-4 py-2 bg-red-400 text-white text-sm font-bold rounded shadow opacity-60 cursor-not-allowed"
                 disabled
               >
                 Claim Now
@@ -692,28 +692,28 @@ const EventCard = ({ event, userId, timers, handleClaimReward, handleJoinEvent, 
           {statusFilter !== 'Claim Reward' && (
             hasJoined ? (
               <button
-                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
+                className="px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
                 disabled
               >
                 Registered
               </button>
             ) : isFull ? (
               <button
-                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
+                className="px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
                 disabled
               >
                 Full
               </button>
             ) : hasEnded(event) ? (
               <button
-                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
+                className="px-4 py-2 bg-gray-300 text-gray-600 text-sm font-bold rounded shadow cursor-not-allowed"
                 disabled
               >
                 Closed
               </button>
             ) : (
               <button
-                className="absolute right-0 bottom-0 mb-1 mr-1 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded shadow hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded shadow hover:bg-blue-700 transition-colors"
                 onClick={() => handleJoinEvent(event._id, event.title)}
               >
                 Register
