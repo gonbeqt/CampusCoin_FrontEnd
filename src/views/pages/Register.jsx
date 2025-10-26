@@ -752,7 +752,7 @@ const Register = () => {
               )}
             </div>
 
-            {/* Document Upload <div className="bg-white shadow rounded-lg p-6 border <div className="bg-white shadow rounded-lg p-6 border border-emerald-300">*/}
+            {/* Document Upload*/}
             {requirements && (
               <div className="bg-white shadow rounded-lg p-6 border border-emerald-300">
                 <h3 className="text-lg font-medium text-gray-900 mb-2">{requirements.title}</h3>
