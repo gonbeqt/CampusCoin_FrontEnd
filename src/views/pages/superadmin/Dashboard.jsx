@@ -187,9 +187,9 @@ const SuperAdminDashboard = ({ user }) => {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {dashboardData.recentValidations.map((user) => (
-                        <tr key={user.id}>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                      {dashboardData.recentValidations.map((user, idx) => (
+                        <tr key={user._id ?? user.id ?? `user-${idx}`}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900">
                               {user.first_name || user.name}

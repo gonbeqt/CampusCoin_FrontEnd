@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { CoinsIcon, AlertTriangle, Clock, XCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
 import AuthController from '../../controllers/authController'
@@ -21,13 +21,16 @@ const Login = () => {
 
   const [accountStatusInfo, setAccountStatusInfo] = useState(null)
   const navigate = useNavigate()
+  const passwordRef = useRef(null)
 
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target
+    // Prevent spaces in password fields
+    const newValue = name === 'password' ? value.replace(/\s+/g, '') : value
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: newValue
     }))
 
     // Clear error when user starts typing
@@ -51,6 +54,14 @@ const Login = () => {
       ...prev,
       showPassword: !prev.showPassword
     }))
+  }
+
+  // Prevent space characters in password input
+  const handlePasswordKeyDown = (e) => {
+    if (e.key === ' ' || e.code === 'Space' || e.keyCode === 32) {
+      // Prevent inserting space
+      e.preventDefault()
+    }
   }
 
   // Handle form submission
@@ -263,6 +274,8 @@ const Login = () => {
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleInputChange}
+                  onKeyDown={handlePasswordKeyDown}
+                  ref={passwordRef}
                   disabled={viewState.isLoading}
                 />
                 <button

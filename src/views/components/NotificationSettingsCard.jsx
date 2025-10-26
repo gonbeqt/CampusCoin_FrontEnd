@@ -10,7 +10,7 @@ import {
   AlertTriangle,
   Info
 } from 'lucide-react';
-import { useNotifications } from '../views/components/NotificationContext';
+import { useNotifications } from './NotificationContext';
 
 const NotificationSettingsCard = ({ className = "" }) => {
   const navigate = useNavigate();

@@ -14,7 +14,7 @@ import {
   Settings,
   RefreshCw
 } from 'lucide-react';
-import { useNotifications } from '../views/components/NotificationContext';
+import { useNotifications } from './NotificationContext';
 import NotificationBreadcrumb from './NotificationBreadcrumb';
 
 const NotificationCenter = () => {

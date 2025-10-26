@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, AlertTriangle, Info, Bell } from 'lucide-react';
-import { useNotifications } from '../views/components/NotificationContext';
+import { useNotifications } from './NotificationContext';
 
 const NotificationToast = ({ notification, onClose, duration = 5000 }) => {
   const { getNotificationIcon, getNotificationColor, markAsRead } = useNotifications();

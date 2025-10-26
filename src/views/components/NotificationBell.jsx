@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { Bell, BellRing, X, Check, Star, Trash2 } from 'lucide-react';
-import { useNotifications } from '../views/components/NotificationContext';
-import socketService from '../services/socketService';
+import { useNotifications } from './NotificationContext';
+import socketService from '../../services/socketService';
 
 const NotificationBell = () => {
   const {

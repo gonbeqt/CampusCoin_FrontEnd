@@ -68,14 +68,35 @@ const Register = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
+
+    // Prevent numbers in name fields
+    const nameFieldsNoNumbers = ['first_name', 'last_name', 'middle_name', 'suffix']
+    let newValue = value
+    if (nameFieldsNoNumbers.includes(name)) {
+      // Strip any numeric characters (typing or paste)
+      newValue = String(value).replace(/[0-9]/g, '')
+    }
+
+    // Prevent spaces in password fields
+    if (name === 'password' || name === 'confirmPassword') {
+      newValue = String(newValue).replace(/\s+/g, '')
+    }
+
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: newValue
     }))
     
     // Clear message when user starts typing
     if (message) {
       setMessage(null)
+    }
+  }
+
+  // Prevent space characters from being typed into password fields
+  const handlePasswordKeyDown = (e) => {
+    if (e.key === ' ' || e.code === 'Space' || e.keyCode === 32) {
+      e.preventDefault()
     }
   }
 
@@ -324,6 +345,7 @@ const Register = () => {
           </p>
         </div>
 
+
         {showVerification ? (
           // ================= Verification Form =================
           <div className="mt-8 space-y-6">
@@ -504,6 +526,7 @@ const Register = () => {
                         placeholder="Enter password"
                         value={formData.password}
                         onChange={handleInputChange}
+                        onKeyDown={handlePasswordKeyDown}
                         disabled={viewState.isLoading}
                       />
                       <button
@@ -534,6 +557,7 @@ const Register = () => {
                         placeholder="Confirm password"
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
+                        onKeyDown={handlePasswordKeyDown}
                         disabled={viewState.isLoading}
                       />
                       <button
@@ -832,7 +856,13 @@ const Register = () => {
                 </div>
               </div>
             </div>
-
+              
+            {/* Status message (shows above the registration form) */}
+            {!showVerification && message && (
+              <div className={`rounded-md p-4 mb-4 border ${message.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+                <p className="text-sm font-medium">{message.text}</p>
+              </div>
+            )}
             {/* Submit Button */}
             <div>
               <button

@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import { MenuIcon, XIcon, CoinsIcon } from 'lucide-react'
 import AuthController from '../../controllers/authController'
-import NotificationBell from '../../components/NotificationBell'
-import NotificationModal from '../../components/NotificationModal'
-import LogoutConfirmModal from '../../components/LogoutConfirmModal'
+import NotificationBell from './NotificationBell'
+import NotificationModal from './NotificationModal'
+import LogoutConfirmModal from './LogoutConfirmModal'
 import { useState } from 'react'
 
 const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
