@@ -225,7 +225,6 @@ const EventAttendanceDetails = () => {
                       (student.email || '').toLowerCase().includes(text)
                     );
                   })
-                  .slice(0, 10)
                   .map((student, idx) => {
                     const id = String(student._id);
                     const overrideStatus = attendance[id];

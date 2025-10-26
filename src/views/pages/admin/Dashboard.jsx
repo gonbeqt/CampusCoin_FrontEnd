@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 import {
   CalendarIcon,
   UsersIcon,
@@ -8,9 +8,9 @@ import {
   TrendingUpIcon,
   BarChartIcon,
   PieChartIcon,
-} from 'lucide-react'
-import WalletConnect from '../../../views/components/WalletConnect'
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
+} from 'lucide-react';
+import WalletConnect from '../../../views/components/WalletConnect';
+import adminDashboardController from '../../../controllers/adminDashboardController';
 
 const AdminDashboard = ({ user }) => {
   const [isWalletConnected, setIsWalletConnected] = useState(false);
@@ -50,57 +50,39 @@ const AdminDashboard = ({ user }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showChartMenu]);
   useEffect(() => {
-    // Fetch analytics
-    fetch(`${API_BASE}/admin-dashboard/analytics`)
-      .then(res => res.json())
-      .then(data => {
+    // Fetch analytics via controller
+    adminDashboardController.getAnalytics().then(res => {
+      if (res.success && res.data) {
+        const data = res.data;
         setStats(prev => ({
           ...prev,
           totalEvents: data.totalEvents,
           totalStudents: data.totalStudents,
           totalCoinsIssued: data.totalCampusCoin,
-          activeEvents: data.activeEvents, // Use backend value
-          verifiedStudents: data.verifiedStudents // New value
+          activeEvents: data.activeEvents,
+          verifiedStudents: data.verifiedStudents
         }));
         if (data.attendanceSummary) setAttendanceSummary(data.attendanceSummary);
         if (data.attendanceByCategory) setAttendanceByCategory(data.attendanceByCategory);
         if (data.eventAttendanceTimeline) {
-          // Sort by date ascending for line chart
           const sortedTimeline = [...data.eventAttendanceTimeline].sort((a, b) => new Date(a.date) - new Date(b.date));
           setEventAttendanceTimeline(sortedTimeline);
         }
-      });
-    // Fetch all events for recentEvents table (upcoming/ongoing only)
-    fetch(`${API_BASE}/events/all-events`)
-      .then(res => res.json())
-      .then(data => {
-        // Debug: log what is returned from backend
-        // console.log('Fetched events from backend:', data);
-        if (data.events) {
-          // Filter for upcoming events
-          const upcoming = data.events.filter(ev => ev.status === 'upcoming');
-          // Sort by soonest start date/time (nearest future event first)
-          const sortedUpcoming = upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
-          if (sortedUpcoming.length > 0) {
-            setRecentEvents(sortedUpcoming.slice(0, 10));
-          } else {
-            // Fallback: show 10 most recent events (any status), soonest first
-            const sortedAll = [...data.events].sort((a, b) => new Date(a.date) - new Date(b.date));
-            setRecentEvents(sortedAll.slice(0, 10));
-          }
-        } else if (Array.isArray(data)) {
-          // If backend returns array directly
-          // console.log('Fetched events (array):', data);
-          const upcoming = data.filter(ev => ev.status === 'upcoming');
-          const sortedUpcoming = upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
-          if (sortedUpcoming.length > 0) {
-            setRecentEvents(sortedUpcoming);
-          } else {
-            const sortedAll = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
-            setRecentEvents(sortedAll.slice(0, 5));
-          }
+      }
+    });
+    // Fetch recent events via controller
+    adminDashboardController.getRecentEvents().then(res => {
+      if (res.success && Array.isArray(res.events)) {
+        const upcoming = res.events.filter(ev => ev.status === 'upcoming');
+        const sortedUpcoming = upcoming.sort((a, b) => new Date(a.date) - new Date(b.date));
+        if (sortedUpcoming.length > 0) {
+          setRecentEvents(sortedUpcoming.slice(0, 10));
+        } else {
+          const sortedAll = [...res.events].sort((a, b) => new Date(a.date) - new Date(b.date));
+          setRecentEvents(sortedAll.slice(0, 10));
         }
-      });
+      }
+    });
   }, []);
   const handleWalletConnect = (balance) => {
     setIsWalletConnected(true);
@@ -183,7 +165,7 @@ const AdminDashboard = ({ user }) => {
           <div className="bg-white rounded-lg shadow p-8 flex flex-col flex-1 min-h-[370px] h-full" style={{ height: '100%' }}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-700">
-                Recent Events
+                Upcoming Events
               </h2>
               <Link
                 to="/admin/events"

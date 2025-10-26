@@ -40,11 +40,6 @@ const AdminSidebar = ({ user, showMobileMenu, onNavigate }) => {
       path: '/admin/users',
       icon: <UsersIcon size={20} />,
     },
-    {
-      name: 'Settings',
-      path: '/admin/settings',
-      icon: <SettingsIcon size={20} />,
-    },
   ]
 
   const sidebarClasses = `fixed top-0 left-0 z-[60] h-screen transition-transform ${

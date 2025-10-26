@@ -148,6 +148,77 @@ async generateAttendanceQr(eventId, studentId) {
       return { success: false, error: 'Unexpected error occurred' };
     }
   }
+
+  async createEvent(payload) {
+    try {
+      const authModel = new AuthModel();
+      const token = authModel.getToken();
+      const response = await fetch(`${this.model.baseURL}/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? data : null,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('EventController.createEvent error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  async updateEvent(eventId, payload) {
+    try {
+      const authModel = new AuthModel();
+      const token = authModel.getToken();
+      const response = await fetch(`${this.model.baseURL}/${eventId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? data : null,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('EventController.updateEvent error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  async deleteEvent(eventId) {
+    try {
+      const authModel = new AuthModel();
+      const token = authModel.getToken();
+      const response = await fetch(`${this.model.baseURL}/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const data = await response.json();
+      return {
+        success: response.ok,
+        data: response.ok ? data : null,
+        error: response.ok ? null : data.error || data.message,
+      };
+    } catch (error) {
+      console.error('EventController.deleteEvent error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
 }
 
 const eventController = new EventController();
