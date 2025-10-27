@@ -3,8 +3,6 @@ import { useNavigate, Link } from 'react-router-dom'
 import { AlertTriangle, Clock, XCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
 import AuthController from '../../controllers/authController'
 import { useAuth } from '../components/AuthContext'
-
-// ✅ Import your custom logo
 import WebLogo from '../../assets/images/Web logo.png'
 
 const Login = () => {

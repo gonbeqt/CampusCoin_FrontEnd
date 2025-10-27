@@ -334,7 +334,7 @@ const Events = ({ user }) => {
 
       {/* Search bar (and filter only for Claim Reward) */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative w-full sm:w-64">
+        <div className="relative w-full md:w-1/2 lg:w-1/3">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <SearchIcon size={18} className="text-gray-400" />
           </div>
