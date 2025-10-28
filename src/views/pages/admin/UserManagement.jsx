@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Skeleton from '../../components/Skeleton'
+import userController from '../../../controllers/userController.jsx'
 
 // Toast notification component (copied from EventManagement.jsx)
 function Toast({ message, type, show }) {
@@ -20,43 +21,41 @@ const UserManagement = () => {
   const [courseFilter, setCourseFilter] = useState("");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10); // Fixed page size for now
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
   // Search bar state for students table only (consistent with EventManagement)
   const [searchInput, setSearchInput] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
 
   // Handle search (on button click or Enter)
   const handleSearch = () => {
-    setStudentSearch(searchInput);
+  setStudentSearch(searchInput);
+  setPage(1); // Reset to first page on new search
   };
-  // Fetch users from backend
-  const fetchUsers = async () => {
+  // Fetch users from backend (via controller)
+  const fetchUsers = async (targetPage = page, targetCourse = courseFilter, targetSearch = studentSearch) => {
     setLoading(true);
-    try {
-      const res = await fetch('http://localhost:5000/api/users');
-      if (!res.ok) throw new Error('Failed to fetch users');
-      const data = await res.json();
-        setUsers(
-          data.map(u => ({
-            id: u._id,
-            name: [u.first_name, u.middle_name, u.last_name, u.suffix].filter(Boolean).join(' ') || u.fullname || '',
-            email: u.email,
-            presentToday: false, // Update if you have attendance data
-            totalPresent: 0,
-            totalAbsent: 0,
-            ...u,
-            courseShort: u.course ? u.course.split(' ')[0] : ''
-          }))
-      );
-    } catch (err) {
-      showToast('Error fetching users: ' + err.message, 'error');
+    const result = await userController.getUsers(targetPage, limit, targetSearch, targetCourse);
+    if (result.success) {
+      setUsers(result.users);
+      setTotalPages(result.totalPages || 1);
+      setTotalUsers(result.totalUsers || result.users.length);
+    } else {
+      showToast('Error fetching users: ' + result.error, 'error');
+      setUsers([]);
+      setTotalPages(1);
+      setTotalUsers(0);
     }
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(page, courseFilter, studentSearch);
     // eslint-disable-next-line
-  }, []);
+  }, [page, courseFilter, studentSearch]);
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [currentStudent, setCurrentStudent] = useState(null)
@@ -79,28 +78,18 @@ const UserManagement = () => {
     setTimeout(() => setToast(t => ({ ...t, show: false })), 2500);
   };
   const handleAddStudent = async () => {
-    try {
-      const backendUrl = 'http://localhost:5000/api/users';
-      const payload = {
-        first_name: newStudent.first_name,
-        middle_name: newStudent.middle_name,
-        last_name: newStudent.last_name,
-        email: newStudent.email,
-        role: newStudent.role
-      };
-      if (newStudent.suffix && newStudent.suffix.trim() !== '') {
-        payload.suffix = newStudent.suffix;
-      }
-      const res = await fetch(backendUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        showToast(errData.error || 'Failed to add student', 'error');
-        return;
-      }
+    const payload = {
+      first_name: newStudent.first_name,
+      middle_name: newStudent.middle_name,
+      last_name: newStudent.last_name,
+      email: newStudent.email,
+      role: newStudent.role
+    };
+    if (newStudent.suffix && newStudent.suffix.trim() !== '') {
+      payload.suffix = newStudent.suffix;
+    }
+    const result = await userController.addUser(payload);
+    if (result.success) {
       setShowAddModal(false);
       setNewStudent({
         first_name: '',
@@ -114,44 +103,33 @@ const UserManagement = () => {
         totalAbsent: 0,
       });
       showToast('Student added successfully!', 'success');
-      fetchUsers(); // Refresh user list
-    } catch (err) {
-      showToast('Error adding student: ' + err.message, 'error');
+  fetchUsers();
+    } else {
+      showToast(result.error || 'Failed to add student', 'error');
     }
   }
   const handleEditStudent = async () => {
     if (!currentStudent) return;
-    try {
-      const backendUrl = `http://localhost:5000/api/users/${currentStudent.id}`;
-      // Only send updatable fields
-      const payload = {
-        first_name: currentStudent.first_name,
-        middle_name: currentStudent.middle_name,
-        last_name: currentStudent.last_name,
-        suffix: currentStudent.suffix === '' ? null : currentStudent.suffix,
-        course: currentStudent.course,
-        // email is not updatable
-      };
-      // If reset password field is exactly 'RESET', add password: '1234' to payload
-      if (currentStudent.resetPasswordInput && currentStudent.resetPasswordInput.trim().toUpperCase() === 'RESET') {
-        payload.password = '1234';
-      }
-      const res = await fetch(backendUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        showToast(errData.error || 'Failed to update student', 'error');
-        return;
-      }
+    // Only send updatable fields
+    const payload = {
+      first_name: currentStudent.first_name,
+      middle_name: currentStudent.middle_name,
+      last_name: currentStudent.last_name,
+      suffix: currentStudent.suffix === '' ? null : currentStudent.suffix,
+      course: currentStudent.course,
+      // email is not updatable
+    };
+    if (currentStudent.resetPasswordInput && currentStudent.resetPasswordInput.trim().toUpperCase() === 'RESET') {
+      payload.password = '1234';
+    }
+    const result = await userController.editUser(currentStudent.id, payload);
+    if (result.success) {
       setShowEditModal(false);
       setCurrentStudent(null);
       showToast('Student updated!', 'success');
-      fetchUsers(); // Refresh user list
-    } catch (err) {
-      showToast('Error updating student: ' + err.message, 'error');
+  fetchUsers();
+    } else {
+      showToast(result.error || 'Failed to update student', 'error');
     }
   }
   // Delete confirmation modal state
@@ -167,22 +145,16 @@ const UserManagement = () => {
   // Confirm delete
   const confirmDeleteStudent = async () => {
     if (!studentToDelete) return;
-    try {
-      const res = await fetch(`http://localhost:5000/api/users/${studentToDelete.id}`, {
-        method: 'DELETE',
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || errData.error || 'Failed to delete user');
-      }
+    const result = await userController.deleteUser(studentToDelete.id);
+    if (result.success) {
       setShowDeleteModal(false);
       setStudentToDelete(null);
-      await fetchUsers();
+  await fetchUsers();
       showToast('Student deleted!', 'success');
-    } catch (err) {
+    } else {
       setShowDeleteModal(false);
       setStudentToDelete(null);
-      showToast('Error deleting student: ' + err.message, 'error');
+      showToast('Error deleting student: ' + result.error, 'error');
     }
   };
   const handleToggleAttendance = (id) => {
@@ -210,15 +182,22 @@ const UserManagement = () => {
     )
   }
  
-  const students = users.filter(u =>
-    u.role === 'student' &&
-    (
-      u.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
-      u.email.toLowerCase().includes(studentSearch.toLowerCase()) ||
-      (u.course && u.course.toLowerCase().includes(studentSearch.toLowerCase()))
-    ) &&
-    (courseFilter === "" || (u.course && u.course === courseFilter))
-  );
+  // Only filter if search or course filter is set
+  const isFiltering = studentSearch.trim() !== '' || courseFilter.trim() !== '';
+  let students;
+  if (isFiltering) {
+    students = users.filter(u =>
+      u.role === 'student' &&
+      (
+        u.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
+        u.email.toLowerCase().includes(studentSearch.toLowerCase()) ||
+        (u.course && u.course.toLowerCase().includes(studentSearch.toLowerCase()))
+      ) &&
+      (courseFilter === "" || (u.course && u.course === courseFilter))
+    );
+  } else {
+    students = users;
+  }
 
   return (
     <div className="pt-16 md:ml-64 min-h-screen">
@@ -287,14 +266,19 @@ const UserManagement = () => {
                         <select
                           className="mt-1 block w-28 px-2 py-1 border border-gray-300 rounded text-xs focus:ring-blue-500 focus:border-blue-500"
                           value={courseFilter}
-                          onChange={e => setCourseFilter(e.target.value)}
+                          onChange={e => { setCourseFilter(e.target.value); setPage(1); }}
                         >
                           <option value="">All</option>
                           <option value="BSIT">BSIT</option>
                           <option value="CMA">CMA</option>
                           <option value="CAHS">CAHS</option>
-                          <option value="CEA">CEA</option>
-                          <option value="CRIM">CRIM</option>
+                          <option value="BSCRIM">BSCRIM</option>
+                          <option value="BSECE">BSECE</option>
+                          <option value="BSTM">BSTM</option>
+                          <option value="BSED">BSED</option>
+                          <option value="BSBA">BSBA</option>
+                          <option value="BSCS">BSCS</option>
+                          <option value="BSN">BSN</option>
                         </select>
                       </div>
                     </th>
@@ -340,6 +324,28 @@ const UserManagement = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50 rounded-b-lg">
+              <div className="text-sm text-gray-700">
+                Page {page} of {totalPages} &nbsp;•&nbsp; Total: {totalUsers}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  className="px-4 py-2 rounded border text-gray-500 bg-gray-100 disabled:opacity-50"
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                >
+                  Prev
+                </button>
+                <button
+                  className="px-4 py-2 rounded border text-gray-700 bg-emerald-100 hover:bg-emerald-200 disabled:opacity-50"
+                  disabled={page === totalPages || totalPages === 0}
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
         </div>

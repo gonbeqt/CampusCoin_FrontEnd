@@ -37,7 +37,7 @@ const OrderManagement = () => {
   const [totalOrders, setTotalOrders] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [hasPrev, setHasPrev] = useState(false);
-  // ✅ Toast state
+  // Toast state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });

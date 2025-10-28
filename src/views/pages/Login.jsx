@@ -6,6 +6,17 @@ import { useAuth } from '../components/AuthContext'
 import WebLogo from '../../assets/images/Web logo.png'
 
 const Login = () => {
+  // Disable browser back button on login screen
+  React.useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+    const handlePopState = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
   const { login } = useAuth()
   const [formData, setFormData] = useState({
     email: '',

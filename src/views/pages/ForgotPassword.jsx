@@ -1,27 +1,38 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { CoinsIcon, KeyIcon } from 'lucide-react'
 const ForgotPassword = () => {
   const [resetEmail, setResetEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [resetSuccess, setResetSuccess] = useState(false)
   const [error, setError] = useState('')
+  const navigate = useNavigate();
   const handleForgotPassword = async (e) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
     try {
-      // Simulate password reset request
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      if (resetEmail) {
-        setResetSuccess(true)
+      if (!resetEmail) {
+        setError('Please enter your email address');
+        setIsLoading(false);
+        return;
+      }
+      const res = await fetch('http://localhost:5000/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail })
+      });
+      if (res.ok) {
+        setResetSuccess(true);
+        setTimeout(() => navigate('/reset-forgot-password', { state: { email: resetEmail }, replace: true }), 1000);
       } else {
-        setError('Please enter your email address')
+        const data = await res.json();
+        setError(data.message || 'Failed to send reset email');
       }
     } catch (err) {
-      setError('An error occurred while sending the reset link')
+      setError('An error occurred while sending the reset link');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
   return (

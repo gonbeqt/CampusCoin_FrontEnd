@@ -1,3 +1,15 @@
+import React, { useState, useEffect } from 'react';
+import Skeleton from '../../components/Skeleton';
+import {
+  PlusIcon,
+  SearchIcon,
+  FilterIcon,
+  CalendarIcon,
+  TrashIcon,
+  PencilIcon,
+} from 'lucide-react';
+import eventController from '../../../controllers/eventController';
+
 // Toast notification component
 function Toast({ message, type, show }) {
   return (
@@ -9,17 +21,6 @@ function Toast({ message, type, show }) {
     </div>
   );
 }
-
-import React, { useState, useEffect } from 'react';
-import Skeleton from '../../components/Skeleton';
-import {
-  PlusIcon,
-  SearchIcon,
-  FilterIcon,
-  CalendarIcon,
-  TrashIcon,
-  PencilIcon,
-} from 'lucide-react';
 
 const EventManagement = () => {
   // Filtering and sorting state (must be at the top)
@@ -72,13 +73,8 @@ const EventManagement = () => {
   const confirmDeleteEvent = async () => {
     if (!eventToDelete) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/events/${eventToDelete._id || eventToDelete.id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || errData.error || "Failed to delete event");
-      }
+      const res = await eventController.deleteEvent(eventToDelete._id || eventToDelete.id);
+      if (!res.success) throw new Error(res.error || 'Failed to delete event');
       setShowDeleteModal(false);
       setEventToDelete(null);
       await fetchEvents();
@@ -93,19 +89,18 @@ const EventManagement = () => {
   const fetchEvents = async () => {
     setLoading(true);
     setError("");
-    const start = Date.now();
     try {
-      const params = new URLSearchParams();
-      params.append("page", page);
-      if (statusFilter !== "all") params.append("status", statusFilter);
-      if (searchTerm) params.append("search", searchTerm);
-      params.append("sort", sortOrder);
-      const res = await fetch(`http://localhost:5000/api/events/all-events?${params.toString()}`, { method: "GET" });
-      const data = await res.json();
-      if (data && Array.isArray(data.events)) {
-        setEvents(data.events);
-        setTotalPages(data.pagination?.totalPages || 1);
-        setTotalEvents(data.totalEvents || data.events.length);
+      const params = {
+        page,
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        search: searchTerm || undefined,
+        sort: sortOrder,
+      };
+      const res = await eventController.getAllEvents(params.page, 10); // Adjust limit as needed
+      if (res.success && Array.isArray(res.events)) {
+        setEvents(res.events);
+        setTotalPages(res.totalPages || 1);
+        setTotalEvents(res.totalEvents || res.events.length);
       } else {
         setEvents([]);
         setTotalPages(1);
@@ -114,13 +109,7 @@ const EventManagement = () => {
     } catch (err) {
       setError("Failed to fetch events");
     } finally {
-      const elapsed = Date.now() - start;
-      const minDelay = 400;
-      if (elapsed < minDelay) {
-        setTimeout(() => setLoading(false), minDelay - elapsed);
-      } else {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
@@ -178,7 +167,6 @@ const EventManagement = () => {
     setFormError("");
     setSubmitting(true);
     try {
-      let res;
       const payload = {
         title: form.title,
         date: form.date,
@@ -193,35 +181,13 @@ const EventManagement = () => {
         minStudents: form.minStudents ? Number(form.minStudents) : 0,
         status: form.status,
       };
-  const token = localStorage.getItem('authToken');
-      const authHeaders = {
-        "Content-Type": "application/json",
-        ...(token ? { "Authorization": `Bearer ${token}` } : {})
-      };
+      let res;
       if (editId) {
-        res = await fetch(`http://localhost:5000/api/events/${editId}`, {
-          method: "PUT",
-          headers: authHeaders,
-          body: JSON.stringify(payload),
-        });
+        res = await eventController.updateEvent(editId, payload);
       } else {
-        res = await fetch("http://localhost:5000/api/events/create", {
-          method: "POST",
-          headers: authHeaders,
-          body: JSON.stringify(payload),
-        });
+        res = await eventController.createEvent(payload);
       }
-      const text = await res.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        // Not JSON, probably HTML error
-        throw new Error(text.startsWith('<') ? 'Server returned HTML (possible 404/500 or wrong endpoint)' : text);
-      }
-      if (!res.ok) {
-        throw new Error(data?.message || data?.error || "Failed to submit event");
-      }
+      if (!res.success) throw new Error(res.error || 'Failed to submit event');
       await fetchEvents();
       setShowModal(false);
       setForm({
