@@ -8,6 +8,7 @@ import {
   TrashIcon,
   PencilIcon,
 } from 'lucide-react';
+import webLogo from '../../../assets/images/Web logo.png';
 import eventController from '../../../controllers/eventController';
 
 // Toast notification component
@@ -370,7 +371,8 @@ const EventManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-sm text-blue-600 font-medium">
+                      <div className="text-sm text-blue-600 font-medium flex items-center">
+                        <img src={webLogo} alt="Web Logo" className="w-4 h-4 mr-1" />
                         {event.reward} CampusCoin
                       </div>
                     </td>

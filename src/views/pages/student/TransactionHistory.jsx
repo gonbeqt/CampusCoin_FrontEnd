@@ -6,6 +6,7 @@ import {
   FilterIcon,
   CoinsIcon
 } from 'lucide-react'
+import webLogo from '../../../assets/images/Web logo.png';
 import productController from '../../../controllers/productController';
 import Skeleton from '../../components/Skeleton';
 
@@ -154,7 +155,7 @@ const TransactionHistory = ({ user }) => {
                               ? `+${transaction.totalPrice}`
                               : transaction.totalPrice}
                           </span>
-                          <CoinsIcon size={16} className="text-emerald-600" />
+                          <img src={webLogo} alt="Web Logo" className="w-4 h-4" />
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-left text-sm text-gray-500">
