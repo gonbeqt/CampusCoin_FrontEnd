@@ -4,11 +4,11 @@ import { Link } from 'react-router-dom';
 import {
   CalendarIcon,
   UsersIcon,
-  CoinsIcon,
   TrendingUpIcon,
   BarChartIcon,
   PieChartIcon,
 } from 'lucide-react';
+import logo from '../../../assets/images/Web logo.png';
 import WalletConnect from '../../../views/components/WalletConnect';
 import adminDashboardController from '../../../controllers/adminDashboardController';
 
@@ -148,8 +148,8 @@ const AdminDashboard = ({ user }) => {
                 {stats.totalCoinsIssued}
               </p>
             </div>
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <CoinsIcon size={24} className="text-yellow-600" />
+            <div className="p-2 bg-emerald-100 rounded-lg">
+              <img src={logo} alt="Web Logo" className="h-6 w-6" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm">

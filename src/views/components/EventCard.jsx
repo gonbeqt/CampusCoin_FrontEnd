@@ -37,55 +37,53 @@ const EventCard = ({ event, admin }) => {
       onClick={admin ? handleCardClick : undefined}
     >
       {/* Top Section */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex-1">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400/80">
-                {event.category}
-              </p>
-              <h3 className="mt-2 text-xl font-semibold text-emerald-900 md:text-2xl">
-                {event.title}
-              </h3>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400/80">
+              {event.category}
+            </p>
+            <h3 className="mt-2 text-xl font-semibold text-emerald-900 md:text-2xl break-words">
+              {event.title}
+            </h3>
+          </div>
+
+          {/* Admin badges */}
+          {admin && (
+            <div className="flex flex-col items-end gap-1 shrink-0 ml-4">
+              <span className={`cc-pill ${statusColor}`}>{statusText}</span>
+              <span className={`cc-pill ${finalStateClass}`}>{finalStateText}</span>
             </div>
-
-            {/* Admin badges */}
-            {admin && (
-              <div className="flex items-center gap-2 shrink-0">
-                <span className={`cc-pill ${finalStateClass}`}>{finalStateText}</span>
-                <span className={`cc-pill ${statusColor}`}>{statusText}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Date, Time, Location */}
-          <div className="mt-4 flex flex-col gap-2 text-sm text-emerald-700">
-            <span className="flex items-center gap-2">
-              <CalendarIcon size={18} />
-              {eventDate.toLocaleDateString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-              })}
-            </span>
-            <span className="flex items-center gap-2">
-              <ClockIcon size={18} />
-              {eventDate.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </span>
-            <span className="flex items-center gap-2">
-              <MapPinIcon size={18} />
-              {event.location}
-            </span>
-          </div>
-          {event.organizedBy && (
-            <span className="mt-5 inline-block text-xs font-medium uppercase tracking-wider text-emerald-400">
-              Organized by {event.organizedBy}
-            </span>
           )}
         </div>
+
+        {/* Date, Time, Location */}
+        <div className="flex flex-col gap-2 text-sm text-emerald-700">
+          <span className="flex items-center gap-2">
+            <CalendarIcon size={18} />
+            {eventDate.toLocaleDateString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </span>
+          <span className="flex items-center gap-2">
+            <ClockIcon size={18} />
+            {eventDate.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+          <span className="flex items-center gap-2">
+            <MapPinIcon size={18} />
+            {event.location}
+          </span>
+        </div>
+        {event.organizedBy && (
+          <span className="inline-block text-xs font-medium uppercase tracking-wider text-emerald-400">
+            Organized by {event.organizedBy}
+          </span>
+        )}
       </div>
 
       {/* Bottom Section */}
