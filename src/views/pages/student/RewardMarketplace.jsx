@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Skeleton from '../../components/Skeleton'
-import { CoinsIcon, SearchIcon, PlusCircle, MinusCircle } from 'lucide-react'
+import { SearchIcon, PlusCircle, MinusCircle } from 'lucide-react'
+import logo from '../../../assets/images/Web logo.png';
 import { useBalance } from "../../components/BalanceContext";
 import productController from '../../../controllers/productController';
 
@@ -317,7 +318,7 @@ const RewardMarketplace = ({ user }) => {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center font-semibold text-gray-900">
-                      <CoinsIcon size={16} className="mr-1 text-emerald-600" />
+                      <img src={logo} alt="Web Logo" className="h-4 w-4 mr-1" />
                       <span>{product.price * quantities[product._id]}</span>
                     </div>
                     <div className="relative w-32 h-8">

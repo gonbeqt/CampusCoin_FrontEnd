@@ -4,11 +4,11 @@ import { Link } from 'react-router-dom'
 import {
   CalendarIcon,
   UsersIcon,
-  CoinsIcon,
   TrendingUpIcon,
   BarChartIcon,
   PieChartIcon,
 } from 'lucide-react'
+import logo from '../../../assets/images/Web logo.png';
 import WalletConnect from '../../../views/components/WalletConnect'
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
@@ -161,13 +161,16 @@ const AdminDashboard = ({ user }) => {
         <div className="bg-white rounded-lg shadow p-5">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-500">CampusCoin Economy</p>
+              <div className="flex items-center gap-2">
+                <img src={logo} alt="Web Logo" className="h-5 w-5" />
+                <p className="text-gray-500">Economy</p>
+              </div>
               <p className="text-2xl font-bold mt-1">
                 {stats.totalCoinsIssued}
               </p>
             </div>
             <div className="p-2 bg-yellow-100 rounded-lg">
-              <CoinsIcon size={24} className="text-yellow-600" />
+              <img src={logo} alt="Web Logo" className="h-6 w-6" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm">

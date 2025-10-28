@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { CoinsIcon, TrendingUpIcon, TrendingDownIcon } from 'lucide-react'
+import { TrendingUpIcon, TrendingDownIcon } from 'lucide-react'
+import logo from '../../assets/images/Web logo.png';
 import { useBalance } from "./BalanceContext";
 import authController from "../../controllers/authController";
 
@@ -64,7 +65,7 @@ const WalletCard = () => {
 
       <div className="flex items-center gap-4">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100">
-          <CoinsIcon size={28} className="text-emerald-600" />
+          <img src={logo} alt="Web Logo" className="h-7 w-7" />
         </div>
         <div>
           <p className="text-sm font-medium uppercase tracking-wide text-emerald-500/80">Current Balance</p>

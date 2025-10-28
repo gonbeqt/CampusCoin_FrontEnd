@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom'
 import {
   CalendarIcon,
-  CoinsIcon,
   TrendingUpIcon,
   ClockIcon,
   MapPinIcon,
 } from 'lucide-react'
+import logo from '../../../assets/images/Web logo.png';
 import EventCard from '../../../views/components/EventCard'
 import WalletCard from '../../../views/components/WalletCard'
 import RecentTransactionsCard from '../../../views/components/RecentTransactionsCard'
@@ -114,7 +114,7 @@ const StudentDashboard = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-2xl border border-emerald-100 bg-gray-50 p-4">
               <div className="mb-2 flex items-center gap-2 text-gray-700">
-                <CalendarIcon size={18} />
+                <img src={logo} alt="Web Logo" className="h-4 w-4" />
                 <span className="text-xs font-medium uppercase tracking-wide text-gray-600">Events</span>
               </div>
               <p className="text-2xl font-semibold text-gray-900">{attendanceCount}</p>
@@ -122,7 +122,7 @@ const StudentDashboard = () => {
             </div>
             <div className="rounded-2xl border border-emerald-100 bg-white p-4">
               <div className="mb-2 flex items-center gap-2 text-gray-700">
-                <TrendingUpIcon size={18} />
+                <img src={logo} alt="Web Logo" className="h-4 w-4" />
                 <span className="text-xs font-medium uppercase tracking-wide text-gray-600">Streak</span>
               </div>
               <p className="text-2xl font-semibold text-gray-900">5</p>
@@ -156,7 +156,7 @@ const StudentDashboard = () => {
                 <span>{nextEvent.location}</span>
               </div>
               <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
-                <CoinsIcon size={16} />
+                <img src={logo} alt="Web Logo" className="h-4 w-4" />
                 <span>{nextEvent.reward} CampusCoin reward</span>
               </div>
             </div>

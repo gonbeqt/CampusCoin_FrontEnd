@@ -1,6 +1,7 @@
 import React from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { CalendarIcon, MapPinIcon, CoinsIcon, ClockIcon } from 'lucide-react'
+import { CalendarIcon, MapPinIcon, ClockIcon } from 'lucide-react'
+import logo from '../../assets/images/Web logo.png';
 import { useBalance } from "./BalanceContext";
 
 const EventCard = ({ event, admin }) => {
@@ -100,7 +101,7 @@ const EventCard = ({ event, admin }) => {
 
         {/* CampusCoin reward badge (bottom-right) */}
         <div className={`cc-pill bg-emerald-100/90 text-emerald-800 flex items-center gap-2 px-4 py-2 font-semibold`}>
-          <CoinsIcon size={16} className="text-emerald-500" />
+          <img src={logo} alt="Web Logo" className="h-4 w-4" />
           <span>{event.reward} CampusCoin</span>
         </div>
       </div>
