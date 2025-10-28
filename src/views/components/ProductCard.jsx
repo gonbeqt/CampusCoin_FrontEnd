@@ -1,5 +1,6 @@
 import React from 'react'
-import { Edit2Icon, TrashIcon, CoinsIcon } from 'lucide-react'
+import { Edit2Icon, TrashIcon } from 'lucide-react'
+import webLogo from '../../assets/images/Web logo.png'
 
 // Helper to format category display
 const formatCategory = (cat) => {
@@ -65,7 +66,7 @@ const ProductCard = ({
         </p>
         <div className="flex justify-between items-center">
           <div className="flex items-center text-blue-600 font-medium">
-            <CoinsIcon size={16} className="mr-1" />
+            <img src={webLogo} alt="Web Logo" className="w-4 h-4 mr-1" />
             <span>{product.price}</span>
           </div>
           {isSellerView ? (

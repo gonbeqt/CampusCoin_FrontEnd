@@ -8,6 +8,7 @@ import {
   BarChart2Icon,
   PlusCircleIcon,
 } from 'lucide-react'
+import webLogo from '../../../assets/images/Web logo.png'
 import WalletConnect from '../../../views/components/WalletConnect'
 import productController from '../../../controllers/productController'
 import authController from '../../../controllers/authController'
@@ -119,12 +120,12 @@ const SellerDashboard = ({ user }) => {
                 </div>
               ) : (
                 <p className="text-2xl font-bold mt-1 flex items-center">
-                  <CoinsIcon className="w-5 h-5 mr-1 text-amber-500" /> {stats.totalSales}  ETH
+                  <img src={webLogo} alt="Web Logo" className="w-5 h-5 mr-1" /> {stats.totalSales}  ETH
                 </p>
               )}
             </div>
             <div className="p-2 rounded-lg bg-emerald-50">
-              <CoinsIcon size={24} className="text-emerald-600" />
+              <img src={webLogo} alt="Web Logo" className="w-6 h-6" />
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Image, Coins, Check } from 'lucide-react'
+import { ArrowLeft, Image, Check } from 'lucide-react'
+import webLogo from '../../../assets/images/Web logo.png'
 import ProductController from '../../../controllers/productController'
 
 const AddProduct = () => {
@@ -235,7 +236,7 @@ const result = await ProductController.addProduct(productFormData, token);
                 <label className="block text-sm font-medium text-gray-700 mb-1">Price (CampusCoin)*</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Coins size={16} className="text-gray-400" />
+                    <img src={webLogo} alt="Web Logo" className="w-4 h-4" />
                   </div>
                   <input
                     type="number"

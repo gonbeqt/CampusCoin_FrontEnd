@@ -6,9 +6,9 @@ import {
   PlusCircleIcon,
   BarChart2Icon,
   SettingsIcon,
-  CoinsIcon,
   X,
 } from 'lucide-react'
+import logo from '../../assets/images/Web logo.png';
 
 const SellerSidebar = ({ user, showMobileMenu, onNavigate }) => {
   const location = useLocation()
@@ -66,9 +66,7 @@ const SellerSidebar = ({ user, showMobileMenu, onNavigate }) => {
             </button>
           </div>
           <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/40 bg-emerald-700/40 px-3 py-4 shadow-lg shadow-emerald-950/30">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/60">
-              <CoinsIcon className="h-5 w-5 text-white" />
-            </div>
+            <img src={logo} alt="Web Logo" className="h-8 w-8" />
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.25em] text-emerald-100/80">CampusCoin</p>
               <p className="text-lg font-semibold text-white">Seller Studio</p>
