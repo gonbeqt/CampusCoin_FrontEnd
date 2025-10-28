@@ -307,7 +307,7 @@ const EventManagement = () => {
         <div className="bg-white rounded-lg shadow mb-6">
           <div className="p-4 border-b">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="relative w-full md:w-64 flex items-center">
+              <div className="relative w-full md:w-1/2 flex items-center">
                 <SearchIcon
                   size={18}
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"

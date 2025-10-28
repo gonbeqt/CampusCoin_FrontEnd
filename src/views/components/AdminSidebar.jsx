@@ -5,7 +5,6 @@ import {
   CalendarIcon,
   UsersIcon,
   CheckSquareIcon,
-  SettingsIcon,
   ShoppingBagIcon,
   CoinsIcon,
   X,
@@ -39,11 +38,6 @@ const AdminSidebar = ({ user, showMobileMenu, onNavigate }) => {
       name: 'Users',
       path: '/admin/users',
       icon: <UsersIcon size={20} />,
-    },
-    {
-      name: 'Settings',
-      path: '/admin/settings',
-      icon: <SettingsIcon size={20} />,
     },
   ]
 
