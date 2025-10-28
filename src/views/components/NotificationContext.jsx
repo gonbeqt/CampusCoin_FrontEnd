@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import notificationController from '../../controllers/notificationController';
+import socketService from '../../services/socketService';
+import AuthModel from '../../models/authModel';
 
 const NotificationContext = createContext();
 
@@ -11,32 +13,49 @@ export const NotificationProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [stats, setStats] = useState(null);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const isInitializedRef = useRef(false);
+  const authModel = useRef(new AuthModel());
 
-  // Load initial data
+  // Get current user ID on mount
   useEffect(() => {
-    loadInitialData();
-    setupEventListeners();
+    const userData = authModel.current.getUserData();
+    if (userData) {
+      const userId = userData._id || userData.id;
+      setCurrentUserId(userId);
+      console.log('Current user ID:', userId);
+    }
   }, []);
 
   // Load initial notification data - only once
   const loadInitialData = useCallback(async () => {
-    // Prevent multiple simultaneous calls
-    if (isLoading) return;
+    // Prevent loading if no user is identified
+    if (!currentUserId) {
+      console.warn('No user ID found. Skipping notification load.');
+      return;
+    }
     
     try {
       setIsLoading(true);
       setError(null);
 
-      const [notificationsData, unreadCountData, preferencesData, statsData] = await Promise.allSettled([
+      console.log(`Fetching notifications for user ${currentUserId}...`);
+
+      const [notificationsData, unreadCountData, statsData] = await Promise.allSettled([
         notificationController.getUserNotifications(1, 50),
         notificationController.getUnreadCount(),
-        notificationController.getNotificationPreferences(),
         notificationController.getNotificationStats()
       ]);
 
       if (notificationsData.status === 'fulfilled') {
-        setNotifications(notificationsData.value.notifications || []);
+        const fetchedNotifications = notificationsData.value.notifications || [];
+        console.log(`API returned ${fetchedNotifications.length} notifications total`);
+        
+        // DON'T filter - backend already filters by authenticated user
+        setNotifications(fetchedNotifications);
+        console.log(`Set ${fetchedNotifications.length} notifications for user ${currentUserId}`);
       } else {
+        console.error('Failed to fetch notifications:', notificationsData.reason);
         setNotifications([]);
       }
 
@@ -46,11 +65,8 @@ export const NotificationProvider = ({ children }) => {
         setUnreadCount(0);
       }
 
-      if (preferencesData.status === 'fulfilled') {
-        setPreferences(preferencesData.value);
-      } else {
-        setPreferences({ inApp: { enabled: true }, push: { enabled: false } });
-      }
+      // Set default preferences (API endpoint not available)
+      setPreferences({ inApp: { enabled: true }, push: { enabled: false } });
 
       if (statsData.status === 'fulfilled') {
         setStats(statsData.value);
@@ -58,13 +74,22 @@ export const NotificationProvider = ({ children }) => {
         setStats({ total: 0, unread: 0, important: 0 });
       }
     } catch (error) {
+      console.error('Error loading initial notification data:', error);
       setError(error.message);
       setNotifications([]);
       setUnreadCount(0);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading]);
+  }, [currentUserId]);
+
+  // Trigger notification load when currentUserId is set
+  useEffect(() => {
+    if (!currentUserId) return;
+    
+    console.log('User ID changed to:', currentUserId, 'loading notifications...');
+    loadInitialData();
+  }, [currentUserId, loadInitialData]); // This will trigger whenever currentUserId changes
 
   // Refresh notifications (for socket updates)
   const refreshNotifications = useCallback(async () => {
@@ -75,7 +100,11 @@ export const NotificationProvider = ({ children }) => {
       ]);
 
       if (notificationsData.status === 'fulfilled') {
-        setNotifications(notificationsData.value.notifications || []);
+        const fetchedNotifications = notificationsData.value.notifications || [];
+        console.log(`Refreshed: ${fetchedNotifications.length} notifications for user ${currentUserId}`);
+        
+        // DON'T filter - backend already filters by authenticated user
+        setNotifications(fetchedNotifications);
       }
 
       if (unreadCountData.status === 'fulfilled') {
@@ -84,33 +113,64 @@ export const NotificationProvider = ({ children }) => {
     } catch (error) {
       console.error('Error refreshing notifications:', error);
     }
-  }, []);
+  }, [currentUserId]);
 
-  // Note: Push notifications setup removed as per requirements
+  // Initialize socket connection when user is identified
+  useEffect(() => {
+    // Wait for user to be identified
+    if (!currentUserId) return;
+    
+    if (isInitializedRef.current) return; // Prevent re-initialization
+    
+    isInitializedRef.current = true;
+    console.log('Initializing socket connection for user:', currentUserId);
 
-  // Setup event listeners
-  const setupEventListeners = useCallback(() => {
-    // Listen for notification refresh events
+    // Connect socket service
+    socketService.connect();
+
+    // Setup socket listeners
+    const handleNewNotification = () => {
+      console.log('New notification received via socket');
+      refreshNotifications();
+    };
+
+    const handleNotificationUpdate = () => {
+      console.log('Notification update received via socket');
+      refreshNotifications();
+    };
+
+    socketService.on('new_notification', handleNewNotification);
+    socketService.on('notification_updated', handleNotificationUpdate);
+
+    // Setup window event listeners
     const handleNotificationRefresh = () => {
       refreshNotifications();
     };
 
-    window.addEventListener('notificationRefresh', handleNotificationRefresh);
-
-    // Listen for storage changes (for multi-tab sync)
     const handleStorageChange = (e) => {
       if (e.key === 'notificationUpdate') {
         refreshNotifications();
       }
     };
 
+    window.addEventListener('notificationRefresh', handleNotificationRefresh);
     window.addEventListener('storage', handleStorageChange);
 
+    // Cleanup on unmount
     return () => {
+      socketService.off('new_notification', handleNewNotification);
+      socketService.off('notification_updated', handleNotificationUpdate);
       window.removeEventListener('notificationRefresh', handleNotificationRefresh);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [refreshNotifications]);
+  }, [currentUserId, refreshNotifications]);
+
+  // Note: Push notifications setup removed as per requirements
+
+  // Setup event listeners (kept for backward compatibility)
+  const setupEventListeners = useCallback(() => {
+    // This is now handled in the main useEffect above
+  }, []);
 
   // Mark notification as read
   const markAsRead = useCallback(async (notificationId) => {
