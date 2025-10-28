@@ -25,6 +25,7 @@ const EventDetails = () => {
   const [qrError, setQrError] = useState(null)
   const [qrLoading, setQrLoading] = useState(false)
   const [qrExpiresIn, setQrExpiresIn] = useState('')
+  const [registrationSuccess, setRegistrationSuccess] = useState(false)
 
   const userData = authModel.getUserData();
   const userId = userData?._id || userData?.id;
@@ -242,6 +243,8 @@ const EventDetails = () => {
       }));
       setQrData(null);
       setQrError(null);
+      setRegistrationSuccess(true);
+      setTimeout(() => setRegistrationSuccess(false), 3000);
     } else {
       alert(res.error || "Failed to join event");
     }
@@ -471,6 +474,12 @@ const EventDetails = () => {
                 >
                   Register for Event
                 </button>
+              )}
+              
+              {registrationSuccess && (
+                <div className="mt-3 rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-center">
+                  <p className="text-sm font-medium text-emerald-700">✓ Successfully registered for event!</p>
+                </div>
               )}
             </div>
           </div>

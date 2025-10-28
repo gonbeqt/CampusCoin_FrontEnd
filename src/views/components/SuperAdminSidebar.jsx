@@ -38,11 +38,7 @@ const SuperAdminSidebar = ({user, showMobileMenu, onNavigate }) => {
       path: '/superadmin/users',
       icon: <CheckCircleIcon size={20} />,
     },
-    {
-      name: 'Settings',
-      path: '/superadmin/settings',
-      icon: <SettingsIcon size={20} />,
-    },
+  
   ]
   // Apply mobile menu visibility classes
   const sidebarClasses = `fixed top-0 left-0 z-[60] h-screen  transition-transform ${showMobileMenu ? 'translate-x-0' : '-translate-x-full'} md:w-64 md:translate-x-0`

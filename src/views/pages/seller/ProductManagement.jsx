@@ -27,6 +27,10 @@ const ProductManagement = () => {
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [productToEdit, setProductToEdit] = useState(null)
 
+  // status message states
+  const [deleteSuccess, setDeleteSuccess] = useState(false)
+  const [editSuccess, setEditSuccess] = useState(false)
+
   const token = localStorage.getItem('authToken')
 
   // Fetch products from API
@@ -81,6 +85,8 @@ const ProductManagement = () => {
       const res = await ProductController.deleteProduct(productToDelete, token)
       if (res.success) {
         setProducts(products.filter((p) => p._id !== productToDelete))
+        setDeleteSuccess(true)
+        setTimeout(() => setDeleteSuccess(false), 3000)
       } else {
         console.error(res.error)
       }
@@ -108,6 +114,8 @@ const ProductManagement = () => {
         setProducts(products.map((p) =>
           p._id === productToEdit._id ? productToEdit : p
         ))
+        setEditSuccess(true)
+        setTimeout(() => setEditSuccess(false), 3000)
       } else {
         console.error(res.error)
       }
@@ -128,6 +136,19 @@ const ProductManagement = () => {
           <PlusIcon size={16} className="mr-2" /> Add Product
         </Link>
       </div>
+
+      {/* Status Messages */}
+      {deleteSuccess && (
+        <div className="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-center">
+          <p className="text-sm font-medium text-red-700">✓ Product deleted successfully!</p>
+        </div>
+      )}
+      
+      {editSuccess && (
+        <div className="mb-4 rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-center">
+          <p className="text-sm font-medium text-emerald-700">✓ Product updated successfully!</p>
+        </div>
+      )}
 
       {/* Search + Filter */}
       <div className="mb-6 rounded-3xl border border-emerald-100 bg-white p-4 shadow-sm">

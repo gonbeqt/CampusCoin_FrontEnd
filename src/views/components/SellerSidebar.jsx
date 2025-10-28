@@ -76,8 +76,7 @@ const SellerSidebar = ({ user, showMobileMenu, onNavigate }) => {
         </div>
         {user?.role === 'seller' && (
           <div className="mt-6 rounded-2xl border border-emerald-500/40 bg-emerald-700/40 px-4 py-5 shadow-inner shadow-emerald-950/30">
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-100/80">Store ID</p>
-            <p className="mt-2 text-sm font-semibold text-white break-words">{user?._id}</p>
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-100/80">Store</p>
             <p className="text-xs text-emerald-100/60">Manage products, track sales, grow rewards.</p>
           </div>
         )}

@@ -107,11 +107,7 @@ const StudentSidebar = ({ user, showMobileMenu, onNavigate }) => {
           ))}
         </ul>
 
-        {/* Footer */}
-        <div className="mt-auto pt-8 text-xs text-emerald-100/70 border-t border-emerald-700/50">
-          <p className="font-semibold">Need help?</p>
-          <p className="text-emerald-100/60">Contact your campus support.</p>
-        </div>
+      
       </div>
     </aside>
   )
