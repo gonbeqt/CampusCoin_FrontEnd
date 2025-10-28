@@ -41,6 +41,8 @@ const RewardMarketplace = ({ user }) => {
   const [totalProducts, setTotalProducts] = useState(0)
   const [hasNext, setHasNext] = useState(false)
   const [hasPrev, setHasPrev] = useState(false)
+  const [redeemSuccess, setRedeemSuccess] = useState(false)
+  const [redeemProductName, setRedeemProductName] = useState('')
   const { balance, setBalance, refreshBalance } = useBalance();
 
   // Defensive fetchProducts
@@ -121,8 +123,10 @@ const RewardMarketplace = ({ user }) => {
       // Refresh product list
       await fetchProducts();
 
-      // Optionally show a success message
-      setError(null);
+      // Show success message
+      setRedeemProductName(product.name);
+      setRedeemSuccess(true);
+      setTimeout(() => setRedeemSuccess(false), 3000);
     } else {
       setError(orderResult.error || 'Failed to create order');
     }
@@ -173,6 +177,13 @@ const RewardMarketplace = ({ user }) => {
           </p>
         </div>
       </div>
+
+      {/* Success Message */}
+      {redeemSuccess && (
+        <div className="mb-4 rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-center">
+          <p className="text-sm font-medium text-emerald-700">✓ Successfully redeemed {redeemProductName}!</p>
+        </div>
+      )}
         {/* category buttons */}
         <div className="mb-5 flex flex-wrap gap-2">
           <button

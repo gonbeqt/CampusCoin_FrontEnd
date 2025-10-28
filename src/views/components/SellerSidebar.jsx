@@ -63,24 +63,24 @@ const SellerSidebar = ({ user, showMobileMenu, onNavigate }) => {
           >
             <X className="h-3.5 w-3.5" />
             Close
-          </button>
-        </div>
-        <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/40 bg-emerald-700/40 px-3 py-4 shadow-lg shadow-emerald-950/30">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/60">
-            <CoinsIcon className="h-5 w-5 text-white" />
+            </button>
           </div>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-[0.25em] text-emerald-100/80">CampusCoin</p>
-            <p className="text-lg font-semibold text-white">Seller Studio</p>
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/40 bg-emerald-700/40 px-3 py-4 shadow-lg shadow-emerald-950/30">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/60">
+              <CoinsIcon className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.25em] text-emerald-100/80">CampusCoin</p>
+              <p className="text-lg font-semibold text-white">Seller Studio</p>
+            </div>
           </div>
-        </div>
-        {user?.role === 'seller' && (
-          <div className="mt-6 rounded-2xl border border-emerald-500/40 bg-emerald-700/40 px-4 py-5 shadow-inner shadow-emerald-950/30">
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-100/80">Store</p>
-            <p className="text-xs text-emerald-100/60">Manage products, track sales, grow rewards.</p>
-          </div>
-        )}
-        <ul className="mt-8 space-y-2">
+          {user?.role === 'seller' && (
+            <div className="mt-6 rounded-2xl border border-emerald-500/40 bg-emerald-700/40 px-4 py-5 shadow-inner shadow-emerald-950/30">
+              <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-100/80">Store</p>
+              <p className="text-xs text-emerald-100/60">Manage products, track sales, grow rewards.</p>
+            </div>
+          )}
+          <ul className="mt-8 space-y-2">
           {sellerNavItems.map((item) => (
             <li key={item.name}>
               <Link
