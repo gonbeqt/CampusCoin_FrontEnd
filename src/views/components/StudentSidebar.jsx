@@ -4,7 +4,6 @@ import { useBalance } from "./BalanceContext";
 import {
   HomeIcon,
   CalendarIcon,
-  CoinsIcon,
   ShoppingBagIcon,
   HistoryIcon,
   X,
@@ -71,7 +70,7 @@ const StudentSidebar = ({ user, showMobileMenu, onNavigate }) => {
               Balance
             </p>
             <p className="mt-2 flex items-center gap-2 text-2xl font-semibold text-white">
-              <CoinsIcon className="h-5 w-5" /> {balance}
+              <img src={WebLogo} alt="Web Logo" className="h-5 w-5" /> {balance}
             </p>
             <p className="text-xs font-medium text-emerald-100/60 mt-1">
               Attend events to earn more rewards.

@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom'
 import {
   CalendarIcon,
-  CoinsIcon,
   TrendingUpIcon,
   ClockIcon,
   MapPinIcon,
 } from 'lucide-react'
+import logo from '../../../assets/images/Web logo.png';
 import EventCard from '../../../views/components/EventCard'
 import WalletCard from '../../../views/components/WalletCard'
 import RecentTransactionsCard from '../../../views/components/RecentTransactionsCard'
@@ -156,7 +156,7 @@ const StudentDashboard = () => {
                 <span>{nextEvent.location}</span>
               </div>
               <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
-                <CoinsIcon size={16} />
+                <img src={logo} alt="Web Logo" className="h-4 w-4" />
                 <span>{nextEvent.reward} CampusCoin reward</span>
               </div>
             </div>

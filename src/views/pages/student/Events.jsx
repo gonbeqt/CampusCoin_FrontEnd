@@ -4,11 +4,11 @@ import {
   CalendarIcon,
   SearchIcon,
   ClockIcon,
-  MapPinIcon,
-  CoinsIcon
+  MapPinIcon
 } from 'lucide-react'
+import logo from '../../../assets/images/Web logo.png';
 import eventController from '../../../controllers/eventController'
-import { useBalance } from "../../components/BalanceContext"; 
+import { useBalance } from "../../components/BalanceContext";
 import AuthModel from '../../../models/authModel'
 const authModel = new AuthModel();
 
@@ -660,7 +660,7 @@ const EventCard = ({ event, userId, timers, handleClaimReward, handleJoinEvent, 
           </div>
           <div className="flex items-center text-gray-500"><MapPinIcon size={16} className="mr-1" />{event.location}</div>
         </div>
-        <div className="mt-4 flex items-center text-blue-600"><CoinsIcon size={16} className="mr-1" />{event.reward} CampusCoin reward</div>
+        <div className="mt-4 flex items-center text-blue-600"><img src={logo} alt="Web Logo" className="h-4 w-4 mr-1" />{event.reward} CampusCoin reward</div>
         <div className="mt-5 flex justify-between items-center">
           <Link to={`/student/event/${event._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">View details</Link>
           {/* Claim Now button for Claim Reward tab (enabled for present, disabled for absent) */}
