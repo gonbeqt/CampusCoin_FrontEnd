@@ -9,7 +9,6 @@ import {
   X,
 } from 'lucide-react'
 
-// ✅ Import your custom logo
 import WebLogo from '../../assets/images/Web logo.png'
 
 const StudentSidebar = ({ user, showMobileMenu, onNavigate }) => {
@@ -50,12 +49,11 @@ const StudentSidebar = ({ user, showMobileMenu, onNavigate }) => {
         </div>
 
         {/* Header Section with Pure Logo */}
-        <div className="flex items-center gap-3 px-4 py-4">
-          {/* ✅ Pure logo without container */}
+        <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/40 bg-emerald-700/40 px-3 py-4 shadow-lg shadow-emerald-950/30">
           <img
             src={WebLogo}
             alt="CampusCoin Logo"
-            className="h-10 w-10 object-contain"
+            className="h-12 w-12 object-contain"
           />
           <div>
             <p className="text-sm font-medium text-emerald-100/90">CampusCoin</p>

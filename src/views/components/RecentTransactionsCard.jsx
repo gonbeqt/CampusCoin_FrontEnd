@@ -1,5 +1,6 @@
 import React from 'react'
 import { ArrowUpIcon, ArrowDownIcon, XIcon, CoinsIcon } from 'lucide-react'
+import logo from '../../assets/images/Web logo.png';
 
 const RecentTransactionsCard = ({ transactions }) => {
   const getStatusClasses = (status) => {
@@ -54,7 +55,7 @@ const RecentTransactionsCard = ({ transactions }) => {
               <span className={`text-sm font-semibold ${classes.amountColor}`}>
                 {classes.sign}{transaction.totalPrice}
               </span>
-              <CoinsIcon size={14} className="text-emerald-600" />
+              <img src={logo} alt="Web Logo" className="h-4 w-4" />
             </div>
           </div>
         )

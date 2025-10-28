@@ -1,16 +1,19 @@
-import React, { useEffect, useState } from 'react'
-import { TrendingUpIcon, TrendingDownIcon } from 'lucide-react'
-import logo from '../../assets/images/Web logo.png';
+import React, { useEffect, useState, useRef } from "react";
+import { TrendingUpIcon, TrendingDownIcon } from "lucide-react";
 import { useBalance } from "./BalanceContext";
 import authController from "../../controllers/authController";
 
 const WalletCard = () => {
-  const { balance } = useBalance()
+  const { balance } = useBalance();
   const [stats, setStats] = useState({
     today: 0,
     thisWeek: 0,
     lastWeek: 0,
   });
+
+  const [isHovered, setIsHovered] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const hoverTimeout = useRef(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -26,6 +29,10 @@ const WalletCard = () => {
       }
     };
     fetchStats();
+
+    return () => {
+      if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    };
   }, []);
 
   const StatBadge = ({ label, value }) => {
@@ -47,15 +54,37 @@ const WalletCard = () => {
     );
   };
 
+  // Hover Handlers
+  const handleMouseEnter = () => {
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    hoverTimeout.current = setTimeout(() => {
+      setIsHovered(true);
+      setIsAnimating(true);
+    }, 100);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    setIsHovered(false);
+    setTimeout(() => setIsAnimating(false), 300);
+  };
+
   return (
-    <div className="cc-card p-6">
+    <div
+      className={`cc-card p-6 transition-transform duration-500 ease-out ${
+        isHovered ? "scale-[1.03] shadow-lg" : "scale-100"
+      }`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-500/80">Balance overview</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-500/80">
+            Balance overview
+          </p>
           <h2 className="text-xl font-semibold text-emerald-900">Your Wallet</h2>
         </div>
 
-        {/* badge row with good spacing */}
         <div className="flex flex-wrap gap-2">
           <StatBadge label="today" value={stats.today} />
           <StatBadge label="this week" value={stats.thisWeek} />
@@ -63,12 +92,28 @@ const WalletCard = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100">
-          <img src={logo} alt="Web Logo" className="h-7 w-7" />
+      <div className="flex items-center gap-4 transition-all duration-300">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 overflow-hidden">
+          {isAnimating ? (
+            <img
+              key={isHovered ? "hovered" : "idle"}
+              src="src/assets/images/CampusCoin3DModel.gif"
+              alt="Coin animation"
+              className="w-11 h-11 object-contain transition-transform duration-500 ease-in-out"
+            />
+          ) : (
+            <img
+              src="src/assets/images/Web logo.png"
+              alt="Static coin"
+              className="w-10 h-10 object-contain transition-transform duration-500 ease-in-out"
+            />
+          )}
         </div>
+
         <div>
-          <p className="text-sm font-medium uppercase tracking-wide text-emerald-500/80">Current Balance</p>
+          <p className="text-sm font-medium uppercase tracking-wide text-emerald-500/80">
+            Current Balance
+          </p>
           <p className="text-4xl font-semibold text-emerald-900">{balance}</p>
           <p className="text-sm text-emerald-600">CampusCoin</p>
         </div>

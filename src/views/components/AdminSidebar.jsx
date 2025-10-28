@@ -70,7 +70,7 @@ const AdminSidebar = ({ user, showMobileMenu, onNavigate }) => {
           </button>
         </div>
         <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/40 bg-emerald-700/40 px-3 py-4 shadow-lg shadow-emerald-950/30">
-          <img src={logo} alt="Web Logo" className="h-8 w-8" />
+          <img src={logo} alt="Web Logo" className="h-12 w-12" />
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.25em] text-emerald-100/80">CampusCoin</p>
             <p className="text-lg font-semibold text-white">Admin Console</p>

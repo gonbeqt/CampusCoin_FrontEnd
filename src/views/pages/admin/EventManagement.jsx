@@ -371,10 +371,10 @@ const EventManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-sm text-blue-600 font-medium flex items-center">
-                        <img src={webLogo} alt="Web Logo" className="w-4 h-4 mr-1" />
-                        {event.reward} CampusCoin
-                      </div>
+                    <div className="text-sm text-blue-600 font-medium flex items-center">
+                      <span className="mr-1">{event.reward}</span>
+                      <img src={webLogo} alt="Web Logo" className="w-4 h-4" />
+                    </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <span

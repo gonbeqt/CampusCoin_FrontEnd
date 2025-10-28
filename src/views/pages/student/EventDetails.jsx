@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import eventController from '../../../controllers/eventController'
 import AuthModel from '../../../models/authModel'
+import logo from '../../../assets/images/Web logo.png';
 
 const authModel = new AuthModel();
 
@@ -310,7 +311,7 @@ const EventDetails = () => {
               </>
             )}
             <span className="flex items-center text-sm font-medium text-gray-800">
-              <CoinsIcon size={14} className="mr-1 text-emerald-600" />
+              <img src={logo} alt="Web Logo" className="h-4 w-4 mr-2" />
               {event.reward} CampusCoin reward
             </span>
           </div>

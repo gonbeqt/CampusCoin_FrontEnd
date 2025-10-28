@@ -4,6 +4,8 @@ import { SearchIcon, PlusCircle, MinusCircle } from 'lucide-react'
 import logo from '../../../assets/images/Web logo.png';
 import { useBalance } from "../../components/BalanceContext";
 import productController from '../../../controllers/productController';
+import confetti from "canvas-confetti";
+import WebLogo from "../../../assets/images/Web Logo.png";
 
 const categoryMapping = {
   'All': 'All',
@@ -101,40 +103,121 @@ const RewardMarketplace = ({ user }) => {
     }))
   }
 
-  const handleConfirm = async (productId) => {
+const handleConfirm = async (productId) => {
   try {
-    setProcessingOrders(prev => ({ ...prev, [productId]: true }));
+    setProcessingOrders((prev) => ({ ...prev, [productId]: true }));
     setError(null);
 
-    const product = products.find(p => p._id === productId);
+    const product = products.find((p) => p._id === productId);
     const totalCost = product.price * quantities[productId];
 
-    const orderResult = await productController.createOrder(productId, quantities[productId]);
+    const orderResult = await productController.createOrder(
+      productId,
+      quantities[productId]
+    );
 
     if (orderResult.success) {
       // Deduct balance locally
-      refreshBalance?.(); // optional: refresh from backend if needed
-      setRedeemStates(prev => ({ ...prev, [productId]: false }));
-
       if (balance >= totalCost) {
-        setBalance(prev => prev - totalCost); // immediately adjust balance
-        await refreshBalance(); // optional: sync with backend
+        setBalance((prev) => prev - totalCost);
+        await refreshBalance();
       }
 
-      // Refresh product list
-      await fetchProducts();
+      // Update redeemed product
+      setProducts((prevProducts) =>
+        prevProducts.map((p) =>
+          p._id === productId
+            ? {
+                ...p,
+                stockQuantity: Math.max(p.stockQuantity - quantities[productId], 0),
+              }
+            : p
+        )
+      );
 
-      // Show success message
+      // Reset redeem state
+      setRedeemStates((prev) => ({ ...prev, [productId]: false }));
+
+      const button = document.querySelector(`[data-confirm-id="${productId}"]`);
+      if (button) {
+        const rect = button.getBoundingClientRect();
+        const origin = {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+        };
+
+        // Create a temporary canvas overlay
+        const canvas = document.createElement("canvas");
+        document.body.appendChild(canvas);
+        canvas.style.position = "fixed";
+        canvas.style.left = "0";
+        canvas.style.top = "0";
+        canvas.style.pointerEvents = "none";
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const ctx = canvas.getContext("2d");
+
+        const particles = [];
+        const particleCount = 20;
+        const img = new Image();
+        img.src = WebLogo;
+
+        img.onload = () => {
+          for (let i = 0; i < particleCount; i++) {
+            particles.push({
+              x: origin.x,
+              y: origin.y,
+              vx: (Math.random() - 0.5) * 6,
+              vy: (Math.random() - 1) * 6 - 2,
+              size: 28 + Math.random() * 8,
+              rotation: Math.random() * Math.PI * 2,
+              rotationSpeed: (Math.random() - 0.5) * 0.2,
+              opacity: 1,
+            });
+          }
+
+          const animate = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p) => {
+              p.x += p.vx;
+              p.y += p.vy;
+              p.vy += 0.2; // gravity
+              p.rotation += p.rotationSpeed;
+              p.opacity -= 0.02;
+
+              if (p.opacity > 0) {
+                ctx.save();
+                ctx.globalAlpha = p.opacity;
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation);
+                ctx.drawImage(img, -p.size / 2, -p.size / 2, p.size, p.size);
+                ctx.restore();
+              }
+            });
+
+            // continue animation until particles fade out
+            if (particles.some((p) => p.opacity > 0)) {
+              requestAnimationFrame(animate);
+            } else {
+              document.body.removeChild(canvas);
+            }
+          };
+
+          animate();
+        };
+      }
+
+      // Success message
       setRedeemProductName(product.name);
       setRedeemSuccess(true);
       setTimeout(() => setRedeemSuccess(false), 3000);
     } else {
-      setError(orderResult.error || 'Failed to create order');
+      setError(orderResult.error || "Failed to create order");
     }
   } catch (err) {
-    setError(err.message || 'An unexpected error occurred');
+    setError(err.message || "An unexpected error occurred");
   } finally {
-    setProcessingOrders(prev => ({ ...prev, [productId]: false }));
+    setProcessingOrders((prev) => ({ ...prev, [productId]: false }));
   }
 };
 
@@ -179,12 +262,6 @@ const RewardMarketplace = ({ user }) => {
         </div>
       </div>
 
-      {/* Success Message */}
-      {redeemSuccess && (
-        <div className="mb-4 rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-center">
-          <p className="text-sm font-medium text-emerald-700">✓ Successfully redeemed {redeemProductName}!</p>
-        </div>
-      )}
         {/* category buttons */}
         <div className="mb-5 flex flex-wrap gap-2">
           <button
@@ -216,6 +293,12 @@ const RewardMarketplace = ({ user }) => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          {/* Success Message */}
+          {redeemSuccess && (
+            <div className="absolute top-0 right-[-998px] w-64 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-right shadow-sm">
+              <p className="text-sm font-medium text-emerald-700">✓ Successfully redeemed {redeemProductName}!</p>
+            </div>
+          )}
         </div>
       {loading ? (
         <div className="p-4">
@@ -349,6 +432,7 @@ const RewardMarketplace = ({ user }) => {
                         </div>
                         <div className={`absolute inset-0 transform transition-all duration-300 flex gap-1 ${redeemStates[product._id] ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
                           <button
+                            data-confirm-id={product._id}
                             className="flex-1 h-full rounded-lg text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-95 bg-emerald-600 hover:bg-emerald-700"
                             onClick={() => handleConfirm(product._id)}
                             disabled={processingOrders[product._id]}
