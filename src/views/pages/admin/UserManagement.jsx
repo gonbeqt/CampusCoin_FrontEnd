@@ -230,20 +230,17 @@ const UserManagement = () => {
         </div>
       ) : (
         <div className="mb-6">
-          <div className="flex flex-col gap-2 mb-4">
-            <div style={{ marginLeft: '-8vw' }}>
+          <div className="flex justify-between items-center mb-6">
+            <div>
               <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
               <p className="text-gray-600">Manage students and track their attendance.</p>
             </div>
-              <div className="flex flex-row items-center justify-between gap-2 w-full">
-                <div className="flex-1" />
-              </div>
           </div>
           {/* Students Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden mb-10 border-t-4 border-blue-200" style={{ width: '1400px', marginLeft: '-8vw' }}>
+            <div className="bg-white rounded-lg shadow mb-6">
             <h2 className="text-lg font-bold px-6 pt-6 pb-2 text-blue-700">Students</h2>
             <div className="px-6 pb-2">
-              <div className="relative w-full max-w-xs mb-2 flex items-center">
+              <div className="relative w-full md:w-1/2 mb-2 flex items-center">
                 {/* Search icon inside input */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

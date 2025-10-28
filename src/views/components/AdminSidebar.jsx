@@ -5,7 +5,6 @@ import {
   CalendarIcon,
   UsersIcon,
   CheckSquareIcon,
-  SettingsIcon,
   ShoppingBagIcon,
   CoinsIcon,
   X,

@@ -172,12 +172,6 @@ const RewardMarketplace = ({ user }) => {
             Redeem your CampusCoin balance for simple, everyday perks.
           </p>
         </div>
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 shadow-sm">
-          <CoinsIcon size={18} className="text-emerald-600" />
-          <span className="text-sm font-semibold text-gray-900">
-            {balance} CampusCoin
-          </span>
-        </div>
       </div>
         {/* category buttons */}
         <div className="mb-5 flex flex-wrap gap-2">
@@ -199,7 +193,7 @@ const RewardMarketplace = ({ user }) => {
         </div>
 
         {/* Search bar */}
-        <div className="relative mb-6 flex-1">
+        <div className="relative mb-6 w-full md:w-1/2 lg:w-1/3">
           <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
             <SearchIcon size={18} className="text-gray-400" />
           </div>

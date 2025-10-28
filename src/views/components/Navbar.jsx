@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom'
-import { MenuIcon, XIcon, CoinsIcon } from 'lucide-react'
+import { MenuIcon, XIcon } from 'lucide-react'
 import AuthController from '../../controllers/authController'
 import NotificationBell from './NotificationBell'
 import NotificationModal from './NotificationModal'
 import LogoutConfirmModal from './LogoutConfirmModal'
 import { useState } from 'react'
+import WebLogo from '../../assets/images/Web logo.png'
 
 const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
   const navigate = useNavigate()
@@ -26,7 +27,9 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
     user?.first_name || user?.firstName,
     user?.middle_name || user?.middleName,
     user?.last_name || user?.lastName
-  ].filter(Boolean).map(part => part.trim())
+  ]
+    .filter(Boolean)
+    .map(part => part.trim())
 
   const suffix = user?.suffix && user.suffix.trim() ? user.suffix.trim() : null
 
@@ -35,10 +38,12 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
   if (suffix) displayName = `${displayName} ${suffix}`
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-emerald-100 bg-white-90 backdrop-blur-xl shadow-sm md:left-64">
-      <div className="mx-auto w-full max-w-7xl px-3 py-3 sm:px-6 md:px-8 md:py-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-emerald-100 bg-white/90 backdrop-blur-xl shadow-sm md:left-64">
+      <div className="w-full px-3 py-3 sm:px-6 md:px-8 md:py-4 mr-3 sm:mr-6 md:mr-8">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
+          {/* Left Section */}
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* Mobile Menu Button */}
             <button
               className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 text-emerald-600 transition-colors hover:bg-emerald-50 md:hidden"
               onClick={toggleMobileMenu}
@@ -49,18 +54,27 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
               {showMobileMenu ? <XIcon size={22} /> : <MenuIcon size={22} />}
               <span className="sr-only">Toggle sidebar</span>
             </button>
+
+            {/* NOT SURE IF VISUALLY APPEALING YUNG 2 LOGO NA NASA IISANG ALIGNMENT KAYO NA BAHALA MAG-ALIS OR IBALIK 
+                          <img
+                src={WebLogo}
+                alt="CampusCoin Logo"
+                className="h-10 w-10 object-contain"
+              />
+            */}
             <div className="flex items-center gap-2 sm:gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-lg font-semibold text-emerald-700">
-                <CoinsIcon size={20} />
-              </span>
               <div className="leading-tight">
                 <p className="text-sm font-semibold text-emerald-900 sm:text-lg">CampusCoin</p>
-                <p className="hidden text-xs font-medium uppercase tracking-[0.25em] text-emerald-500/90 sm:block">Engage · Reward · Grow</p>
+                <p className="hidden text-xs font-medium uppercase tracking-[0.25em] text-emerald-500/90 sm:block">
+                  Engage · Reward · Grow
+                </p>
               </div>
             </div>
           </div>
 
+          {/* Right Section */}
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* User Info (desktop) */}
             <div className="hidden flex-col items-end text-right sm:flex">
               <p className="text-sm font-semibold text-emerald-900">{displayName}</p>
               <p className="text-xs font-medium text-emerald-500">
@@ -75,6 +89,8 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
                   : 'Member'}
               </p>
             </div>
+
+            {/* Notifications and Logout */}
             <div className="relative flex items-center gap-2 sm:gap-3">
               <NotificationBell />
               <NotificationModal />
@@ -86,12 +102,17 @@ const Navbar = ({ user, showMobileMenu, toggleMobileMenu }) => {
                 >
                   Logout
                 </button>
-                <LogoutConfirmModal open={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={confirmLogout} />
+                <LogoutConfirmModal
+                  open={confirmOpen}
+                  onClose={() => setConfirmOpen(false)}
+                  onConfirm={confirmLogout}
+                />
               </>
             </div>
           </div>
         </div>
 
+        {/* User Info (mobile view) */}
         <div className="mt-2 flex flex-col leading-tight text-left sm:hidden">
           <p className="text-sm font-semibold text-emerald-900">{displayName}</p>
           <p className="text-xs font-medium text-emerald-500">

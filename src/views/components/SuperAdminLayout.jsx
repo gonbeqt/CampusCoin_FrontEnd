@@ -43,7 +43,7 @@ const SuperAdminLayout = () => {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar user={user} showMobileMenu={showMobileMenu} toggleMobileMenu={toggleMobileMenu} />
         <main className="flex-1 overflow-y-auto bg-transparent px-4 py-6 md:px-10 md:py-10">
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+          <div className="flex w-full flex-col gap-6 mr-4 md:mr-10">
             <Outlet />
           </div>
         </main>
